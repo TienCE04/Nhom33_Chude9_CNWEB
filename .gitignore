@@ -1,0 +1,13 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+
+
+.npm
+package-lock.json
+
+# dotenv environment variables file
+.env
+.env.test
+.localenv
+*.env
