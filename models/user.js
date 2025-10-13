@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const { mongoose, redis } = require('./index')
 const _ = require('lodash')
 const { hashPassword } = require('../utils/auth')
 
