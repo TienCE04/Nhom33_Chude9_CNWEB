@@ -1,4 +1,4 @@
-const debug = require('debug')('api:middleware')
+const debug = require('debug')('api')
 const jwt = require('jwt-simple')
 const moment = require('moment')
 const _ = require('lodash')

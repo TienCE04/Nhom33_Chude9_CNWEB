@@ -1,8 +1,8 @@
 const Router = require('koa-router')
-const debug = require('debug')('dashboard-api:routes:auth')
+const debug = require('debug')('api')
 const jwt = require('jwt-simple')
 const Joi = require('joi')
-const moment = require('moment')
+const { fetchUserByEmail } = require('../models/user')
 
 
 const router = new Router()
@@ -16,6 +16,7 @@ router.post('/auth', async (ctx) => {
 
     const err = Joi.validate(body, schema).error
     const verbosity = !err || err.message
+    // user = await fetchUserByEmail(body.email)
 
     if (err) {
         ctx.status = 400
