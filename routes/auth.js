@@ -16,7 +16,6 @@ router.post('/auth', async (ctx) => {
 
     const err = Joi.validate(body, schema).error
     const verbosity = !err || err.message
-    // user = await fetchUserByEmail(body.email)
 
     if (err) {
         ctx.status = 400
@@ -26,6 +25,8 @@ router.post('/auth', async (ctx) => {
             verbosity
         }
     } else{
+        user = await fetchUserByEmail(body.username)
+
         ctx.body = {
             message: "okkkk",
             success: true
