@@ -7,7 +7,7 @@ const defaults = {
     secret: 'secret-boilerplate-token',
     redisHost: 'localhost',
     redisPort: '6379',
-    redisDb: 0,
+    redisDb: 5,
     redisPassword: null,
 }
 

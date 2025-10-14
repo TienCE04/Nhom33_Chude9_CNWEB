@@ -1,6 +1,3 @@
-const debug = require('debug')('api')
-const jwt = require('jwt-simple')
-const moment = require('moment')
 const _ = require('lodash')
 const uuid = require('uuid/v4')
 
@@ -8,12 +5,10 @@ const uuid = require('uuid/v4')
 const loggingMethod = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 const loggingPathIgnore = [
     '/login',
-    '/api-logs-aws',
     '/api-logs-database',
     '/api-logs',
-    '/api-logs-loki'
 ]
-// Simple Log class for basic logging
+
 class Log {
     constructor(data) {
         this.data = data
