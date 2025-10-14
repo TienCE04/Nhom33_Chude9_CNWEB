@@ -18,7 +18,7 @@ let custom = {
         process.env.ENV === 'production',
     env: process.env.NODE_ENV,
     port: process.env.PORT,
-    dbUrl: process.env.MONGODB_URL,
+    dbUrl: process.env.MONGODB_CONNECTION_STRING,
     redisHost: process.env.REDIS_HOST,
     redisPort: process.env.REDIS_PORT,
     redisPassword: process.env.REDIS_PASSWORD,

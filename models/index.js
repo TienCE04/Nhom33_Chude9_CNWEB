@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { env } = process
 const Redis = require('ioredis')
 
-mongoose.connect(process.env.MONGODB_URL)
+mongoose.connect(process.env.MONGODB_CONNECTION_STRING)
   .then(() => {
     console.log("Connected to MongoDB");
   })
