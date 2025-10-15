@@ -24,4 +24,14 @@ module.exports = class Player {
         }   
         return player
     }
+
+    static async createPlayer(username) {
+        const newPlayer = new PlayerModel({ username })
+        await newPlayer.save()
+        return {
+            message: "Create player successfully",
+            success: true,
+            player: newPlayer
+        }
+    }
 }
