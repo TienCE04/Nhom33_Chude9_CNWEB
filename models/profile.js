@@ -22,4 +22,13 @@ module.exports = class Profile {
     }
     return profile;
   }
+ static async createProfile(atts) {
+    const newProfile = new ProfileModel(atts); // bỏ {}
+    await newProfile.save();
+    return {
+      message: "Create profile successfully",
+      success: true,
+      profile: newProfile
+    };
+}
 };
