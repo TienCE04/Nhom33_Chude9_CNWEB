@@ -35,6 +35,7 @@ glob(`${__dirname}/routes/*.js`, { ignore: "**/index.js" }, (err, matches) => {
   });
 });
 
+
 const httpServer = createServer(app.callback());
 initSocket(httpServer);
 if (!module.parent) {
