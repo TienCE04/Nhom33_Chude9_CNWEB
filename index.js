@@ -1,6 +1,4 @@
 require("dotenv").config({ path: ".localenv" });
-const authRouter = require("./routes/authRouter");
-const topicRouter = require("./routes/topicRouter");
 const glob = require("glob");
 const Koa = require("koa");
 const cors = require("@koa/cors");
@@ -9,7 +7,8 @@ const compress = require("koa-compress");
 const zlib = require("zlib");
 const config = require("./config");
 const { log } = require("./middleware/index");
-
+const { createServer } = require("http");
+const { initSocket } = require("./socket/socketHandler.js"); 
 const app = new Koa();
 
 app.use(bodyParser());
@@ -35,6 +34,13 @@ glob(`${__dirname}/routes/*.js`, { ignore: "**/index.js" }, (err, matches) => {
     app.use(controller.routes()).use(controller.allowedMethods());
   });
 });
-app.use(authRouter.routes()).use(authRouter.allowedMethods());
-app.use(topicRouter.routes()).use(topicRouter.allowedMethods());
-if (!module.parent) app.listen(config.port);
+
+
+const httpServer = createServer(app.callback());
+initSocket(httpServer);
+if (!module.parent) {
+  httpServer.listen(config.port, () => {
+    console.log(`✅ Server is running on port ${config.port}`);
+    console.log(`✅ Koa (HTTP) and Socket.IO (WebSocket) are sharing the same port.`);
+  });
+}

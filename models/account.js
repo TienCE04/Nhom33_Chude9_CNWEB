@@ -82,4 +82,28 @@ module.exports = class Account {
       return { success: false, message: "Invalid or expired token" };
     }
   }
+
+  static async changePassword(username, oldPassword, newPassword) {
+    try {
+      const account = await AccountModel.findOne({ username });
+      if (!account) {
+        return { success: false, message: "Account not found" };
+      }
+
+      const { compareHash } = require("../utils/auth");
+      if (!compareHash(oldPassword, account.password)) {
+        return { success: false, message: "Current password is incorrect" };
+      }
+
+      const hashedNewPassword = hashPassword(newPassword);
+      await AccountModel.updateOne(
+        { username },
+        { $set: { password: hashedNewPassword } }
+      );
+
+      return { success: true, message: "Password changed successfully" };
+    } catch (err) {
+      return { success: false, message: "Failed to change password" };
+    }
+  }
 };
