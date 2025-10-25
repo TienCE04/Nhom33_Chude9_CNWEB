@@ -1,5 +1,6 @@
 require("dotenv").config({ path: ".localenv" });
 const authRouter = require("./routes/authRouter");
+const topicRouter = require("./routes/topicRouter");
 const glob = require("glob");
 const Koa = require("koa");
 const cors = require("@koa/cors");
@@ -35,4 +36,5 @@ glob(`${__dirname}/routes/*.js`, { ignore: "**/index.js" }, (err, matches) => {
   });
 });
 app.use(authRouter.routes()).use(authRouter.allowedMethods());
+app.use(topicRouter.routes()).use(topicRouter.allowedMethods());
 if (!module.parent) app.listen(config.port);

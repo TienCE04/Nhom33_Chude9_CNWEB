@@ -16,4 +16,16 @@ module.exports = class Topic {
     await topic.save();
     return topic;
   }
+
+  static async getAllTopics() {
+    return await TopicModel.find();
+  }
+
+  static async getDefaultTopics() {
+    return await TopicModel.find({ createdBy: "system" });
+  }
+
+    static async getUserTopics(username) {
+    return await TopicModel.find({ createdBy: username }).sort({ timeStamp: -1 });
+  }
 };
