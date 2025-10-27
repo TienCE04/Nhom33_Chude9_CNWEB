@@ -46,3 +46,39 @@ exports.getUserTopics = async (ctx) => {
     ctx.body = { success: false, message: err.message };
   }
 };
+
+exports.updateTopic = async (ctx) => {
+  try {
+    const { idTopic } = ctx.params;
+    const schema = Joi.object({
+      nameTopic: Joi.string(),
+      keyWord: Joi.array().items(Joi.string()),
+    });
+
+    const { error, value } = schema.validate(ctx.request.body);
+    if (error) ctx.throw(400, error.message);
+
+    const updatedTopic = await Topic.updateTopic(idTopic, value);
+    if (!updatedTopic) ctx.throw(404, "Topic not found");
+
+    ctx.body = { success: true, message: "Topic updated successfully", data: updatedTopic };
+  } catch (err) {
+    ctx.status = err.status || 500;
+    ctx.body = { success: false, message: err.message };
+  }
+};
+
+exports.deleteTopic = async (ctx) => {
+  try {
+    const { idTopic } = ctx.params;
+    console.log(idTopic)
+    
+    const deletedTopic = await Topic.deleteTopic(idTopic);
+    if (!deletedTopic) ctx.throw(404, "Topic not found");
+
+    ctx.body = { success: true, message: "Topic deleted successfully", data: deletedTopic };
+  } catch (err) {
+    ctx.status = err.status || 500;
+    ctx.body = { success: false, message: err.message };
+  }
+};
