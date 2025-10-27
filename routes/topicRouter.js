@@ -1,10 +1,5 @@
 const Router = require("koa-router");
-const {
-  createTopic,
-  getDefaultTopic,
-  getUserTopics,
-} = require("../controller/topicController");
-
+const topicController = require("../controller/topicController");
 const router = Router();
 
 router.post("/create/topic", topicController.createTopic);
