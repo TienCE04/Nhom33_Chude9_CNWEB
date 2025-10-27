@@ -28,4 +28,12 @@ module.exports = class Topic {
     static async getUserTopics(username) {
     return await TopicModel.find({ createdBy: username }).sort({ timeStamp: -1 });
   }
+
+  static async updateTopic(idTopic, updateData) {
+    return await TopicModel.findOneAndUpdate({ idTopic: idTopic }, updateData, { new: true });
+  }
+
+  static async deleteTopic(idTopic) {
+    return await TopicModel.findOneAndDelete({ idTopic: idTopic });
+  }
 };
