@@ -9,6 +9,7 @@ const GameButton = forwardRef(
       secondary: "bg-secondary text-secondary-foreground hover:brightness-110",
       success: "bg-success text-success-foreground hover:brightness-110",
       danger: "bg-danger text-danger-foreground hover:brightness-110",
+      pause: "bg-yellow-400 text-primary-foreground hover:brightness-110",
     };
 
     const sizes = {

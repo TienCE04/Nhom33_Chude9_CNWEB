@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Copy, LogOut, Play } from "lucide-react";
+import { Copy, LogOut, Play, Pause } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { PlayerCard } from "@/components/PlayerCard";
 import { toast } from "sonner";
 import { Select } from "antd";
 import { ChatBox } from "../components/ChatBox";
+import Game from "./Game";
 
 import "../assets/styles/gamePage.css";
 
@@ -31,6 +32,7 @@ const Lobby = () => {
   const [drawTime, setDrawTime] = useState(60);
   const [topic, setTopic] = useState("Animals");
   const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [isGameStarted, setIsGameStarted] = useState(false);
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
@@ -45,11 +47,10 @@ const Lobby = () => {
   };
 
   return (
-    <div className="h-screen p-2 md:p-4 overflow-hidden">
-      
+    <div className="h-screen p-2 md:p-4 overflow-auto">
       <div className="max-w-7xl mx-auto h-full flex flex-col">
         {/* Header */}
-  <div className="game-card mb-3 flex flex-col md:flex-row items-center justify-between gap-2">
+        <div className="game-card mb-3 flex flex-col md:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold">Room Code:</h2>
             <code className="bg-primary/20 px-4 py-2 rounded-xl font-mono font-bold text-lg">
@@ -64,14 +65,21 @@ const Lobby = () => {
           </div>
           
           <div className="flex gap-3">
-            <GameButton
+            {!isGameStarted ? <GameButton
               variant="success"
               size="md"
-              onClick={() => navigate("/game")}
+              onClick={() => setIsGameStarted(true)}
             >
               <Play className="w-5 h-5 mr-2" />
               Start Game
-            </GameButton>
+            </GameButton> : <GameButton
+              variant="pause"
+              size="md"
+              onClick={() => setIsGameStarted(false)}
+            >
+              <Pause className="w-5 h-5 mr-2" />
+              Pause Game
+            </GameButton> }
             <GameButton
               variant="danger"
               size="md"
@@ -83,8 +91,20 @@ const Lobby = () => {
           </div>
         </div>
 
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:items-stretch flex-1 overflow-hidden">
-          {/* Main Content */}
+        {isGameStarted ? (
+          <Game 
+            messages={messages} 
+            onSendMessage={handleSendMessage}
+            drawTime={drawTime}
+            players={MOCK_PLAYERS}
+            onLeave={() => {
+              setIsGameStarted(false);
+              navigate("/");
+            }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:items-stretch flex-1 overflow-hidden">
+            {/* Main Content */}
           <div className="lg:col-span-2 flex flex-col gap-3 lg:h-full lg:min-h-0">
             {/* Players Grid */}
             <div className="game-card overflow-auto flex-1 min-h-0">
@@ -156,7 +176,8 @@ const Lobby = () => {
               />
             </div>
           </div>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

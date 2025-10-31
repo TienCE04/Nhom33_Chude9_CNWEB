@@ -36,7 +36,7 @@ export const TimerBar = ({ totalSeconds, onComplete }) => {
         </span>
       </div>
       
-      <div className="w-full bg-muted rounded-full h-4 overflow-hidden">
+      <div className="w-full bg-muted rounded-full h-[10px] overflow-hidden">
         <div
           className={`h-full transition-all duration-1000 ease-linear rounded-full ${
             isLow ? "bg-danger" : "bg-success"

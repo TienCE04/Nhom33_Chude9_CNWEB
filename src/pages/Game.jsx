@@ -35,21 +35,13 @@ const Game = () => {
   };
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen">
       <div className="max-w-[1600px] mx-auto space-y-4">
         {/* Header with Timer */}
         <div className="flex items-center gap-4">
           <div className="flex-1">
             <TimerBar totalSeconds={60} onComplete={handleTimerComplete} />
           </div>
-          <GameButton
-            variant="danger"
-            size="sm"
-            onClick={() => navigate("/")}
-          >
-            <LogOut className="w-5 h-5 mr-2" />
-            Leave
-          </GameButton>
         </div>
 
         {/* Current Word Hint */}
@@ -63,7 +55,7 @@ const Game = () => {
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4">
           {/* Canvas and Chat */}
           <div className="space-y-4">
-            <div className="flex justify-center">
+            <div className="flex">
               <CanvasBoard />
             </div>
             
