@@ -93,7 +93,7 @@ export const CanvasBoard = () => {
         
         <div className="border-t border-border my-2" />
         
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 items-center justify-center">
           {COLORS.map((c) => (
             <button
               key={c}

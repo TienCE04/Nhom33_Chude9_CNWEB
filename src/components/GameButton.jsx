@@ -1,5 +1,6 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 import { cn } from "@/lib/utils";
+import "../assets/styles/gamePage.css";
 
 const GameButton = forwardRef(
   ({ className, variant = "primary", size = "md", children, ...props }, ref) => {

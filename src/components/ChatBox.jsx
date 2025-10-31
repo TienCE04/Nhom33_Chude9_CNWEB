@@ -21,7 +21,7 @@ export const ChatBox = ({
     <div className="game-card h-full flex flex-col">
       <h3 className="font-bold text-lg mb-3">Chat</h3>
       
-      <div className="flex-1 overflow-y-auto space-y-2 mb-3 min-h-0">
+      <div className="flex-1 overflow-y-auto space-y-2 mb-3 min-h-0 pr-[10px]">
         {messages.map((msg) => (
           <div
             key={msg.id}
