@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Select } from "antd";
 import { ChatBox } from "../components/ChatBox";
 import Game from "./Game";
+import { PlayRulePopup } from "../components/PlayRulePopup";
 
 import "../assets/styles/gamePage.css";
 
@@ -33,6 +34,7 @@ const Lobby = () => {
   const [topic, setTopic] = useState("Animals");
   const [messages, setMessages] = useState(MOCK_MESSAGES);
   const [isGameStarted, setIsGameStarted] = useState(false);
+  const [showRulesPopup, setShowRulesPopup] = useState(false);
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
@@ -46,8 +48,21 @@ const Lobby = () => {
     ]);
   };
 
+  const handleConfirmRules = () => {
+    setShowRulesPopup(false);
+    setIsGameStarted(true);
+  };
+
   return (
     <div className="h-screen p-2 md:p-4 overflow-auto">
+
+      {/* RENDER POP-UP KHI STATE LÀ TRUE */}
+      {showRulesPopup && (
+        <PlayRulePopup 
+          topic={topic} 
+          onConfirm={handleConfirmRules} 
+        />
+      )}
       <div className="max-w-7xl mx-auto h-full flex flex-col">
         {/* Header */}
         <div className="game-card mb-3 flex flex-col md:flex-row items-center justify-between gap-2">
@@ -68,7 +83,7 @@ const Lobby = () => {
             {!isGameStarted ? <GameButton
               variant="success"
               size="md"
-              onClick={() => setIsGameStarted(true)}
+              onClick={() => setShowRulesPopup(true)}
             >
               <Play className="w-5 h-5 mr-2" />
               Start Game
