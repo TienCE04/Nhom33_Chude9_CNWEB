@@ -29,7 +29,7 @@ const Home = () => {
 
   const handleJoinRoom = () => {
     if (nicknameLogin.trim()) {
-      navigate("/lobby");
+      navigate("/rooms");
     }
   };
 
