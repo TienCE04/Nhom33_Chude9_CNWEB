@@ -11,6 +11,8 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import RoomList from "./pages/RoomList";
 import NotFound from "./pages/NotFound";
+import CreateRoom from "./pages/CreateRoom";
+import CreateTheme from "./pages/CreateTheme";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,8 @@ const App = () => (
           <Route path="/settings" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/rooms" element={<RoomList />} />
+          <Route path="/create/room" element={<CreateRoom />} />
+          <Route path="/create/theme" element={<CreateTheme />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

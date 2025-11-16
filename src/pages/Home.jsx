@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Palette, Users, LogIn, Globe, Volume2, Settings } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDiscord } from '@fortawesome/free-brands-svg-icons';
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faDiscord } from "@fortawesome/free-brands-svg-icons";
 
 const Home = () => {
   const [nicknameLogin, setNicknameLogin] = useState("");
@@ -23,7 +23,7 @@ const Home = () => {
 
   const handleCreateRoom = () => {
     if (nicknameLogin.trim()) {
-      navigate("/lobby");
+      navigate("/create/room");
     }
   };
 
@@ -193,7 +193,9 @@ const Home = () => {
                 />
 
                 {regError && (
-                  <p className="text-sm text-red-500 mb-2 text-center">{regError}</p>
+                  <p className="text-sm text-red-500 mb-2 text-center">
+                    {regError}
+                  </p>
                 )}
 
                 <GameButton
@@ -206,8 +208,9 @@ const Home = () => {
                 </GameButton>
 
                 <p className="mt-3 text-xs text-muted-foreground text-center">
-                  By registering you agree to the local template behaviour. This is a
-                  frontend-only placeholder — integrate a backend to persist accounts.
+                  By registering you agree to the local template behaviour. This
+                  is a frontend-only placeholder — integrate a backend to
+                  persist accounts.
                 </p>
               </>
             ) : (
@@ -222,11 +225,28 @@ const Home = () => {
                   aria-label="Sign up with Google"
                 >
                   {/* Google SVG */}
-                  <svg className="w-5 h-5" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <path d="M533.5 278.4c0-17.4-1.4-34.2-4.1-50.4H272v95.2h147.1c-6.3 34-25 62.8-53.5 82.1v68.1h86.4c50.6-46.6 80-115.2 80-195z" fill="#4285F4"/>
-                    <path d="M272 544.3c72.7 0 133.8-24 178.5-65.5l-86.4-68.1c-24.1 16.2-55 25.7-92.1 25.7-71 0-131-47.9-152.3-112.2H30.2v70.2C74.8 489.9 168 544.3 272 544.3z" fill="#34A853"/>
-                    <path d="M119.7 323.9c-10.8-32.2-10.8-66.9 0-99.1V154.6H30.2c-41.7 82.3-41.7 179.6 0 261.9l89.5-92.6z" fill="#FBBC05"/>
-                    <path d="M272 107.7c39.6 0 75.2 13.6 103.2 40.4l77.4-77.4C402.9 24.9 344 0 272 0 168 0 74.8 54.4 30.2 135.8l89.5 70.2C141 155.6 201 107.7 272 107.7z" fill="#EA4335"/>
+                  <svg
+                    className="w-5 h-5"
+                    viewBox="0 0 533.5 544.3"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden
+                  >
+                    <path
+                      d="M533.5 278.4c0-17.4-1.4-34.2-4.1-50.4H272v95.2h147.1c-6.3 34-25 62.8-53.5 82.1v68.1h86.4c50.6-46.6 80-115.2 80-195z"
+                      fill="#4285F4"
+                    />
+                    <path
+                      d="M272 544.3c72.7 0 133.8-24 178.5-65.5l-86.4-68.1c-24.1 16.2-55 25.7-92.1 25.7-71 0-131-47.9-152.3-112.2H30.2v70.2C74.8 489.9 168 544.3 272 544.3z"
+                      fill="#34A853"
+                    />
+                    <path
+                      d="M119.7 323.9c-10.8-32.2-10.8-66.9 0-99.1V154.6H30.2c-41.7 82.3-41.7 179.6 0 261.9l89.5-92.6z"
+                      fill="#FBBC05"
+                    />
+                    <path
+                      d="M272 107.7c39.6 0 75.2 13.6 103.2 40.4l77.4-77.4C402.9 24.9 344 0 272 0 168 0 74.8 54.4 30.2 135.8l89.5 70.2C141 155.6 201 107.7 272 107.7z"
+                      fill="#EA4335"
+                    />
                   </svg>
                   <span>Sign up with Google</span>
                 </GameButton>
@@ -240,7 +260,9 @@ const Home = () => {
                   <span>Sign up with Discord</span>
                 </GameButton>
 
-                <p className="mt-2 text-xs text-muted-foreground text-center">No backend connected — these are placeholders.</p>
+                <p className="mt-2 text-xs text-muted-foreground text-center">
+                  No backend connected — these are placeholders.
+                </p>
               </div>
             )}
           </div>

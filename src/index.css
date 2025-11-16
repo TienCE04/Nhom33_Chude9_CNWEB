@@ -26,7 +26,7 @@ All colors MUST be HSL.
     --success: 122 40% 57%;
     --success-foreground: 0 0% 100%;
 
-    --danger: 1 82% 62%;
+    --danger: 1 60% 70%;
     --danger-foreground: 0 0% 100%;
 
     --muted: 210 60% 90%;
@@ -59,9 +59,16 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground font-nunito;
-    background-image: 
-      radial-gradient(circle at 20% 30%, hsl(210 100% 88% / 0.4) 0%, transparent 50%),
-      radial-gradient(circle at 80% 70%, hsl(45 100% 85% / 0.3) 0%, transparent 50%);
+    background-image: radial-gradient(
+        circle at 20% 30%,
+        hsl(210 100% 88% / 0.4) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        circle at 80% 70%,
+        hsl(45 100% 85% / 0.3) 0%,
+        transparent 50%
+      );
   }
 }
 
@@ -82,4 +89,36 @@ All colors MUST be HSL.
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
     @apply transition-all duration-200;
   }
+}
+
+/* :where(.css-dev-only-do-not-override-ac2jek).ant-select-outlined:not(.ant-select-customize-input) .ant-select-selector {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    font-size: 1rem;
+    line-height: 1.5rem;
+} */
+
+:where(.css-dev-only-do-not-override-ac2jek).ant-select-outlined:not(
+    .ant-select-customize-input
+  )
+  .ant-select-selector,
+:where(.css-dev-only-do-not-override-ac2jek).ant-input-outlined {
+  border: 2px solid hsl(var(--border));
+  background: #ffffff;
+  border-radius: 0.75rem;
+}
+
+.ant-select-focused:where(
+    .css-dev-only-do-not-override-ac2jek
+  ).ant-select-outlined:not(.ant-select-disabled):not(
+    .ant-select-customize-input
+  ):not(.ant-pagination-size-changer)
+  .ant-select-selector {
+  border-color: hsl(var(--primary));
+}
+
+:where(.css-dev-only-do-not-override-ac2jek).ant-input-outlined:focus,
+:where(.css-dev-only-do-not-override-ac2jek).ant-input-outlined:focus-visible {
+  border-color: hsl(var(--primary));
 }
