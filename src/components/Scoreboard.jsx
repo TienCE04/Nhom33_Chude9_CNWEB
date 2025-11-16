@@ -4,7 +4,7 @@ export const Scoreboard = ({ players, title = "Scoreboard" }) => {
   const sortedPlayers = [...players].sort((a, b) => b.points - a.points);
 
   return (
-    <div className="game-card">
+    <div className="game-card h-full overflow-auto">
       <div className="flex items-center gap-2 mb-4">
         <Trophy className="w-5 h-5 text-secondary" />
         <h3 className="font-bold text-lg">{title}</h3>

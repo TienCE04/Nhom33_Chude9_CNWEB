@@ -106,7 +106,7 @@ export const CanvasBoard = () => {
   };
 
   return (
-    <div className="flex gap-4">
+    <div className="flex gap-4 w-full">
       <div className="relative">
         {/* Thanh công cụ (Toolbar) */}
         <div className="game-card flex flex-col gap-3 p-3">
@@ -195,10 +195,10 @@ export const CanvasBoard = () => {
       </div>
 
       {/* Canvas */}
-      <div className="game-card p-0 overflow-hidden">
+      <div className="game-card p-0 overflow-hidden flex-1">
         <canvas
           ref={canvasRef}
-          width={800}
+          // width={800}
           height={600}
           className="cursor-crosshair bg-white"
           onMouseDown={startDrawing}

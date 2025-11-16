@@ -118,7 +118,7 @@ const Lobby = () => {
             }}
           />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:items-stretch flex-1 overflow-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:items-stretch flex-1">
             {/* Main Content */}
           <div className="lg:col-span-2 flex flex-col gap-3 lg:h-full lg:min-h-0">
             {/* Players Grid */}
@@ -188,6 +188,7 @@ const Lobby = () => {
                 messages={messages}
                 onSendMessage={handleSendMessage}
                 placeholder="Chat with players..."
+                typeBox={"chat"}
               />
             </div>
           </div>

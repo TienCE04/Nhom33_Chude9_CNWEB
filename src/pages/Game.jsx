@@ -7,9 +7,18 @@ import { Scoreboard } from "@/components/Scoreboard"; // <-- THÊM VÀO
 
 // THAY ĐỔI: Nhận props từ Lobby.jsx
 const Game = ({ players, messages, onSendMessage, drawTime }) => {
+
+  const [answers, setAnswers] = useState([]);
   const navigate = useNavigate();
   const handleTimerComplete = () => {
-    navigate("/results");
+    // navigate("/results");
+  };
+
+  const handleSetAnswers = (answer) => {
+    setAnswers([
+      ...answers,
+      { id: Date.now().toString(), player: "You", text: answer },
+    ]);
   };
 
   return (
@@ -44,10 +53,20 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
           {/* THÊM VÀO: Cột Bảng điểm và Chat */}
           <div className="flex flex-col gap-4 min-h-0">
             <Scoreboard players={players} />
+          </div>
+
+          <div className="flex gap-4 min-h-0 w-full">
             <ChatBox
               messages={messages}
               onSendMessage={onSendMessage}
+              placeholder="Nhập tin nhắn..."
+              typeBox={"chat"}
+            />
+            <ChatBox
+              messages={answers}
+              onSendMessage={handleSetAnswers}
               placeholder="Nhập câu trả lời..."
+              typeBox={"answer"}
             />
           </div>
         </div>
