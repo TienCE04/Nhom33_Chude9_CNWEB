@@ -38,4 +38,5 @@ module.exports = class Player {
   static async getAllPlayer() {
     return await Player.find().sort({ totalPoint: -1 });
   }
+
 };
