@@ -2,8 +2,8 @@ import { useState } from "react"; // Xóa useState vì không còn dùng
 import { useNavigate } from "react-router-dom";
 import { CanvasBoard } from "@/components/CanvasBoard";
 import { TimerBar } from "@/components/TimerBar";
-import { ChatBox } from "@/components/ChatBox"; // <-- THÊM VÀO
-import { Scoreboard } from "@/components/Scoreboard"; // <-- THÊM VÀO
+import { ChatBox } from "@/components/ChatBox"; 
+import { Scoreboard } from "@/components/Scoreboard"; 
 
 // THAY ĐỔI: Nhận props từ Lobby.jsx
 const Game = ({ players, messages, onSendMessage, drawTime }) => {
@@ -34,24 +34,25 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
         </div>
 
         {/* Current Word Hint */}
-        <div className="game-card text-center">
-          <h2 className="text-2xl font-bold">
-            Current word: <span className="text-primary">_ _ _ _ _ _ _ _</span>
-          </h2>
-        </div>
+        {/* <h2 className="text-2xl font-bold text-center">
+          <span className="text-primary">ANSWER_ _ _</span>
+        </h2> */}
 
         {/* Main Game Area */}
-        {/* THAY ĐỔI: Thêm flex-1 min-h-0 để grid lấp đầy không gian */}
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 flex-1 min-h-0">
           {/* Canvas */}
-          <div className="space-y-4">
+          <div className="relative mt-6" style={{maxHeight: "500px"}}>
+            {/* Current Word Hint - đặt đè lên Canvas */}
+            {/* <div className="absolute left-1/2 -translate-x-1/2 -top-6 bg-primary text-primary-foreground font-bold text-xl px-8 py-2 rounded-full shadow-lg border-4 border-white z-10">
+              ANSWER_ _ _
+            </div> */}
             <div className="flex">
               <CanvasBoard />
             </div>
           </div>
 
           {/* THÊM VÀO: Cột Bảng điểm và Chat */}
-          <div className="flex flex-col gap-4 min-h-0">
+          <div className="flex flex-col gap-4 min-h-0 mt-6">
             <Scoreboard players={players} />
           </div>
 

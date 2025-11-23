@@ -65,7 +65,7 @@ const Lobby = () => {
       )}
       <div className="max-w-7xl mx-auto h-full flex flex-col">
         {/* Header */}
-        <div className="game-card mb-3 flex flex-col md:flex-row items-center justify-between gap-2">
+        <div className="mb-3 flex flex-col md:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold">Room Code:</h2>
             <code className="bg-primary/20 px-4 py-2 rounded-xl font-mono font-bold text-lg">
