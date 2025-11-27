@@ -1,5 +1,5 @@
 const Joi = require("joi");
-const Player = require("../models/player");
+const Player = require("../models/player.js");
 
 //lấy xếp hạng 1,2,3 rank của player
 exports.getPlayer = async (ctx) => {

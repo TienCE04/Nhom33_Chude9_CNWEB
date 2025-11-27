@@ -144,3 +144,36 @@ exports.getRoomById = async (ctx) => {
     ctx.body = { success: false, message: "Failed to load room data" };
   }
 };
+
+exports.setStatus = async (room_id, status) => {
+    const key = roomKey(room_id);
+
+    try {
+    
+        const data = await redis.get(key);
+        if (!data) {
+            console.warn(`Room with key ${key} not found for status update.`);
+            return false;
+        }
+
+    
+        const roomData = JSON.parse(data);
+
+   
+        roomData.status = status;
+        roomData.updatedAt = new Date().toISOString();
+
+        await redis.set(key, JSON.stringify(roomData));
+
+        //báo sự kiện thay đổi từ waiting sang playing để các socket start_game
+        const io = getIO();
+        io.to(room_id).emit("room_updated", { action: "status_change", room: roomData });
+        
+        io.emit("rooms_list_updated"); 
+
+        return true;
+    } catch (error) {
+        console.error(`Error updating status for room ${room_id}:`, error);
+        return false;
+    }
+};
