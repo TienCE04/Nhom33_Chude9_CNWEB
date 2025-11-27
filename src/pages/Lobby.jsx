@@ -32,6 +32,7 @@ const Lobby = () => {
   const [rounds, setRounds] = useState(3);
   const [drawTime, setDrawTime] = useState(60);
   const [topic, setTopic] = useState("Animals");
+  const [roomType, setRoomType] = useState("Public");
   const [messages, setMessages] = useState(MOCK_MESSAGES);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [showRulesPopup, setShowRulesPopup] = useState(false);
@@ -49,25 +50,29 @@ const Lobby = () => {
   };
 
   const handleConfirmRules = () => {
+    // include roomType in confirmation flow
     setShowRulesPopup(false);
+    console.log("Starting game with roomType:", roomType);
+    toast.success(`Bắt đầu phòng ${roomType}`);
     setIsGameStarted(true);
   };
 
   return (
-    <div className="h-screen p-2 md:p-4 overflow-auto">
+    <div className="h-screen p-2 md:p-4">
 
       {/* RENDER POP-UP KHI STATE LÀ TRUE */}
       {showRulesPopup && (
         <PlayRulePopup 
-          topic={topic} 
-          onConfirm={handleConfirmRules} 
+          topic={topic}
+          roomType={roomType}
+          onConfirm={handleConfirmRules}
         />
       )}
-      <div className="max-w-7xl mx-auto h-full flex flex-col">
+      <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="mb-3 flex flex-col md:flex-row items-center justify-between gap-2">
+        <div className="mb-3 flex flex-col md:flex-row items-center justify-between gap-2 px-6">
           <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-bold">Room Code:</h2>
+            <h2 className="text-3xl font-extrabold">Room Code:</h2>
             <code className="bg-primary/20 px-4 py-2 rounded-xl font-mono font-bold text-lg">
               {roomCode}
             </code>
@@ -80,21 +85,25 @@ const Lobby = () => {
           </div>
           
           <div className="flex gap-3">
-            {!isGameStarted ? <GameButton
-              variant="success"
-              size="md"
-              onClick={() => setShowRulesPopup(true)}
-            >
-              <Play className="w-5 h-5 mr-2" />
-              Start Game
-            </GameButton> : <GameButton
-              variant="pause"
-              size="md"
-              onClick={() => setIsGameStarted(false)}
-            >
-              <Pause className="w-5 h-5 mr-2" />
-              Pause Game
-            </GameButton> }
+            {!isGameStarted ? (
+              <GameButton
+                variant="success"
+                size="md"
+                onClick={() => setShowRulesPopup(true)}
+              >
+                <Play className="w-5 h-5 mr-2" />
+                Start Game
+              </GameButton>
+            ) : (
+              <GameButton
+                variant="pause"
+                size="md"
+                onClick={() => setIsGameStarted(false)}
+              >
+                <Pause className="w-5 h-5 mr-2" />
+                Pause Game
+              </GameButton>
+            )}
             <GameButton
               variant="danger"
               size="md"
@@ -124,19 +133,19 @@ const Lobby = () => {
             {/* Players Grid */}
             <div className="game-card overflow-auto flex-1 min-h-0">
               <h3 className="text-xl font-bold mb-4">Players</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                 {MOCK_PLAYERS.map((player) => (
                   <PlayerCard key={player.id} {...player} />
                 ))}
               </div>
             </div>
             {/* Game Settings */}
-            <div className="game-card overflow-auto flex-1 min-h-0">
+            <div className="game-card flex-1 min-h-0 overflow-auto">
               <h3 className="text-xl font-bold mb-4">Game Settings</h3>
               
               <div className="space-y-3">
-                <div>
-                  <label className="block font-semibold mb-2">Topic</label>
+                <div className="flex items-center justify-center gap-3">
+                  <label className="block font-semibold">Topic:</label>
                   <Select
                     value={topic}
                     onChange={(value) => setTopic(value)}
@@ -145,6 +154,19 @@ const Lobby = () => {
                       { value: "Food", label: "Food" },
                       { value: "Objects", label: "Objects" },
                       { value: "Random", label: "Random" },
+                    ]}
+                    className="w-full h-[40px]"
+                  />
+                </div>
+
+                <div className="flex items-center justify-center gap-3">
+                  <label className="font-semibold flex-shrink-0">Loại phòng:</label>
+                  <Select
+                    value={roomType}
+                    onChange={(value) => setRoomType(value)}
+                    options={[
+                      { value: "Public", label: "Public" },
+                      { value: "Private", label: "Private" },
                     ]}
                     className="w-full h-[40px]"
                   />
