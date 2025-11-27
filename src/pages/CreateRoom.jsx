@@ -4,6 +4,27 @@ import { ArrowLeft, Gamepad2, Plus } from "lucide-react";
 import { GameButton } from "../components/GameButton";
 import { Select } from "antd";
 
+// Material Icon mapping
+const TOPIC_ICONS = {
+  "Động vật": "cruelty_free",
+  "Công nghệ": "laptop_mac",
+  "Thiên nhiên": "nature",
+  "Thực phẩm": "cookie",
+  "Thể thao": "sports_soccer",
+  "Điện ảnh": "videocam",
+  "Âm nhạc": "queue_music",
+  "Du lịch": "flight",
+  "Nghệ thuật": "palette",
+  "Trò chơi": "sports_esports",
+};
+
+// Material Icon Component
+const MaterialIcon = ({ iconName, className = "" }) => (
+  <span className={`material-symbols-rounded ${className}`}>
+    {iconName}
+  </span>
+);
+
 const CreateRoom = () => {
   const navigate = useNavigate();
   const [maxPlayers, setMaxPlayers] = useState("6");
@@ -12,16 +33,16 @@ const CreateRoom = () => {
 
   // Mock topics data
   const topics = [
-    { id: 1, name: "Động vật", avatar: "🦁" },
-    { id: 2, name: "Công nghệ", avatar: "💻" },
-    { id: 3, name: "Thiên nhiên", avatar: "🌲" },
-    { id: 4, name: "Thực phẩm", avatar: "🍕" },
-    { id: 5, name: "Thể thao", avatar: "⚽" },
-    { id: 6, name: "Điện ảnh", avatar: "🎬" },
-    { id: 7, name: "Âm nhạc", avatar: "🎵" },
-    { id: 8, name: "Du lịch", avatar: "✈️" },
-    { id: 9, name: "Nghệ thuật", avatar: "🎨" },
-    { id: 10, name: "Trò chơi", avatar: "🎮" },
+    { id: 1, name: "Động vật" },
+    { id: 2, name: "Công nghệ" },
+    { id: 3, name: "Thiên nhiên" },
+    { id: 4, name: "Thực phẩm" },
+    { id: 5, name: "Thể thao" },
+    { id: 6, name: "Điện ảnh" },
+    { id: 7, name: "Âm nhạc" },
+    { id: 8, name: "Du lịch" },
+    { id: 9, name: "Nghệ thuật" },
+    { id: 10, name: "Trò chơi" },
   ];
 
   const handleCreateRoom = () => {
@@ -34,30 +55,26 @@ const CreateRoom = () => {
   };
 
   return (
-    <div className="h-screen p-4 flex flex-col">
+    <div className="p-4 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 px-6">
         <div className="flex items-center gap-3">
           <Gamepad2 className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-extrabold">Tạo phòng</h1>
         </div>
-        <GameButton variant="secondary" size="md" onClick={() => navigate("/")}>
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Quay lại
-        </GameButton>
       </div>
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 flex-1 sm:h-0">
         {/* Left Column - Configuration (1/3 width) */}
-        <div className="sm:col-span-1 bg-card game-card flex flex-col min-h-0">
+        <div className="sm:col-span-1 bg-card game-card flex flex-col min-h-0 shadow-lg">
           <h2 className="text-2xl font-bold mb-6 text-foreground">
             Cấu hình phòng
           </h2>
 
           {/* Max Players */}
           <div className="mb-6">
-            <label className="block text-sm font-semibold text-foreground mb-2">
+            <label className="block text-md font-semibold text-foreground mb-2">
               Số người chơi tối đa
             </label>
             <Select
@@ -79,7 +96,7 @@ const CreateRoom = () => {
 
           {/* Target Score */}
           <div className="mb-8">
-            <label className="block text-sm font-semibold text-foreground mb-2">
+            <label className="block text-md font-semibold text-foreground mb-2">
               Mục tiêu điểm
             </label>
             <Select
@@ -116,7 +133,7 @@ const CreateRoom = () => {
         </div>
 
         {/* Right Column - Topic Selection (2/3 width) */}
-        <div className="sm:col-span-2 bg-card game-card flex flex-col min-h-0">
+        <div className="sm:col-span-2 bg-card game-card flex flex-col min-h-0 shadow-lg">
           {/* Header with Create Topic Button */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-foreground">Chủ đề</h2>
@@ -130,29 +147,47 @@ const CreateRoom = () => {
             </GameButton>
           </div>
 
-          {/* Topics List with Internal Scroll */}
-          <div className="flex-1 overflow-y-auto pr-4 mb-6">
-            <div className="space-y-3">
+          {/* Topics Grid with Internal Scroll */}
+          <div className="flex-1 overflow-y-auto mb-6 p-2">
+            <div className="flex flex-wrap gap-4">
               {topics.map((topic) => (
                 <button
                   key={topic.id}
                   onClick={() => setSelectedTopic(topic)}
                   className={`
-                                        w-full p-4 rounded-xl transition-all duration-200
-                                        border-2 border-border
-                                        flex items-center gap-3
-                                        hover:shadow-[0_8px_24px_hsl(210_60%_70%_/_0.2)]
-                                        hover:scale-102
-                                        ${
-                                          selectedTopic?.id === topic.id
-                                            ? "bg-primary border-primary shadow-[0_8px_24px_hsl(210_60%_70%_/_0.25)]"
-                                            : "bg-card hover:bg-muted/50"
-                                        }
-                                    `}
+                    w-32 h-32 border-2 border-border flex flex-col items-center justify-center gap-3 rounded-xl
+                    transition-all duration-500
+                    hover:scale-105
+                    ${
+                      selectedTopic?.id === topic.id
+                        ? "bg-primary border-primary shadow-[0_8px_24px_hsl(210_60%_70%_/_0.25)]"
+                        : "bg-card hover:bg-muted/30"
+                    }
+                  `}
                 >
-                  <span className="text-3xl">{topic.avatar}</span>
+                  <div
+                    className={`
+                      w-16 h-16 rounded-full
+                      flex items-center justify-center
+                      transition-colors duration-200
+                      ${
+                        selectedTopic?.id === topic.id
+                          ? "bg-white"
+                          : "bg-primary/20"
+                      }
+                    `}
+                  >
+                    <MaterialIcon
+                      iconName={TOPIC_ICONS[topic.name]}
+                      className={`text-3xl ${
+                        selectedTopic?.id === topic.id
+                          ? "text-primary"
+                          : "text-primary"
+                      }`}
+                    />
+                  </div>
                   <span
-                    className={`font-semibold ${
+                    className={`font-semibold text-center text-md line-clamp-2 ${
                       selectedTopic?.id === topic.id
                         ? "text-primary-foreground"
                         : "text-foreground"

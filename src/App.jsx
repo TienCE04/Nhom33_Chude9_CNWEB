@@ -13,6 +13,8 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import RoomList from "./pages/RoomList";
 import NotFound from "./pages/NotFound";
+import CreateRoom from "./pages/CreateRoom";
+import CreateTheme from "./pages/CreateTheme";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +35,8 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/results" element={<Results />} />
+            <Route path="/create/room" element={<CreateRoom />} />
+            <Route path="/create/theme" element={<CreateTheme />} />
           </Route>
 
           {/* Trang Game thường full màn hình nên để ngoài Layout Navbar */}

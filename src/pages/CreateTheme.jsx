@@ -4,7 +4,7 @@ import { ArrowLeft, Palette, X } from "lucide-react";
 import { GameButton } from "../components/GameButton";
 import { Input } from "antd";
 
-const CreateTheme = () => {
+export const CreateTheme = () => {
   const navigate = useNavigate();
   const [themeName, setThemeName] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
