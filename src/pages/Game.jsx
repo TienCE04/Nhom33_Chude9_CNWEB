@@ -11,7 +11,7 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
   const [answers, setAnswers] = useState([]);
   const navigate = useNavigate();
   const handleTimerComplete = () => {
-    // navigate("/results");
+    navigate("/results");
   };
 
   const handleSetAnswers = (answer) => {

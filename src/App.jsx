@@ -15,6 +15,8 @@ import RoomList from "./pages/RoomList";
 import NotFound from "./pages/NotFound";
 import CreateRoom from "./pages/CreateRoom";
 import CreateTheme from "./pages/CreateTheme";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +29,8 @@ const App = () => (
         <Routes>
           {/* Route Trang chủ (Login) có thể không cần Navbar hoặc cần Layout riêng */}
           <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
           {/* Các trang có Navbar */}
           <Route element={<Layout />}>
