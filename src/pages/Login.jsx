@@ -15,6 +15,7 @@ const Login = () => {
 
   const handlePlayNow = () => {
     if (nicknameLogin.trim()) {
+      localStorage.setItem("isLoggedIn", "true");
       navigate("/lobby");
     }
   };
@@ -47,6 +48,7 @@ const Login = () => {
     }
 
     // No backend in this template — proceed to lobby for now
+    localStorage.setItem("isLoggedIn", "true");
     navigate("/lobby");
   };
 

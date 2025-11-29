@@ -1,9 +1,10 @@
+import { useEffect } from "react"; // 1. Import useEffect
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Layout from "@/components/Layout"; // Import Layout mới tạo
+import Layout from "@/components/Layout";
 
 import Home from "./pages/Home";
 import Lobby from "./pages/Lobby";
@@ -20,38 +21,45 @@ import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          {/* Route Trang chủ (Login) có thể không cần Navbar hoặc cần Layout riêng */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+const App = () => {
+  // 2. Thêm useEffect để thiết lập theme khi ứng dụng khởi động
+  useEffect(() => {
+    const theme = localStorage.getItem("theme");
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
 
-          {/* Các trang có Navbar */}
-          <Route element={<Layout />}>
-            <Route path="/rooms" element={<RoomList />} />
-            <Route path="/lobby" element={<Lobby />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/results" element={<Results />} />
-            <Route path="/create/room" element={<CreateRoom />} />
-            <Route path="/create/theme" element={<CreateTheme />} />
-          </Route>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Trang Game thường full màn hình nên để ngoài Layout Navbar */}
-          <Route path="/game" element={<Game />} />
+            <Route element={<Layout />}>
+              <Route path="/rooms" element={<RoomList />} />
+              <Route path="/lobby" element={<Lobby />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/results" element={<Results />} />
+              <Route path="/create/room" element={<CreateRoom />} />
+              <Route path="/create/theme" element={<CreateTheme />} />
+            </Route>
 
-          {/* Trang 404 */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+            <Route path="/game" element={<Game />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

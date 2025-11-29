@@ -13,6 +13,14 @@ const Navbar = () => {
         : "text-muted-foreground hover:bg-muted hover:text-foreground"
     }`;
 
+  // THÊM HÀM XỬ LÝ LOGOUT
+  const handleLogout = () => {
+    // Xóa trạng thái đăng nhập
+    localStorage.removeItem("isLoggedIn");
+    // Điều hướng về trang chủ
+    navigate("/");
+  };
+
   return (
     <nav className="sticky top-0 z-50 w-full p-4">
       <div className="game-card flex items-center justify-between px-6 py-3 shadow-lg bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
@@ -56,7 +64,7 @@ const Navbar = () => {
         <GameButton
           variant="danger"
           size="sm"
-          onClick={() => navigate("/")}
+          onClick={handleLogout}
           className="hidden sm:flex"
         >
           <LogOut className="w-4 h-4 sm:mr-2" />
