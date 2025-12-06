@@ -7,7 +7,7 @@ import { Select } from "antd";
 const Settings = () => {
   const navigate = useNavigate();
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState("vi");
   
   // Khởi tạo state dark mode từ localStorage hoặc mặc định false
   const [darkMode, setDarkMode] = useState(() => {
@@ -42,8 +42,8 @@ const Settings = () => {
     <div className="flex items-center w-full justify-center p-4 bg-background transition-colors duration-300">
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold mb-2 text-foreground">Settings</h1>
-          <p className="text-muted-foreground">Customize your game experience</p>
+          <h1 className="text-4xl font-extrabold mb-2 text-foreground">Cài đặt</h1>
+          <p className="text-muted-foreground">Tùy chỉnh trải nghiệm trò chơi của bạn</p>
         </div>
 
         {/* ... (Giữ nguyên phần Sound và Language) ... */}
@@ -56,8 +56,8 @@ const Settings = () => {
                 <div className="flex items-center gap-3">
                   {soundEnabled ? <Volume2 className="w-6 h-6 text-primary" /> : <VolumeX className="w-6 h-6 text-muted-foreground" />}
                   <div>
-                    <h3 className="font-bold text-foreground">Sound Effects</h3>
-                    <p className="text-sm text-muted-foreground">Enable game sounds</p>
+                    <h3 className="font-bold text-foreground">Hiệu ứng âm thanh</h3>
+                    <p className="text-sm text-muted-foreground">Bật âm thanh trò chơi</p>
                   </div>
                 </div>
                 <button onClick={() => setSoundEnabled(!soundEnabled)} className={`w-14 h-8 rounded-full transition-colors relative ${soundEnabled ? "bg-success" : "bg-muted"}`}>
@@ -70,8 +70,8 @@ const Settings = () => {
                 <div className="flex items-center gap-3">
                   <Globe className="w-6 h-6 text-primary" />
                   <div>
-                    <h3 className="font-bold text-foreground">Language</h3>
-                    <p className="text-sm text-muted-foreground">Choose your language</p>
+                    <h3 className="font-bold text-foreground">Ngôn ngữ</h3>
+                    <p className="text-sm text-muted-foreground">Chọn ngôn ngữ của bạn</p>
                   </div>
                 </div>
                 <Select
@@ -94,9 +94,9 @@ const Settings = () => {
                     <Sun className="w-6 h-6 text-primary" />
                 )}
                 <div>
-                    <h3 className="font-bold text-foreground">Dark Mode</h3>
+                    <h3 className="font-bold text-foreground">Chế độ tối</h3>
                     <p className="text-sm text-muted-foreground">
-                    Toggle dark theme
+                    Chuyển đổi giao diện tối
                     </p>
                 </div>
                 </div>

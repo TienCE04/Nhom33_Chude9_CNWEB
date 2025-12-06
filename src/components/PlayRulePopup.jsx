@@ -1,13 +1,14 @@
 import { GameButton } from "@/components/GameButton";
 import { Ban, Check } from "lucide-react";
+import { createPortal } from "react-dom";
 
 /**
  * Component pop-up hiển thị luật chơi.
  */
 export const PlayRulePopup = ({ topic, onConfirm }) => {
-  return (
+  return createPortal(
     // Lớp phủ (Overlay)
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 animate-fade-in">
       
       {/* Thẻ Modal */}
       <div className="game-card w-full max-w-md text-center p-6 relative animate-scale-in">
@@ -65,6 +66,7 @@ export const PlayRulePopup = ({ topic, onConfirm }) => {
           XÁC NHẬN
         </GameButton>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
