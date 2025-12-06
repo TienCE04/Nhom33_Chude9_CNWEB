@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react"; // Nhớ import useEffect
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Volume2, VolumeX, Globe, Moon, Sun, LogIn, Gamepad2 } from "lucide-react"; // Import thêm icon
+import { ArrowLeft, Volume2, VolumeX, Globe, Moon, Sun, LogIn, Gamepad2 } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { Select } from "antd";
 
@@ -39,19 +39,15 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex items-center w-full justify-center p-4 bg-background transition-colors duration-300">
+    <div className="flex items-center w-full justify-center p-4 bg-background transition-colors duration-300 min-h-screen">
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold mb-2 text-foreground">Cài đặt</h1>
           <p className="text-muted-foreground">Tùy chỉnh trải nghiệm trò chơi của bạn</p>
         </div>
-
-        {/* ... (Giữ nguyên phần Sound và Language) ... */}
         
         <div className="game-card space-y-6">
-            {/* Phần code Sound và Language giữ nguyên, chỉ thay đổi phần Dark Mode bên dưới */}
-            
-             {/* Sound (Giữ nguyên code cũ) */}
+             {/* Sound */}
              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {soundEnabled ? <Volume2 className="w-6 h-6 text-primary" /> : <VolumeX className="w-6 h-6 text-muted-foreground" />}
@@ -65,7 +61,7 @@ const Settings = () => {
                 </button>
             </div>
 
-            {/* Language (Giữ nguyên code cũ) */}
+            {/* Language */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Globe className="w-6 h-6 text-primary" />
@@ -116,6 +112,28 @@ const Settings = () => {
                 </button>
             </div>
         </div>
+
+        {/* Nút điều hướng Back có điều kiện - ĐÃ ĐƯỢC THÊM LẠI */}
+        <div className="mt-8 text-center">
+          <GameButton
+            variant="secondary"
+            size="lg"
+            onClick={handleBack}
+          >
+            {isLoggedIn ? (
+                <>
+                    <Gamepad2 className="w-5 h-5 mr-2" />
+                    Back to Lobby
+                </>
+            ) : (
+                <>
+                    <LogIn className="w-5 h-5 mr-2" />
+                    Back to Login
+                </>
+            )}
+          </GameButton>
+        </div>
+
       </div>
     </div>
   );
