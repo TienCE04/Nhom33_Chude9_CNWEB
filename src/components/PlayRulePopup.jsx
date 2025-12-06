@@ -5,13 +5,19 @@ import { createPortal } from "react-dom";
 /**
  * Component pop-up hiển thị luật chơi.
  */
-export const PlayRulePopup = ({ topic, onConfirm }) => {
+export const PlayRulePopup = ({ topic, onConfirm, onClose }) => {
   return createPortal(
     // Lớp phủ (Overlay)
-    <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 animate-fade-in">
+    <div 
+      className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 animate-fade-in"
+      onClick={onClose}
+    >
       
       {/* Thẻ Modal */}
-      <div className="game-card w-full max-w-md text-center p-6 relative animate-scale-in">
+      <div 
+        className="game-card w-full max-w-md text-center p-6 relative animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* Tiêu đề */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground font-bold text-2xl px-8 py-2 rounded-full shadow-lg border-4 border-white">

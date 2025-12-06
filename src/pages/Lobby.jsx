@@ -66,6 +66,7 @@ const Lobby = () => {
           topic={topic}
           roomType={roomType}
           onConfirm={handleConfirmRules}
+          onClose={() => setShowRulesPopup(false)}
         />
       )}
       <div className="h-full flex flex-col">
