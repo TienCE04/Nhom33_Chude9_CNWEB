@@ -57,11 +57,15 @@ const CreateRoom = () => {
   return (
     <div className="p-4 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 px-6">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3 px-6">
           <Gamepad2 className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-extrabold">Tạo phòng</h1>
         </div>
+        <GameButton variant="secondary" size="md" onClick={() => navigate("/rooms")}>
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Quay lại
+        </GameButton>
       </div>
 
       {/* Two-column layout */}
@@ -141,6 +145,7 @@ const CreateRoom = () => {
               variant="primary"
               size="md"
               className="flex items-center gap-2"
+              onClick={() => navigate("/create/theme")}
             >
               <Plus className="w-5 h-5" />
               Tạo chủ đề
@@ -205,7 +210,7 @@ const CreateRoom = () => {
             <GameButton
               variant="secondary"
               size="lg"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/rooms")}
               className="flex-1"
             >
               Hủy

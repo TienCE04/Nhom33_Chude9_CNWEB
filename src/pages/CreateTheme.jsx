@@ -46,14 +46,14 @@ export const CreateTheme = () => {
   };
 
   return (
-    <div className="h-screen p-4 flex flex-col">
+    <div className="p-4 flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 px-6">
           <Palette className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-extrabold">Tạo chủ đề</h1>
         </div>
-        <GameButton variant="secondary" size="md" onClick={() => navigate("/")}>
+        <GameButton variant="secondary" size="md" onClick={() => navigate("/create/room")}>
           <ArrowLeft className="w-5 h-5 mr-2" />
           Quay lại
         </GameButton>
@@ -160,7 +160,7 @@ export const CreateTheme = () => {
             <GameButton
               variant="secondary"
               size="lg"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/create/room")}
               className="flex-1"
             >
               Hủy

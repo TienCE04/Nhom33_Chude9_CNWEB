@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit2, Save, X, User, Mail, Lock, Calendar, Trophy, Award, Medal, Camera } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, User, Mail, Lock, Calendar, Trophy, Award, Medal, Camera, Gamepad2, Brush, MessageSquare, Target } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 
 const Profile = () => {
@@ -30,6 +30,12 @@ const Profile = () => {
   const [goldMedals, setGoldMedals] = useState(5);
   const [silverMedals, setSilverMedals] = useState(12);
   const [bronzeMedals, setBronzeMedals] = useState(8);
+
+  // Game Statistics (read-only)
+  const [totalGames, setTotalGames] = useState(150);
+  const [wordsDrawn, setWordsDrawn] = useState(450);
+  const [wordsGuessed, setWordsGuessed] = useState(320);
+  const [guessAccuracy, setGuessAccuracy] = useState(85);
   
   // Original values for cancel - separate for each block
   const [originalPersonalValues, setOriginalPersonalValues] = useState({
@@ -144,7 +150,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full">
+      <div className="w-full">
         {/* Full width horizontal block */}
         <div className="game-card mb-6">
           <div className="flex items-center justify-between">
@@ -181,7 +187,7 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Personal Information */}
           <div className="game-card space-y-6">
             <div className="flex items-center justify-between mb-4">
@@ -328,6 +334,58 @@ const Profile = () => {
                   placeholder="Nhập mật khẩu mới (để trống nếu không đổi)"
                 />
               )}
+            </div>
+          </div>
+
+          {/* Game Statistics */}
+          <div className="game-card space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <Gamepad2 className="w-6 h-6 text-primary" />
+                <h2 className="text-2xl font-bold">Thống kê trò chơi</h2>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <Trophy className="w-5 h-5 text-primary" />
+                  </div>
+                  <span className="font-medium">Tổng số trận</span>
+                </div>
+                <span className="text-xl font-bold">{totalGames}</span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-success/20 rounded-lg">
+                    <Brush className="w-5 h-5 text-success" />
+                  </div>
+                  <span className="font-medium">Số từ đã vẽ</span>
+                </div>
+                <span className="text-xl font-bold">{wordsDrawn}</span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-secondary/20 rounded-lg">
+                    <MessageSquare className="w-5 h-5 text-secondary" />
+                  </div>
+                  <span className="font-medium">Số từ đã đoán</span>
+                </div>
+                <span className="text-xl font-bold">{wordsGuessed}</span>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-yellow-500/20 rounded-lg">
+                    <Target className="w-5 h-5 text-yellow-500" />
+                  </div>
+                  <span className="font-medium">Độ chính xác</span>
+                </div>
+                <span className="text-xl font-bold">{guessAccuracy}%</span>
+              </div>
             </div>
           </div>
         </div>

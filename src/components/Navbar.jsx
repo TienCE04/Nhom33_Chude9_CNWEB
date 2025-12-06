@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { Home, User, Settings, LogOut, Gamepad2, Palette } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 
-const Navbar = () => {
+const Navbar = ({ onLogout }) => {
   const navigate = useNavigate();
 
   // Hàm tạo class cho link, tự động highlight khi active
@@ -17,6 +17,10 @@ const Navbar = () => {
   const handleLogout = () => {
     // Xóa trạng thái đăng nhập
     localStorage.removeItem("isLoggedIn");
+    // Gọi callback nếu có (để cập nhật state ở component cha)
+    if (onLogout) {
+      onLogout();
+    }
     // Điều hướng về trang chủ
     navigate("/");
   };

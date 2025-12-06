@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"; // Nhớ import useEffect
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Volume2, VolumeX, Globe, Moon, Sun, LogIn, Gamepad2 } from "lucide-react"; // Import thêm icon
 import { GameButton } from "@/components/GameButton";
+import { Select } from "antd";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background transition-colors duration-300">
+    <div className="flex items-center w-full justify-center p-4 bg-background transition-colors duration-300">
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold mb-2 text-foreground">Settings</h1>
@@ -73,10 +74,15 @@ const Settings = () => {
                     <p className="text-sm text-muted-foreground">Choose your language</p>
                   </div>
                 </div>
-                <select value={language} onChange={(e) => setLanguage(e.target.value)} className="input-rounded py-2 text-foreground bg-input">
-                  <option value="en">English</option>
-                  <option value="vi">Tiếng Việt</option>
-                </select>
+                <Select
+                  value={language}
+                  onChange={(value) => setLanguage(value)}
+                  className="w-32 h-[40px]"
+                  options={[
+                    { value: "en", label: "English" },
+                    { value: "vi", label: "Tiếng Việt" },
+                  ]}
+                />
             </div>
 
             {/* Theme Toggle */}
@@ -109,27 +115,6 @@ const Settings = () => {
                 />
                 </button>
             </div>
-        </div>
-
-        {/* Nút điều hướng Back có điều kiện */}
-        <div className="mt-8 text-center">
-          <GameButton
-            variant="secondary"
-            size="lg"
-            onClick={handleBack}
-          >
-            {isLoggedIn ? (
-                <>
-                    <Gamepad2 className="w-5 h-5 mr-2" />
-                    Back to Lobby
-                </>
-            ) : (
-                <>
-                    <LogIn className="w-5 h-5 mr-2" />
-                    Back to Login
-                </>
-            )}
-          </GameButton>
         </div>
       </div>
     </div>

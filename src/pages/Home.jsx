@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import Navbar from "@/components/Navbar";
 import { 
   Palette, 
   Play, 
@@ -7,12 +9,27 @@ import {
   Brush, 
   MessageSquare, 
   Zap,
-  ArrowRight
+  ArrowRight,
+  BookOpen
 } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
+import PageTransition from "@/components/PageTransition";
 
 const Home = () => {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+    setIsLoggedIn(loggedIn);
+  }, []);
+
+  const scrollToSection = (id) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const features = [
     {
@@ -39,9 +56,11 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* --- HERO SECTION --- */}
-      <section className="relative overflow-hidden py-20 px-4 md:px-8 lg:py-32">
+    <PageTransition>
+      <div className="min-h-screen bg-background flex flex-col">
+        {isLoggedIn && <Navbar onLogout={() => setIsLoggedIn(false)} />}
+        {/* --- HERO SECTION --- */}
+        <section className="relative overflow-hidden py-20 px-4 md:px-8 lg:py-32">
         {/* Background Decoration */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 opacity-30">
           <div className="absolute top-10 left-10 w-32 h-32 bg-primary/30 rounded-full blur-3xl animate-pulse"></div>
@@ -52,7 +71,7 @@ const Home = () => {
           <div className="inline-flex items-center justify-center p-3 bg-card rounded-2xl shadow-md mb-4">
             <Palette className="w-12 h-12 text-primary mr-3" />
             <h1 className="text-4xl md:text-6xl font-extrabold text-foreground tracking-tight">
-              Gartic <span className="text-primary">Clone</span>
+              Gartic
             </h1>
           </div>
           
@@ -67,7 +86,7 @@ const Home = () => {
               variant="primary" 
               size="lg" 
               onClick={() => navigate("/login")}
-              className="w-full sm:w-auto min-w-[200px] text-lg shadow-xl shadow-primary/20"
+              className="w-full sm:w-auto min-w-[200px] text-lg shadow-lg shadow-primary/20"
             >
               <Play className="w-6 h-6 mr-2 fill-current" />
               Chơi Ngay
@@ -76,10 +95,19 @@ const Home = () => {
               variant="secondary" 
               size="lg" 
               onClick={() => navigate("/rooms")}
-              className="w-full sm:w-auto min-w-[200px] text-lg"
+              className="w-full sm:w-auto min-w-[200px] text-lg shadow-lg shadow-secondary/20"
             >
               <Users className="w-6 h-6 mr-2" />
               Xem Phòng
+            </GameButton>
+            <GameButton 
+              variant="secondary" 
+              size="lg" 
+              onClick={() => scrollToSection("how-to-play")}
+              className="w-full sm:w-auto min-w-[200px] text-lg bg-orange-500 hover:bg-orange-600 text-white border-none shadow-lg shadow-orange-500/20"
+            >
+              <BookOpen className="w-6 h-6 mr-2" />
+              Luật chơi
             </GameButton>
           </div>
         </div>
@@ -113,7 +141,7 @@ const Home = () => {
       </section>
 
       {/* --- HOW TO PLAY SECTION --- */}
-      <section className="py-16 px-4">
+      <section id="how-to-play" className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-3xl font-bold text-center mb-12">Cách chơi đơn giản</h2>
           
@@ -158,7 +186,7 @@ const Home = () => {
             variant="success" 
             size="lg" 
             onClick={() => navigate("/login")}
-            className="min-w-[240px] text-xl py-4 h-auto shadow-xl hover:scale-105 inline-flex justify-center items-center"
+            className="min-w-[240px] text-xl py-4 h-auto shadow-lg shadow-success/20 hover:scale-105 inline-flex justify-center items-center"
           >
             Bắt đầu ngay
           </GameButton>
@@ -170,7 +198,8 @@ const Home = () => {
       <footer className="py-6 text-center text-sm text-muted-foreground">
         © 2025 Gartic Clone - Nhom33_Chude9_CNWEB. All rights reserved.
       </footer>
-    </div>
+      </div>
+    </PageTransition>
   );
 };
 
