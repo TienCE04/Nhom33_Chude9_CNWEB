@@ -1,6 +1,10 @@
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
-const { getAccountByUsername, createAccount, changePassword } = require("../models/account");
+const {
+  getAccountByUsername,
+  createAccount,
+  changePassword,
+} = require("../models/account");
 const { createPlayer } = require("../models/player");
 const { createProfile } = require("../models/profile");
 const { compareHash } = require("../utils/auth");
@@ -61,14 +65,13 @@ exports.resetPassword = async (ctx) => {
   ctx.body = result;
 };
 
-
 exports.signup = async (ctx) => {
   const schema = Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
     email: Joi.string().email(),
     nickname: Joi.string(),
-  })
+  });
   const { body } = ctx.request;
   const err = schema.validate(body).error;
   if (err) {
@@ -87,36 +90,47 @@ exports.signup = async (ctx) => {
     return;
   }
 
-    const newAccount = { username: body.username, password: body.password };
-    const account = await createAccount(newAccount);
-    if (account.success === false) {
-        ctx.status = 500;
-        ctx.body = { success: false, message: "Failed to create account" };
-        return;
-    }
+  const newAccount = { username: body.username, password: body.password };
+  const account = await createAccount(newAccount);
+  if (account.success === false) {
+    ctx.status = 500;
+    ctx.body = { success: false, message: "Failed to create account" };
+    return;
+  }
 
-    const player =  await createPlayer(body.username);
-    if (player.success === false) {
-        ctx.status = 500;
-        ctx.body = { success: false, message: "Failed to create player" };
-        return;
-     }
+  const player = await createPlayer(body.username);
+  if (player.success === false) {
+    ctx.status = 500;
+    ctx.body = { success: false, message: "Failed to create player" };
+    return;
+  }
 
-    const profile =  await createProfile( { username: body.username, email: body.email||'', nickname: body.nickname||'' }   );
-    if (profile.success === false) {
-        ctx.status = 500;
-        ctx.body = { success: false, message: "Failed to create profile" };
-        return;
-     }
+  const profile = await createProfile({
+    username: body.username,
+    email: body.email || "",
+    nickname: body.nickname || "",
+  });
+  if (profile.success === false) {
+    ctx.status = 500;
+    ctx.body = { success: false, message: "Failed to create profile" };
+    return;
+  }
 
-    ctx.body = { success: true, message: "Signup successful", account, player, profile };
-
-}
+  ctx.body = {
+    success: true,
+    message: "Signup successful",
+    account,
+    player,
+    profile,
+  };
+};
 
 exports.changePassword = async (ctx) => {
   const schema = Joi.object({
     oldPassword: Joi.string().required(),
-    newPassword: Joi.string().min(6).required(),
+    newPassword: Joi.string()
+      .min(6)
+      .required(),
   });
 
   const { body } = ctx.request;
@@ -143,13 +157,77 @@ exports.changePassword = async (ctx) => {
 
   // Lấy username từ token (đã được verify bởi middleware authorize)
   const username = ctx.User.username;
-  const result = await changePassword(username, body.oldPassword, body.newPassword);
-  
+  const result = await changePassword(
+    username,
+    body.oldPassword,
+    body.newPassword
+  );
+
   if (result.success) {
     ctx.status = 200;
     ctx.body = result;
   } else {
     ctx.status = 400;
     ctx.body = result;
+  }
+};
+exports.googleLogin = async (ctx) => {
+  const { idToken } = ctx.request.body;
+
+  if (!idToken) {
+    ctx.status = 400;
+    ctx.body = { success: false, message: "Missing idToken" };
+    return;
+  }
+
+  try {
+    // Verify token từ Google
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    const email = payload.email;
+    const name = payload.name;
+    const googleId = payload.sub;
+
+    // Kiểm tra account tồn tại chưa
+    let account = await getAccountByUsername(email);
+
+    if (account.success === false) {
+      const newAcc = {
+        username: email,
+        password: `google_${googleId}`,
+      };
+
+      account = await createAccount(newAcc);
+
+      await createPlayer(email);
+      await createProfile({ username: email, nickname: name, email });
+    }
+
+    const token = jwt.sign(
+      { id: account._id, username: account.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "6h" }
+    );
+
+    ctx.body = {
+      success: true,
+      message: "Google login successful",
+      token,
+      user: {
+        id: account._id,
+        username: account.username,
+        email,
+        nickname: name,
+      },
+    };
+  } catch (err) {
+    console.log(err);
+    ctx.status = 401;
+    ctx.body = { success: false, message: "Invalid Google token" };
   }
 };
