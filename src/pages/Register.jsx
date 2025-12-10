@@ -1,40 +1,74 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Palette, Users, LogIn, Globe, Volume2, Settings } from "lucide-react";
+import { Palette, Users, LogIn, Globe, Volume2, Settings, Loader } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDiscord } from "@fortawesome/free-brands-svg-icons";
+import { authApi } from "@/lib/api";
 
 const Register = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [nickname, setNickname] = useState("");
   const [regError, setRegError] = useState("");
   const [regTab, setRegTab] = useState("account");
+  const [isLoading, setIsLoading] = useState(false);
+  const [touched, setTouched] = useState({
+    username: false,
+    password: false,
+    confirmPassword: false,
+  });
   const navigate = useNavigate();
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     setRegError("");
     if (!username.trim()) {
-      setRegError("Nickname is required");
+      setRegError("Tên đăng nhập là bắt buộc");
       return;
     }
     if (!email.trim()) {
-      setRegError("Email is required");
+      setRegError("Email là bắt buộc");
       return;
     }
     if (password.length < 4) {
-      setRegError("Password must be at least 4 characters");
+      setRegError("Mật khẩu phải có ít nhất 4 ký tự");
       return;
     }
     if (password !== confirmPassword) {
-      setRegError("Passwords do not match");
+      setRegError("Mật khẩu không khớp");
       return;
     }
 
-    // No backend in this template — proceed to lobby for now
-    navigate("/lobby");
+    setIsLoading(true);
+    try {
+      const result = await authApi.signup(username, password, email, nickname || username);
+      
+      if (result.success) {
+        // Nếu signup thành công, tự động login
+        const loginResult = await authApi.login(username, password);
+        
+        if (loginResult.success) {
+          localStorage.setItem("authToken", loginResult.token);
+          localStorage.setItem("user", JSON.stringify(loginResult.user));
+          localStorage.setItem("isLoggedIn", "true");
+          
+          navigate("/lobby");
+        } else {
+          setRegError("Đăng ký thành công! Vui lòng đăng nhập bằng tài khoản của bạn.");
+          // Redirect tới login page sau 2 giây
+          setTimeout(() => navigate("/login"), 2000);
+        }
+      } else {
+        setRegError(result.message || "Đăng ký thất bại");
+      }
+    } catch (error) {
+      setRegError("Lỗi kết nối. Vui lòng thử lại.");
+      console.error("Register error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -45,7 +79,7 @@ const Register = () => {
           <h1 className="text-6xl font-extrabold text-foreground">Gartic</h1>
         </div>
         <p className="text-xl text-muted-foreground font-semibold">
-          Draw, Guess & Have Fun with Friends!
+          Vẽ, Đoán & Vui cùng bạn bè!
         </p>
       </div>
 
@@ -54,7 +88,7 @@ const Register = () => {
           <div className="bg-card p-6 rounded-lg shadow-md">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Users className="w-6 h-6" /> Register
+                <Users className="w-6 h-6" /> Đăng Ký
               </h2>
               {/* Tabs nav */}
               <div className="inline-flex rounded-full bg-transparent p-1 shadow-sm">
@@ -67,7 +101,7 @@ const Register = () => {
                       : "text-muted-foreground bg-card")
                   }
                 >
-                  Account
+                  Tài khoản
                 </button>
                 <button
                   onClick={() => setRegTab("social")}
@@ -78,49 +112,111 @@ const Register = () => {
                       : "text-muted-foreground bg-card")
                   }
                 >
-                  Social
+                  Mạng xã hội
                 </button>
               </div>
             </div>
 
             <div className="relative">
               <div
-                className={`${
+                className={`transition-all duration-100 ${
                   regTab === "account" ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 pointer-events-none absolute inset-0"
                 }`}
               >
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="input-rounded w-full text-center text-lg mb-3"
-                  maxLength={20}
-                />
+                {/* Username Field */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1 text-left">
+                    Tên đăng nhập <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nhập tên đăng nhập"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    onFocus={() => setTouched({ ...touched, username: true })}
+                    className="input-rounded w-full text-center text-lg"
+                    maxLength={20}
+                    autoComplete="off"
+                  />
+                  {touched.username && !username.trim() && (
+                    <p className="text-xs text-red-500 mt-1 text-left">
+                      Tên đăng nhập là bắt buộc
+                    </p>
+                  )}
+                </div>
 
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="input-rounded w-full text-center text-lg mb-3"
-                />
+                {/* Nickname Field */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1 text-left">
+                    Biệt danh (không bắt buộc)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nhập biệt danh hiển thị"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    className="input-rounded w-full text-center text-lg"
+                    maxLength={20}
+                    autoComplete="off"
+                  />
+                </div>
 
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-rounded w-full text-center text-lg mb-3"
-                />
+                {/* Email Field */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1 text-left">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="Nhập email của bạn"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input-rounded w-full text-center text-lg"
+                    autoComplete="off"
+                  />
+                </div>
 
-                <input
-                  type="password"
-                  placeholder="Confirm password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="input-rounded w-full text-center text-lg mb-3"
-                />
+                {/* Password Field */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1 text-left">
+                    Mật khẩu <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Nhập mật khẩu"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setTouched({ ...touched, password: true })}
+                    className="input-rounded w-full text-center text-lg"
+                    autoComplete="new-password"
+                  />
+                  {touched.password && !password.trim() && (
+                    <p className="text-xs text-red-500 mt-1 text-left">
+                      Mật khẩu là bắt buộc
+                    </p>
+                  )}
+                </div>
+
+                {/* Confirm Password Field */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium mb-1 text-left">
+                    Xác nhận mật khẩu <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Xác nhận mật khẩu"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onFocus={() => setTouched({ ...touched, confirmPassword: true })}
+                    className="input-rounded w-full text-center text-lg"
+                    autoComplete="new-password"
+                  />
+                  {touched.confirmPassword && !confirmPassword.trim() && (
+                    <p className="text-xs text-red-500 mt-1 text-left">
+                      Xác nhận mật khẩu là bắt buộc
+                    </p>
+                  )}
+                </div>
 
                 {regError && (
                   <p className="text-sm text-red-500 mb-2 text-center">
@@ -132,15 +228,21 @@ const Register = () => {
                   variant="primary"
                   size="md"
                   onClick={handleRegister}
-                  className="w-full"
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-2"
                 >
-                  Register & Play
+                  {isLoading && <Loader className="w-4 h-4 animate-spin" />}
+                  {isLoading ? "Đang đăng ký..." : "Đăng Ký & Chơi"}
                 </GameButton>
 
-                <p className="mt-3 text-xs text-muted-foreground text-center">
-                  By registering you agree to the local template behaviour. This
-                  is a frontend-only placeholder — integrate a backend to
-                  persist accounts.
+                <p className="text-center text-sm text-muted-foreground mt-3">
+                  Đã có tài khoản?{" "}
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="text-primary font-semibold hover:underline"
+                  >
+                    Đăng nhập tại đây
+                  </button>
                 </p>
               </div>
 
@@ -151,7 +253,7 @@ const Register = () => {
               >
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground text-center mb-2">
-                    Use your Google or Discord account to quickly sign up.
+                    Sử dụng tài khoản Google hoặc Discord để đăng ký nhanh chóng.
                   </p>
 
                   <GameButton
@@ -183,20 +285,20 @@ const Register = () => {
                         fill="#EA4335"
                       />
                     </svg>
-                    <span>Sign up with Google</span>
+                    <span>Đăng ký với Google</span>
                   </GameButton>
 
                   <GameButton
                     className="w-full flex items-center justify-center gap-3 bg-indigo-600 text-white hover:bg-indigo-700"
                     onClick={() => navigate("/lobby")}
-                    aria-label="Sign up with Discord"
+                    aria-label="Đăng ký với Discord"
                   >
                     <FontAwesomeIcon icon={faDiscord} className="w-5 h-5" />
-                    <span>Sign up with Discord</span>
+                    <span>Đăng ký với Discord</span>
                   </GameButton>
 
                   <p className="mt-2 text-xs text-muted-foreground text-center">
-                    No backend connected — these are placeholders.
+                    Chưa kết nối backend — đây là phần giữ chỗ.
                   </p>
                 </div>
               </div>

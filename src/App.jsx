@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "@/components/Layout";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 import Home from "./pages/Home";
 import Lobby from "./pages/Lobby";
@@ -44,16 +45,16 @@ const App = () => {
             <Route path="/register" element={<Register />} />
 
             <Route element={<Layout />}>
-              <Route path="/rooms" element={<RoomList />} />
-              <Route path="/lobby" element={<Lobby />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/results" element={<Results />} />
-              <Route path="/create/room" element={<CreateRoom />} />
-              <Route path="/create/theme" element={<CreateTheme />} />
+              <Route path="/rooms" element={<ProtectedRoute element={<RoomList />} />} />
+              <Route path="/lobby" element={<ProtectedRoute element={<Lobby />} />} />
+              <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
+              <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
+              <Route path="/results" element={<ProtectedRoute element={<Results />} />} />
+              <Route path="/create/room" element={<ProtectedRoute element={<CreateRoom />} />} />
+              <Route path="/create/theme" element={<ProtectedRoute element={<CreateTheme />} />} />
             </Route>
 
-            <Route path="/game" element={<Game />} />
+            <Route path="/game" element={<ProtectedRoute element={<Game />} />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

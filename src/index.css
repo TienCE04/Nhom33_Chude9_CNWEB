@@ -110,7 +110,7 @@ All colors MUST be HSL.
   }
 
   .input-rounded {
-    @apply rounded-xl border-2 border-border bg-input px-4 py-3;
+    @apply rounded-xl border-2 border-border bg-input px-4 py-3 h-[45px];
     @apply focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent;
     @apply transition-all duration-200;
   }

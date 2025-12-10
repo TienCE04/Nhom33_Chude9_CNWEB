@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Palette, Users, LogIn, Globe, Volume2, Settings } from "lucide-react";
+import { Palette, Users, LogIn, Globe, Volume2, Settings, Loader } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDiscord } from "@fortawesome/free-brands-svg-icons";
+import { authApi } from "@/lib/api";
 
 const Login = () => {
   const [nicknameLogin, setNicknameLogin] = useState("");
@@ -11,6 +12,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [regTab, setRegTab] = useState("account");
   const [loginError, setLoginError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handlePlayNow = () => {
@@ -32,24 +34,42 @@ const Login = () => {
     }
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     setLoginError("");
     if (!username.trim()) {
-      setLoginError("Username is required");
+      setLoginError("Tên đăng nhập là bắt buộc");
       return;
     }
     if (!password.trim()) {
-      setLoginError("Password is required");
+      setLoginError("Mật khẩu là bắt buộc");
       return;
     }
     if (password.length < 4) {
-      setLoginError("Password must be at least 4 characters");
+      setLoginError("Mật khẩu phải có ít nhất 4 ký tự");
       return;
     }
 
-    // No backend in this template — proceed to lobby for now
-    localStorage.setItem("isLoggedIn", "true");
-    navigate("/lobby");
+    setIsLoading(true);
+    try {
+      const result = await authApi.login(username, password);
+      
+      if (result.success) {
+        // Lưu token và user info
+        localStorage.setItem("authToken", result.token);
+        localStorage.setItem("user", JSON.stringify(result.user));
+        localStorage.setItem("isLoggedIn", "true");
+        
+        // Redirect tới lobby
+        navigate("/lobby");
+      } else {
+        setLoginError(result.message || "Đăng nhập thất bại");
+      }
+    } catch (error) {
+      setLoginError("Lỗi kết nối. Vui lòng thử lại.");
+      console.error("Login error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -60,7 +80,7 @@ const Login = () => {
           <h1 className="text-6xl font-extrabold text-foreground">Gartic</h1>
         </div>
         <p className="text-xl text-muted-foreground font-semibold">
-          Draw, Guess & Have Fun with Friends!
+          Vẽ, Đoán & Vui cùng bạn bè!
         </p>
       </div>
 
@@ -69,12 +89,12 @@ const Login = () => {
           {/* Guess Block */}
           <div className="bg-card p-6 rounded-lg shadow-md flex flex-col">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <LogIn className="w-6 h-6" />Guess
+              <LogIn className="w-6 h-6" />Đoán
             </h2>
             <div className="flex flex-col justify-center flex-1">
               <input
                 type="text"
-                placeholder="Enter your nickname..."
+                placeholder="Nhập biệt danh của bạn..."
                 value={nicknameLogin}
                 onChange={(e) => setNicknameLogin(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handlePlayNow()}
@@ -90,7 +110,7 @@ const Login = () => {
                   disabled={!nicknameLogin.trim()}
                   className="w-full"
                 >
-                  Play Now
+                  Chơi Ngay
                 </GameButton>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -102,7 +122,7 @@ const Login = () => {
                     className="w-full"
                   >
                     <Users className="w-5 h-5 mr-2" />
-                    Create Room
+                    Tạo Phòng
                   </GameButton>
 
                   <GameButton
@@ -113,7 +133,7 @@ const Login = () => {
                     className="w-full"
                   >
                     <LogIn className="w-5 h-5 mr-2" />
-                    Join Room
+                    Tham Gia Phòng
                   </GameButton>
                 </div>
               </div>
@@ -124,7 +144,7 @@ const Login = () => {
           <div className="bg-card p-6 rounded-lg shadow-md">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Users className="w-6 h-6" /> Login
+                <Users className="w-6 h-6" /> Đăng Nhập
               </h2>
               {/* Tabs nav */}
               <div className="inline-flex rounded-full bg-transparent p-1 shadow-sm">
@@ -137,7 +157,7 @@ const Login = () => {
                       : "text-muted-foreground bg-card")
                   }
                 >
-                  Account
+                  Tài khoản
                 </button>
                 <button
                   onClick={() => setRegTab("social")}
@@ -148,7 +168,7 @@ const Login = () => {
                       : "text-muted-foreground bg-card")
                   }
                 >
-                  Social
+                  Mạng xã hội
                 </button>
               </div>
             </div>
@@ -161,19 +181,21 @@ const Login = () => {
               >
                 <input
                   type="text"
-                  placeholder="Username"
+                  placeholder="Tên đăng nhập"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="input-rounded w-full text-center text-lg mb-3"
                   maxLength={20}
+                  autoComplete="off"
                 />
 
                 <input
                   type="password"
-                  placeholder="Password"
+                  placeholder="Mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="input-rounded w-full text-center text-lg mb-3"
+                  autoComplete="current-password"
                 />
 
                 {loginError && (
@@ -186,18 +208,20 @@ const Login = () => {
                   variant="primary"
                   size="md"
                   onClick={handleLogin}
-                  className="w-full"
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-2"
                 >
-                  Login to Play
+                  {isLoading && <Loader className="w-4 h-4 animate-spin" />}
+                  {isLoading ? "Đang đăng nhập..." : "Đăng Nhập để Chơi"}
                 </GameButton>
 
                 <p className="text-center text-sm text-muted-foreground mt-3">
-                  Don't have an account?{" "}
+                  Chưa có tài khoản?{" "}
                   <button
                     onClick={() => navigate("/register")}
                     className="text-primary font-semibold hover:underline"
                   >
-                    Register here
+                    Đăng ký tại đây
                   </button>
                 </p>
               </div>
@@ -211,7 +235,7 @@ const Login = () => {
                   <GameButton
                     className="w-full flex items-center justify-center gap-3 bg-white text-slate-800 border border-slate-200 hover:shadow-md"
                     onClick={() => navigate("/lobby")}
-                    aria-label="Sign up with Google"
+                    aria-label="Đăng nhập với Google"
                   >
                     {/* Google SVG */}
                     <svg
@@ -237,16 +261,16 @@ const Login = () => {
                         fill="#EA4335"
                       />
                     </svg>
-                    <span>Sign in with Google</span>
+                    <span>Đăng nhập với Google</span>
                   </GameButton>
 
                   <GameButton
                     className="w-full flex items-center justify-center gap-3 bg-indigo-600 text-white hover:bg-indigo-700"
                     onClick={() => navigate("/lobby")}
-                    aria-label="Sign up with Discord"
+                    aria-label="Đăng nhập với Discord"
                   >
                     <FontAwesomeIcon icon={faDiscord} className="w-5 h-5" />
-                    <span>Sign in with Discord</span>
+                    <span>Đăng nhập với Discord</span>
                   </GameButton>
                 </div>
               </div>
