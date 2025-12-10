@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Palette, Users, LogIn, Globe, Volume2, Settings, Loader } from "lucide-react";
+import { Palette, Users, LogIn, Loader, Globe, Volume2, Settings } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
+import { authApi } from "@/lib/api";
+import { useGoogleLogin } from "@react-oauth/google";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDiscord } from "@fortawesome/free-brands-svg-icons";
-import { authApi } from "@/lib/api";
 
 const Login = () => {
   const [nicknameLogin, setNicknameLogin] = useState("");
@@ -14,6 +15,35 @@ const Login = () => {
   const [loginError, setLoginError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoginError("");
+      setIsLoading(true);
+      try {
+        // Gọi API backend với access token từ Google
+        const result = await authApi.googleLogin(tokenResponse.access_token);
+
+        if (result.success) {
+          localStorage.setItem("authToken", result.token);
+          localStorage.setItem("user", JSON.stringify(result.user));
+          localStorage.setItem("isLoggedIn", "true");
+          navigate("/lobby");
+        } else {
+          setLoginError(result.message || "Đăng nhập Google thất bại");
+        }
+      } catch (error) {
+        setLoginError("Lỗi kết nối. Vui lòng thử lại.");
+        console.error("Google login error:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.error("Google Login Failed:", error);
+      setLoginError("Đăng nhập Google thất bại");
+    },
+  });
 
   const handlePlayNow = () => {
     if (nicknameLogin.trim()) {
@@ -233,8 +263,9 @@ const Login = () => {
               >
                 <div className="space-y-3">
                   <GameButton
-                    className="w-full flex items-center justify-center gap-3 bg-white text-slate-800 border border-slate-200 hover:shadow-md"
-                    onClick={() => navigate("/lobby")}
+                    className="w-full flex items-center justify-center gap-3 bg-white text-slate-800 border border-slate-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => googleLogin()}
+                    disabled={isLoading}
                     aria-label="Đăng nhập với Google"
                   >
                     {/* Google SVG */}
@@ -243,12 +274,7 @@ const Login = () => {
                       viewBox="0 0 533.5 544.3"
                       xmlns="http://www.w3.org/2000/svg"
                       aria-hidden
-                    >
-                      <path
-                        d="M533.5 278.4c0-17.4-1.4-34.2-4.1-50.4H272v95.2h147.1c-6.3 34-25 62.8-53.5 82.1v68.1h86.4c50.6-46.6 80-115.2 80-195z"
-                        fill="#4285F4"
-                      />
-                      <path
+                    > <path
                         d="M272 544.3c72.7 0 133.8-24 178.5-65.5l-86.4-68.1c-24.1 16.2-55 25.7-92.1 25.7-71 0-131-47.9-152.3-112.2H30.2v70.2C74.8 489.9 168 544.3 272 544.3z"
                         fill="#34A853"
                       />

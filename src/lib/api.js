@@ -1,4 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
 
 // Auth API calls
 export const authApi = {
@@ -17,7 +18,7 @@ export const authApi = {
       if (!response.ok) {
         return {
           success: false,
-          message: data.message || "Login failed",
+          message: data.message || "Đăng nhập thất bại",
         };
       }
 
@@ -25,7 +26,35 @@ export const authApi = {
     } catch (error) {
       return {
         success: false,
-        message: error.message || "Network error",
+        message: error.message || "Lỗi kết nối",
+      };
+    }
+  },
+
+  googleLogin: async (token) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/google-login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || "Đăng nhập Google thất bại",
+        };
+      }
+
+      return data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Lỗi kết nối",
       };
     }
   },
@@ -45,7 +74,7 @@ export const authApi = {
       if (!response.ok) {
         return {
           success: false,
-          message: data.message || "Signup failed",
+          message: data.message || "Đăng ký thất bại",
         };
       }
 
@@ -53,7 +82,7 @@ export const authApi = {
     } catch (error) {
       return {
         success: false,
-        message: error.message || "Network error",
+        message: error.message || "Lỗi kết nối",
       };
     }
   },
@@ -75,6 +104,10 @@ export const authApi = {
 
   isAuthenticated: () => {
     return !!localStorage.getItem("authToken");
+  },
+
+  getGoogleClientId: () => {
+    return GOOGLE_CLIENT_ID;
   },
 };
 
