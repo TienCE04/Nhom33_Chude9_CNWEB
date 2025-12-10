@@ -111,4 +111,124 @@ export const authApi = {
   },
 };
 
+export const roomApi = {
+  getRooms: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/rooms`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          // Add Authorization header if needed, though listRooms seems public based on router
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || "Không thể tải danh sách phòng",
+          rooms: [],
+        };
+      }
+
+      return data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Lỗi kết nối",
+        rooms: [],
+      };
+    }
+  },
+
+  createRoom: async (roomData) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/rooms`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(roomData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || "Không thể tạo phòng",
+        };
+      }
+
+      return data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Lỗi kết nối",
+      };
+    }
+  },
+};
+
+export const topicApi = {
+  getDefaultTopics: async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/topic/default`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || "Failed to fetch default topics",
+          data: [],
+        };
+      }
+
+      return data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Connection error",
+        data: [],
+      };
+    }
+  },
+
+  getUserTopics: async (username) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/topic/${username}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          message: data.message || "Failed to fetch user topics",
+          data: [],
+        };
+      }
+
+      return data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message || "Connection error",
+        data: [],
+      };
+    }
+  },
+};
+
 export default authApi;

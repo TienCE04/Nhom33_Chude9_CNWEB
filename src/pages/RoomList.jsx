@@ -1,65 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, Trophy, Hash, Gamepad2, ArrowRight, Plus } from "lucide-react";
+import { ArrowLeft, Users, Trophy, Hash, Gamepad2, ArrowRight, Plus, Loader } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
-
-// Mock data for rooms
-const MOCK_ROOMS = [
-  {
-    id: "1",
-    topic: "Animals",
-    topicAvatar: "🦁",
-    roomCode: "GAME-1234",
-    currentPlayers: 3,
-    maxPlayers: 6,
-    maxPoints: 1000,
-  },
-  {
-    id: "2",
-    topic: "Food",
-    topicAvatar: "🍕",
-    roomCode: "GAME-5678",
-    currentPlayers: 5,
-    maxPlayers: 6,
-    maxPoints: 1500,
-  },
-  {
-    id: "3",
-    topic: "Objects",
-    topicAvatar: "🚗",
-    roomCode: "GAME-9012",
-    currentPlayers: 2,
-    maxPlayers: 8,
-    maxPoints: 2000,
-  },
-  {
-    id: "4",
-    topic: "Nature",
-    topicAvatar: "🌲",
-    roomCode: "GAME-3456",
-    currentPlayers: 6,
-    maxPlayers: 6,
-    maxPoints: 1200,
-  },
-  {
-    id: "5",
-    topic: "Sports",
-    topicAvatar: "⚽",
-    roomCode: "GAME-7890",
-    currentPlayers: 4,
-    maxPlayers: 8,
-    maxPoints: 1800,
-  },
-  {
-    id: "6",
-    topic: "Technology",
-    topicAvatar: "💻",
-    roomCode: "GAME-2468",
-    currentPlayers: 1,
-    maxPlayers: 4,
-    maxPoints: 1000,
-  },
-];
+import { roomApi } from "@/lib/api";
 
 // Material Icon mapping for room topics (simple mapping for displayed topics)
 const TOPIC_ICONS = {
@@ -76,26 +19,72 @@ const MaterialIcon = ({ iconName, className = "" }) => (
   <span className={`material-symbols-rounded ${className}`}>{iconName}</span>
 );
 
-// Add status to rooms
-const MOCK_ROOMS_WITH_STATUS = MOCK_ROOMS.map(room => ({
-  ...room,
-  status: room.currentPlayers >= room.maxPlayers ? "Đã đầy" : "Sẵn sàng"
-}));
-
 const RoomList = () => {
   const navigate = useNavigate();
-  const [rooms] = useState(MOCK_ROOMS_WITH_STATUS);
+  const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetchRooms();
+  }, []);
+
+  const fetchRooms = async () => {
+    setIsLoading(true);
+    try {
+      const result = await roomApi.getRooms();
+      if (result.success) {
+        const mappedRooms = result.rooms.map((room) => ({
+          id: room.id,
+          topic: room.name,
+          topicIcon: room.metadata?.topicIcon || "category",
+          roomCode: room.id.substring(0, 8).toUpperCase(),
+          currentPlayers: room.currentPlayers || 0,
+          maxPlayers: room.maxPlayer,
+          maxPoints: room.maxScore,
+          status: (room.currentPlayers || 0) >= room.maxPlayer ? "Đã đầy" : "Sẵn sàng",
+        }));
+        setRooms(mappedRooms);
+      } else {
+        setError(result.message || "Không thể tải danh sách phòng");
+      }
+    } catch (err) {
+      setError("Lỗi kết nối");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getAvatarForTopic = (topic) => {
+    const avatars = {
+      Animals: "🦁",
+      Food: "🍕",
+      Objects: "🚗",
+      Nature: "🌲",
+      Sports: "⚽",
+      Technology: "💻",
+    };
+    return avatars[topic] || "🎮";
+  };
 
   const handleJoinRoom = () => {
     if (selectedRoom) {
-      navigate(`/lobby?room=${selectedRoom.roomCode}`);
+      navigate(`/lobby?room=${selectedRoom.id}`);
     }
   };
 
   const handleCreateRoom = () => {
     navigate("/create/room");
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-4">
@@ -128,6 +117,14 @@ const RoomList = () => {
           </div>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong className="font-bold">Lỗi!</strong>
+            <span className="block sm:inline"> {error}</span>
+          </div>
+        )}
+
         {/* Room Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 bg-white p-4 rounded-lg shadow-sm">
           {rooms.map((room) => (
@@ -155,21 +152,21 @@ const RoomList = () => {
                 <div className="w-24 h-24 rounded-full flex items-center justify-center border-2 border-border shadow-sm">
                   <div className="w-20 h-20 rounded-full flex items-center justify-center transition-all duration-200 bg-primary/20">
                     <MaterialIcon
-                      iconName={TOPIC_ICONS[room.topic] || "palette"}
+                      iconName={room.topicIcon || "category"}
                       className="text-3xl text-primary"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center gap-2">
                 {/* Topic Name */}
                 <h3 className="text-xl font-bold text-center mb-4">
                   {room.topic}
                 </h3>
 
                 {/* Room Code */}
-                <div className="flex items-center justify-center gap-2 mb-4">
+                <div className="flex items-center justify-center mb-4">
                   <Hash className="w-4 h-4 text-muted-foreground" />
                   <code className="bg-primary/20 px-3 py-1.5 rounded-lg font-mono font-semibold text-sm">
                     {room.roomCode}

@@ -1,21 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Gamepad2, Plus } from "lucide-react";
+import { ArrowLeft, Gamepad2, Plus, Loader } from "lucide-react";
 import { GameButton } from "../components/GameButton";
 import { Select } from "antd";
+import { topicApi, authApi, roomApi } from "@/lib/api";
+import { toast } from "sonner";
 
 // Material Icon mapping
 const TOPIC_ICONS = {
   "Động vật": "cruelty_free",
+  "Animals": "cruelty_free",
   "Công nghệ": "laptop_mac",
+  "Technology": "laptop_mac",
   "Thiên nhiên": "nature",
+  "Nature": "nature",
   "Thực phẩm": "cookie",
+  "Food": "cookie",
   "Thể thao": "sports_soccer",
+  "Sports": "sports_soccer",
   "Điện ảnh": "videocam",
+  "Movies": "videocam",
   "Âm nhạc": "queue_music",
+  "Music": "queue_music",
   "Du lịch": "flight",
+  "Travel": "flight",
   "Nghệ thuật": "palette",
+  "Art": "palette",
   "Trò chơi": "sports_esports",
+  "Games": "sports_esports",
+  "General": "category",
+  "Chung": "category"
 };
 
 // Material Icon Component
@@ -30,28 +44,72 @@ const CreateRoom = () => {
   const [maxPlayers, setMaxPlayers] = useState("6");
   const [targetScore, setTargetScore] = useState("100");
   const [selectedTopic, setSelectedTopic] = useState(null);
+  const [topics, setTopics] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
 
-  // Mock topics data
-  const topics = [
-    { id: 1, name: "Động vật" },
-    { id: 2, name: "Công nghệ" },
-    { id: 3, name: "Thiên nhiên" },
-    { id: 4, name: "Thực phẩm" },
-    { id: 5, name: "Thể thao" },
-    { id: 6, name: "Điện ảnh" },
-    { id: 7, name: "Âm nhạc" },
-    { id: 8, name: "Du lịch" },
-    { id: 9, name: "Nghệ thuật" },
-    { id: 10, name: "Trò chơi" },
-  ];
+  useEffect(() => {
+    const fetchTopics = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch default topics
+        const defaultTopicsRes = await topicApi.getDefaultTopics();
+        let allTopics = defaultTopicsRes.success ? defaultTopicsRes.data : [];
 
-  const handleCreateRoom = () => {
+        // Fetch user topics if logged in
+        const user = authApi.getUser();
+        if (user && user.username) {
+          const userTopicsRes = await topicApi.getUserTopics(user.username);
+          if (userTopicsRes.success) {
+            allTopics = [...allTopics, ...userTopicsRes.data];
+          }
+        }
+        
+        // Map to ensure we have necessary fields and handle duplicates if any
+        // For now just setting them directly
+        setTopics(allTopics);
+      } catch (error) {
+        console.error("Error fetching topics:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTopics();
+  }, []);
+  const handleCreateRoom = async () => {
     if (!selectedTopic) {
-      alert("Vui lòng chọn một chủ đề");
+      toast.error("Vui lòng chọn một chủ đề");
       return;
     }
-    console.log({ maxPlayers, targetScore, selectedTopic });
-    navigate("/lobby");
+
+    setIsCreating(true);
+    try {
+      const roomData = {
+        name: selectedTopic.nameTopic,
+        maxPlayer: parseInt(maxPlayers),
+        maxScore: parseInt(targetScore),
+        metadata: {
+          topicId: selectedTopic._id || selectedTopic.idTopic,
+          topicIcon: selectedTopic.topicIcon || "category",
+        },
+      };
+
+      const result = await roomApi.createRoom(roomData);
+
+      if (result.success) {
+        toast.success("Tạo phòng thành công!");
+        // Navigate to lobby with the new room ID
+        navigate(`/lobby?room=${result.room.id}`);
+      } else {
+        toast.error(result.message || "Tạo phòng thất bại");
+      }
+    } catch (error) {
+      console.error("Create room error:", error);
+      toast.error("Lỗi kết nối");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -154,55 +212,67 @@ const CreateRoom = () => {
 
           {/* Topics Grid with Internal Scroll */}
           <div className="flex-1 overflow-y-auto mb-6 p-2">
-            <div className="flex flex-wrap gap-4">
-              {topics.map((topic) => (
-                <button
-                  key={topic.id}
-                  onClick={() => setSelectedTopic(topic)}
-                  className={`
-                    w-32 h-32 border-2 border-border flex flex-col items-center justify-center gap-3 rounded-xl
-                    transition-all duration-500
-                    hover:scale-105
-                    ${
-                      selectedTopic?.id === topic.id
-                        ? "bg-primary border-primary shadow-[0_8px_24px_hsl(210_60%_70%_/_0.25)]"
-                        : "bg-card hover:bg-muted/30"
-                    }
-                  `}
-                >
-                  <div
-                    className={`
-                      w-16 h-16 rounded-full
-                      flex items-center justify-center
-                      transition-colors duration-200
-                      ${
-                        selectedTopic?.id === topic.id
-                          ? "bg-white"
-                          : "bg-primary/20"
-                      }
-                    `}
-                  >
-                    <MaterialIcon
-                      iconName={TOPIC_ICONS[topic.name]}
-                      className={`text-3xl ${
-                        selectedTopic?.id === topic.id
-                          ? "text-primary"
-                          : "text-primary"
-                      }`}
-                    />
+            {isLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader className="w-10 h-10 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-4">
+                {topics.length > 0 ? (
+                  topics.map((topic) => (
+                    <button
+                      key={topic._id || topic.idTopic}
+                      onClick={() => setSelectedTopic(topic)}
+                      className={`
+                        w-32 h-32 border-2 border-border flex flex-col items-center justify-center gap-3 rounded-xl
+                        transition-all duration-500
+                        hover:scale-105
+                        ${
+                          selectedTopic?._id === topic._id || selectedTopic?.idTopic === topic.idTopic
+                            ? "bg-primary border-primary shadow-[0_8px_24px_hsl(210_60%_70%_/_0.25)]"
+                            : "bg-card hover:bg-muted/30"
+                        }
+                      `}
+                    >
+                      <div
+                        className={`
+                          w-16 h-16 rounded-full
+                          flex items-center justify-center
+                          transition-colors duration-200
+                          ${
+                            selectedTopic?._id === topic._id || selectedTopic?.idTopic === topic.idTopic
+                              ? "bg-white"
+                              : "bg-primary/20"
+                          }
+                        `}
+                      >
+                        <MaterialIcon
+                          iconName={TOPIC_ICONS[topic.nameTopic] || "category"}
+                          className={`text-3xl ${
+                            selectedTopic?._id === topic._id || selectedTopic?.idTopic === topic.idTopic
+                              ? "text-primary"
+                              : "text-primary"
+                          }`}
+                        />
+                      </div>
+                      <span
+                        className={`font-semibold text-center text-md line-clamp-2 px-2 ${
+                          selectedTopic?._id === topic._id || selectedTopic?.idTopic === topic.idTopic
+                            ? "text-primary-foreground"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {topic.nameTopic}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="w-full text-center text-muted-foreground py-10">
+                    Không có chủ đề nào. Hãy tạo chủ đề mới!
                   </div>
-                  <span
-                    className={`font-semibold text-center text-md line-clamp-2 ${
-                      selectedTopic?.id === topic.id
-                        ? "text-primary-foreground"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {topic.name}
-                  </span>
-                </button>
-              ))}
-            </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Create Button */}
@@ -219,10 +289,11 @@ const CreateRoom = () => {
               variant="success"
               size="lg"
               onClick={handleCreateRoom}
-              disabled={!selectedTopic}
-              className="flex-1"
+              disabled={!selectedTopic || isCreating}
+              className="flex-1 flex items-center justify-center gap-2"
             >
-              Tạo phòng
+              {isCreating && <Loader className="w-5 h-5 animate-spin" />}
+              {isCreating ? "Đang tạo..." : "Tạo phòng"}
             </GameButton>
           </div>
         </div>
