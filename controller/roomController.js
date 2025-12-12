@@ -44,7 +44,6 @@ exports.createRoom = async (ctx) => {
   await redis.expire(key, 60 * 60);
 
   const io = getIO();
-  io.to(id).emit("room_updated", { action: "created", room: data });
   io.emit("room_created", data); 
 
 
