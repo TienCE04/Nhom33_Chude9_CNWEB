@@ -28,7 +28,7 @@ const Login = () => {
           localStorage.setItem("authToken", result.token);
           localStorage.setItem("user", JSON.stringify(result.user));
           localStorage.setItem("isLoggedIn", "true");
-          navigate("/lobby");
+          navigate("/rooms");
         } else {
           setLoginError(result.message || "Đăng nhập Google thất bại");
         }
@@ -90,7 +90,7 @@ const Login = () => {
         localStorage.setItem("isLoggedIn", "true");
         
         // Redirect tới lobby
-        navigate("/lobby");
+        navigate("/rooms");
       } else {
         setLoginError(result.message || "Đăng nhập thất bại");
       }

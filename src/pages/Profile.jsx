@@ -1,10 +1,64 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit2, Save, X, User, Mail, Lock, Calendar, Trophy, Award, Medal, Camera, Gamepad2, Brush, MessageSquare, Target } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, User, Mail, Lock, Calendar, Trophy, Award, Medal, Camera, Gamepad2, Brush, MessageSquare, Target, Loader } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
+import ChangePasswordModal from "@/components/ChangePasswordModal";
+import { playerApi, authApi } from "@/lib/api";
+import { toast } from "sonner";
 
 const Profile = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const user = authApi.getUser();
+      if (!user || !user.username) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const result = await playerApi.getPlayer(user.username);
+        
+        if (result.success) {
+          const { data } = result;
+          const profile = data.profile || {};
+          
+          // Update Personal Info
+          setFullName(profile.nickname || user.username);
+          setAvatar(profile.avatar || "");
+          // dateOfBirth is not in backend
+          
+          // Update Account Info
+          setUsername(user.username);
+          setEmail(profile.email || "");
+          
+          // Update Achievements (Player stats)
+          setRanking(data.rank || 0);
+          setGoldMedals(data.first || 0);
+          setSilverMedals(data.second || 0);
+          setBronzeMedals(data.third || 0);
+          
+          // Update Game Statistics (Mocking missing data for now or using available)
+          setTotalGames(0); // Not available in backend
+          setWordsDrawn(0); // Not available in backend
+          setWordsGuessed(0); // Not available in backend
+          setGuessAccuracy(0); // Not available in backend
+        } else {
+          toast.error(result.message || "Failed to load profile");
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        toast.error("Error loading profile");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [navigate]);
   
   // Editing states - separate for each block
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
@@ -15,38 +69,41 @@ const Profile = () => {
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [tempAvatar, setTempAvatar] = useState(""); // Temporary avatar for modal editing
   
+  // Change Password Modal state
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+
   // Personal Information
-  const [fullName, setFullName] = useState("Nguyễn Văn A");
-  const [dateOfBirth, setDateOfBirth] = useState("1990-01-15");
+  const [fullName, setFullName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [avatar, setAvatar] = useState(""); // Avatar URL or base64
   
   // Account Information
-  const [username, setUsername] = useState("nguyenvana");
-  const [email, setEmail] = useState("nguyenvana@example.com");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   
   // Achievement Information (read-only)
-  const [ranking, setRanking] = useState(42);
-  const [goldMedals, setGoldMedals] = useState(5);
-  const [silverMedals, setSilverMedals] = useState(12);
-  const [bronzeMedals, setBronzeMedals] = useState(8);
+  const [ranking, setRanking] = useState(0);
+  const [goldMedals, setGoldMedals] = useState(0);
+  const [silverMedals, setSilverMedals] = useState(0);
+  const [bronzeMedals, setBronzeMedals] = useState(0);
 
   // Game Statistics (read-only)
-  const [totalGames, setTotalGames] = useState(150);
-  const [wordsDrawn, setWordsDrawn] = useState(450);
-  const [wordsGuessed, setWordsGuessed] = useState(320);
-  const [guessAccuracy, setGuessAccuracy] = useState(85);
+  const [totalGames, setTotalGames] = useState(0);
+  const [wordsDrawn, setWordsDrawn] = useState(0);
+  const [wordsGuessed, setWordsGuessed] = useState(0);
+  const [guessAccuracy, setGuessAccuracy] = useState(0);
   
   // Original values for cancel - separate for each block
   const [originalPersonalValues, setOriginalPersonalValues] = useState({
-    fullName: "Nguyễn Văn A",
-    dateOfBirth: "1990-01-15",
+    fullName: "",
+    dateOfBirth: "",
     avatar: ""
   });
 
   const [originalAccountValues, setOriginalAccountValues] = useState({
-    username: "nguyenvana",
-    email: "nguyenvana@example.com",
+    username: "",
+    email: "",
     password: ""
   });
 
@@ -147,6 +204,23 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  // Change Password Handlers
+  const handleOpenChangePasswordModal = () => {
+    setIsChangePasswordModalOpen(true);
+  };
+
+  const handleCloseChangePasswordModal = () => {
+    setIsChangePasswordModalOpen(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -317,23 +391,20 @@ const Profile = () => {
             </div>
 
             <div>
-              <label className="block font-semibold mb-2 text-sm text-muted-foreground flex items-center gap-2">
-                <Lock className="w-4 h-4" />
-                Mật khẩu
-              </label>
-              {!isEditingAccount ? (
-                <div className="input-rounded w-full bg-muted opacity-75 flex items-center">
-                  <span className="text-muted-foreground">********</span>
-                </div>
-              ) : (
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-rounded w-full"
-                  placeholder="Nhập mật khẩu mới (để trống nếu không đổi)"
-                />
-              )}
+              <div className="flex items-center justify-between">
+                <label className="font-semibold text-sm text-muted-foreground flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  Mật khẩu
+                </label>
+                <GameButton 
+                  variant="secondary" 
+                  size="sm"
+                  onClick={handleOpenChangePasswordModal}
+                  className="whitespace-nowrap"
+                >
+                  Đổi mật khẩu
+                </GameButton>
+              </div>
             </div>
           </div>
 
@@ -438,7 +509,7 @@ const Profile = () => {
       </div>
 
       {/* Avatar Modal */}
-      {isAvatarModalOpen && (
+      {isAvatarModalOpen && createPortal(
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
           onClick={handleCloseAvatarModal}
@@ -521,8 +592,14 @@ const Profile = () => {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
+      {/* Change Password Modal */}
+      <ChangePasswordModal 
+        isOpen={isChangePasswordModalOpen} 
+        onClose={handleCloseChangePasswordModal} 
+      />
     </div>
   );
 };
