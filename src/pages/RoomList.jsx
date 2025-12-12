@@ -35,10 +35,10 @@ const RoomList = () => {
       fetchRooms();
     };
 
-    socket.on("room_updated", handleRoomUpdate);
+    socket.on("room_created", handleRoomUpdate);
 
     return () => {
-      socket.off("room_updated", handleRoomUpdate);
+      socket.off("room_created", handleRoomUpdate);
     };
   }, []);
 
