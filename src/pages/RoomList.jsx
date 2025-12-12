@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Users, Trophy, Hash, Gamepad2, ArrowRight, Plus, Loader } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { roomApi } from "@/lib/api";
+import { socket } from "@/lib/socket";
 
 // Material Icon mapping for room topics (simple mapping for displayed topics)
 const TOPIC_ICONS = {
@@ -28,6 +29,17 @@ const RoomList = () => {
 
   useEffect(() => {
     fetchRooms();
+
+    // Listen for room updates (create/delete)
+    const handleRoomUpdate = () => {
+      fetchRooms();
+    };
+
+    socket.on("room_updated", handleRoomUpdate);
+
+    return () => {
+      socket.off("room_updated", handleRoomUpdate);
+    };
   }, []);
 
   const fetchRooms = async () => {
