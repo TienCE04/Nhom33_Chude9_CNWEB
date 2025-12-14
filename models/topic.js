@@ -3,6 +3,7 @@ const { mongoose, redis } = require("./index");
 const topicSchema = new mongoose.Schema({
   idTopic: { type: mongoose.Schema.Types.ObjectId, auto: true },
   nameTopic: { type: String, required: true },
+  topicIcon: { type: String, default: "category" },
   keyWord: { type: [String], default: [] },
   createdBy: { type: String, required: true, default: "system" },
   timeStamp: { type: Date, default: Date.now },
@@ -15,6 +16,10 @@ module.exports = class Topic {
     const topic = new TopicModel(atts);
     await topic.save();
     return topic;
+  }
+
+  static async findOne(query) {
+    return await TopicModel.findOne(query);
   }
 
   static async getAllTopics() {
