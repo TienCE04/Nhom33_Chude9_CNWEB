@@ -2,6 +2,7 @@ const Router = require("koa-router");
 const { login, forgetPassword, resetPassword, signup, changePassword,googleLogin, logout } = require("../controller/authController");
 const { authorize } = require("../middleware");
 
+
 const router = new Router();
 
 router.post("/login", login);

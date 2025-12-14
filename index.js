@@ -9,6 +9,7 @@ const config = require("./config");
 const { log } = require("./middleware/index");
 const { createServer } = require("http");
 const { initSocket } = require("./socket/socketHandler.js"); 
+const seedDefaultTopics = require("./utils/seed");
 const app = new Koa();
 
 app.use(bodyParser());
@@ -39,8 +40,11 @@ glob(`${__dirname}/routes/*.js`, { ignore: "**/index.js" }, (err, matches) => {
 const httpServer = createServer(app.callback());
 initSocket(httpServer);
 if (!module.parent) {
-  httpServer.listen(config.port, () => {
+  httpServer.listen(config.port, async () => {
     console.log(` Server is running on port ${config.port}`);
     console.log(` Koa (HTTP) and Socket.IO (WebSocket) are sharing the same port.`);
+    
+    // Run seed
+    await seedDefaultTopics();
   });
 }

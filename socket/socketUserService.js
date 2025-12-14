@@ -4,7 +4,6 @@ function bindSocketToUser(socketId, userId){
     socketUserMap.set(socketId, userId);
 }   
 
-
 function getUsernameBySocket(socketId) {
   return socketUserMap.get(socketId);
 }
@@ -12,6 +11,7 @@ function getUsernameBySocket(socketId) {
 function removeSocket(socketId) {
   socketUserMap.delete(socketId);
 }
+
 export {
   bindSocketToUser,
   getUsernameBySocket,

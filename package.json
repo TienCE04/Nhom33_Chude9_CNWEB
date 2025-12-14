@@ -41,6 +41,7 @@
     "moment": "^2.24.0",
     "mongoose": "^8.19.1",
     "ms": "^2.1.2",
+    "nodemon": "^3.1.11",
     "npm": "^8.7.0",
     "pretty-data": "^0.40.0",
     "querystring": "^0.2.1",

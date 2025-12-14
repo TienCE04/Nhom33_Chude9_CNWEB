@@ -235,11 +235,11 @@ exports.changePassword = async (ctx) => {
 };
 
 exports.googleLogin = async (ctx) => {
-  const { idToken } = ctx.request.body;
+  const { token } = ctx.request.body;
 
-  if (!idToken) {
+  if (!token) {
     ctx.status = 400;
-    ctx.body = { success: false, message: "Missing idToken" };
+    ctx.body = { success: false, message: "Missing token" };
     return;
   }
 
