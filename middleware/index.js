@@ -18,17 +18,18 @@ class Log {
 }
 
 async function authorize(ctx, next) {
-  const authHeader = ctx.headers["authorization"];
+  const authHeader = ctx.headers.authorization;
+
   if (!authHeader) {
-    ctx.status = 400;
-    ctx.body = { success: false, message: "No token provided" };
+    ctx.status = 401;
+    ctx.body = { code: "NO_TOKEN", message: "No token provided" };
     return;
   }
 
   const token = authHeader.split(" ")[1];
   if (!token) {
-    ctx.status = 400;
-    ctx.body = { success: false, message: "Invalid token format" };
+    ctx.status = 401;
+    ctx.body = { code: "INVALID_TOKEN", message: "Invalid token format" };
     return;
   }
 
@@ -37,8 +38,13 @@ async function authorize(ctx, next) {
     ctx.User = decoded;
     await next();
   } catch (error) {
-    ctx.status - 400;
-    ctx.body = { success: false, message: "Token is invalid or expired" };
+    if (error.name === "TokenExpiredError") {
+      ctx.status = 401;
+      ctx.body = { code: "TOKEN_EXPIRED", message: "Access token expired" };
+    } else {
+      ctx.status = 401;
+      ctx.body = { code: "INVALID_TOKEN", message: "Invalid token" };
+    }
   }
 }
 

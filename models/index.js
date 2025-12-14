@@ -17,7 +17,7 @@ const redis = new Redis({
     password: env.REDIS_PASSWORD,
 })
 redis.on("connect", () => {
-  console.log("✅ Redis connected successfully!");
+  console.log(" Redis connected successfully!");
 });
 
 //  Bắt sự kiện "ready" — khi Redis đã sẵn sàng để sử dụng

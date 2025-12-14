@@ -40,7 +40,7 @@ const httpServer = createServer(app.callback());
 initSocket(httpServer);
 if (!module.parent) {
   httpServer.listen(config.port, () => {
-    console.log(`✅ Server is running on port ${config.port}`);
-    console.log(`✅ Koa (HTTP) and Socket.IO (WebSocket) are sharing the same port.`);
+    console.log(` Server is running on port ${config.port}`);
+    console.log(` Koa (HTTP) and Socket.IO (WebSocket) are sharing the same port.`);
   });
 }
