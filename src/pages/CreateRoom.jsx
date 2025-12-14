@@ -43,6 +43,7 @@ const CreateRoom = () => {
   const navigate = useNavigate();
   const [maxPlayers, setMaxPlayers] = useState("6");
   const [targetScore, setTargetScore] = useState("100");
+  const [typeRoom, setTypeRoom] = useState("private");
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [topics, setTopics] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,7 +55,7 @@ const CreateRoom = () => {
       try {
         // Fetch default topics
         const defaultTopicsRes = await topicApi.getDefaultTopics();
-        let allTopics = defaultTopicsRes.success ? defaultTopicsRes.data : [];
+        let allTopics = defaultTopicsRes.success ? defaultTopicsRes.data : []
 
         // Fetch user topics if logged in
         const user = authApi.getUser();
@@ -93,6 +94,7 @@ const CreateRoom = () => {
           topicId: selectedTopic._id || selectedTopic.idTopic,
           topicIcon: selectedTopic.topicIcon || "category",
         },
+        roomType: typeRoom,
       };
 
       const result = await roomApi.createRoom(roomData);
@@ -176,7 +178,20 @@ const CreateRoom = () => {
                 className="w-full h-[45px]"
             />
           </div>
-
+          <div className="mb-8">
+            <label className="block text-md font-semibold text-foreground mb-2">
+              Loại phòng
+            </label>
+            <Select
+                value={typeRoom}
+                onChange={(value) => setTypeRoom(value)}
+                options={[
+                    { value: "private", label: "Phòng riêng" },
+                    { value: "public", label: "Phòng công cộng" },
+                ]}
+                className="w-full h-[45px]"
+            />
+          </div>
           {/* Display Settings Summary */}
           <div className="mt-auto pt-6 border-t border-border">
             <div className="bg-muted/30 rounded-lg p-4 text-sm">
