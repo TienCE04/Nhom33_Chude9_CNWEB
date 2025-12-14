@@ -12,8 +12,7 @@ exports.createRoom = async (ctx) => {
     name: Joi.string().required(),
     maxPlayer: Joi.number().integer().min(1).default(2),
     maxScore: Joi.number().integer().min(1).default(10),
-    metadata: Joi.object().unknown(true).default({}),
-    roomType: Joi.string().required(),
+    metadata: Joi.object().unknown(true).default({})
   });
 
   const { body } = ctx.request;
@@ -36,8 +35,6 @@ exports.createRoom = async (ctx) => {
     status: "waiting",
     currentPlayers: 0,
     metadata: body.metadata,
-    idTopic: body.metadata.topicId || null,
-    room_type: body.roomType,
     createdAt: nowIso,
     updatedAt: nowIso
   };
@@ -47,12 +44,9 @@ exports.createRoom = async (ctx) => {
   await redis.expire(key, 60 * 60);
 
   const io = getIO();
-  if (body.room_type === "public") {
-    io.emit("room_created", data);
-  }
-  else {
-    io.to(id).emit("room_created", data);
-  }
+  io.to(id).emit("room_updated", { action: "created", room: data });
+  io.emit("room_created", data); 
+
 
   ctx.status = 201;
   ctx.body = { success: true, room: data };
@@ -109,9 +103,7 @@ exports.listRooms = async (ctx) => {
           staleKeys.push(key);
           return;
         }
-        if (data.includes('"room_type":"public"')) {
         rooms.push(JSON.parse(data));
-      }
       } catch (error) {
         console.error("Failed to parse room data:", error);
       }
@@ -151,39 +143,6 @@ exports.getRoomById = async (ctx) => {
     ctx.status = 500;
     ctx.body = { success: false, message: "Failed to load room data" };
   }
-};
-
-exports.getRoomForUser = async (ctx) => {
-  const { userName } = ctx.params;
-
-  if (!userName) {
-    ctx.status = 400;
-    ctx.body = { success: false, message: "Missing userName" };
-    return;
-  }
-  const keys = await redis.smembers(ROOMS_SET_KEY);
-  const rooms = [];
-  const staleKeys = [];
-  await Promise.all(
-    keys.map(async (key) => {
-      try {
-        const data = await redis.get(key);
-        if (!data) {
-          staleKeys.push(key);
-          return;
-        }
-        if (data.includes(`"userName":"${userName}"`)) {
-        rooms.push(JSON.parse(data));
-      }
-      } catch (error) {
-        console.error("Failed to parse room data:", error);
-      }
-    })
-  );
-  if (staleKeys.length > 0) {
-    await redis.srem(ROOMS_SET_KEY, ...staleKeys);
-  }
-   ctx.body = { success: true, rooms };
 };
 
 exports.setStatus = async (room_id, status) => {
