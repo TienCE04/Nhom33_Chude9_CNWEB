@@ -1,8 +1,7 @@
 const Joi = require("joi");
 const { v4: uuidv4 } = require("uuid");
 const { redis } = require("../models/index");
-const { getIO } = require("../socket/socketHandler.js");
-
+const Room = require("../models/room");
 const ROOMS_SET_KEY = "rooms";
 const roomKey = (id) => `room:${id}`;
 
@@ -34,7 +33,7 @@ exports.createRoom = async (ctx) => {
     maxPlayer: body.maxPlayer,
     maxScore: body.maxScore,
     status: "waiting",
-    currentPlayers: 0,
+    currentPlayers: 1,
     metadata: body.metadata,
     idTopic: body.metadata.topicId || null,
     room_type: body.roomType,
@@ -45,15 +44,6 @@ exports.createRoom = async (ctx) => {
   await redis.set(key, JSON.stringify(data));
   await redis.sadd(ROOMS_SET_KEY, key);
   await redis.expire(key, 60 * 60);
-
-  const io = getIO();
-  if (body.room_type === "public") {
-    io.emit("room_created", data);
-  }
-  else {
-    io.to(id).emit("room_created", data);
-  }
-
   ctx.status = 201;
   ctx.body = { success: true, room: data };
 };
@@ -74,16 +64,6 @@ exports.deleteRoom = async (ctx) => {
     return;
   }
 
-  const io = getIO();
-  io.to(roomId).emit("room_updated", { action: "deleted", roomId });
-
-  try {
-    const sockets = await io.in(roomId).fetchSockets();
-    sockets.forEach((s) => s.leave(roomId));
-  } catch (e) {
-    console.error("Error while removing sockets from room:", e);
-  }
-
   await redis.del(key);
   await redis.srem(ROOMS_SET_KEY, key);
 
@@ -91,38 +71,12 @@ exports.deleteRoom = async (ctx) => {
 };
 
 exports.listRooms = async (ctx) => {
-  const keys = await redis.smembers(ROOMS_SET_KEY);
-
-  if (!keys || keys.length === 0) {
-    ctx.body = { success: true, rooms: [] };
-    return;
+  try {
+    const rooms = await Room.listRooms()
+    ctx.body = { success: true, rooms: rooms };
+  } catch (error) {
+    ctx.body = {success: false, rooms: []}
   }
-
-  const rooms = [];
-  const staleKeys = [];
-
-  await Promise.all(
-    keys.map(async (key) => {
-      try {
-        const data = await redis.get(key);
-        if (!data) {
-          staleKeys.push(key);
-          return;
-        }
-        if (data.includes('"room_type":"public"')) {
-        rooms.push(JSON.parse(data));
-      }
-      } catch (error) {
-        console.error("Failed to parse room data:", error);
-      }
-    })
-  );
-
-  if (staleKeys.length > 0) {
-    await redis.srem(ROOMS_SET_KEY, ...staleKeys);
-  }
-
-  ctx.body = { success: true, rooms };
 };
 
 exports.getRoomById = async (ctx) => {
@@ -184,37 +138,4 @@ exports.getRoomForUser = async (ctx) => {
     await redis.srem(ROOMS_SET_KEY, ...staleKeys);
   }
    ctx.body = { success: true, rooms };
-};
-
-exports.setStatus = async (room_id, status) => {
-    const key = roomKey(room_id);
-
-    try {
-    
-        const data = await redis.get(key);
-        if (!data) {
-            console.warn(`Room with key ${key} not found for status update.`);
-            return false;
-        }
-
-    
-        const roomData = JSON.parse(data);
-
-   
-        roomData.status = status;
-        roomData.updatedAt = new Date().toISOString();
-
-        await redis.set(key, JSON.stringify(roomData));
-
-        //báo sự kiện thay đổi từ waiting sang playing để các socket start_game
-        const io = getIO();
-        io.to(room_id).emit("room_updated", { action: "status_change", room: roomData });
-        
-        io.emit("rooms_list_updated"); 
-
-        return true;
-    } catch (error) {
-        console.error(`Error updating status for room ${room_id}:`, error);
-        return false;
-    }
 };
