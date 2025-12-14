@@ -30,7 +30,7 @@ const Home = () => {
               Gartic
             </h1>
           </div>
-          <p className="text-xl md:text-2xl text-white/90 font-semibold max-w-xl leading-relaxed drop-shadow-md">
+          <p className="text-xl md:text-2xl font-bold max-w-xl leading-relaxed drop-shadow-md text-foreground">
             Vẽ, đoán và cười thả ga! <br />
             Kết nối bạn bè qua những nét vẽ nguệch ngoạc ngay hôm nay.
           </p>
