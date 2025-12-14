@@ -13,9 +13,7 @@ exports.createRoom = async (ctx) => {
     maxPlayer: Joi.number().integer().min(1).default(2),
     maxScore: Joi.number().integer().min(1).default(10),
     metadata: Joi.object().unknown(true).default({}),
-    userName: Joi.string().required(),
-    idTopic: Joi.string().required(),
-    room_type: Joi.string().required(),
+    roomType: Joi.string().required(),
   });
 
   const { body } = ctx.request;
@@ -38,9 +36,8 @@ exports.createRoom = async (ctx) => {
     status: "waiting",
     currentPlayers: 0,
     metadata: body.metadata,
-    userName: body.userName,
-    idTopic: body.idTopic,
-    room_type: body.room_type,
+    idTopic: body.metadata.topicId || null,
+    room_type: body.roomType,
     createdAt: nowIso,
     updatedAt: nowIso
   };
