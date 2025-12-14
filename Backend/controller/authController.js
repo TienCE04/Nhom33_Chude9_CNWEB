@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
+const request = require("request");
 const {
   getAccountByUsername,
   createAccount,
@@ -172,26 +173,35 @@ exports.changePassword = async (ctx) => {
   }
 };
 exports.googleLogin = async (ctx) => {
-  const { idToken } = ctx.request.body;
+  const { token } = ctx.request.body;
 
-  if (!idToken) {
+  if (!token) {
     ctx.status = 400;
-    ctx.body = { success: false, message: "Missing idToken" };
+    ctx.body = { success: false, message: "Missing token" };
     return;
   }
 
   try {
-    // Verify token từ Google
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+    // Verify token từ Google bằng cách gọi UserInfo endpoint
+    const userInfo = await new Promise((resolve, reject) => {
+      request(
+        {
+          url: "https://www.googleapis.com/oauth2/v3/userinfo",
+          headers: { Authorization: `Bearer ${token}` },
+          json: true,
+        },
+        (err, response, body) => {
+          if (err) reject(err);
+          else if (response.statusCode !== 200)
+            reject(new Error("Failed to fetch user info"));
+          else resolve(body);
+        }
+      );
     });
 
-    const payload = ticket.getPayload();
-
-    const email = payload.email;
-    const name = payload.name;
-    const googleId = payload.sub;
+    const email = userInfo.email;
+    const name = userInfo.name;
+    const googleId = userInfo.sub;
 
     // Kiểm tra account tồn tại chưa
     let account = await getAccountByUsername(email);
@@ -208,7 +218,7 @@ exports.googleLogin = async (ctx) => {
       await createProfile({ username: email, nickname: name, email });
     }
 
-    const token = jwt.sign(
+    const jwtToken = jwt.sign(
       { id: account._id, username: account.username },
       process.env.JWT_SECRET,
       { expiresIn: "6h" }
@@ -217,7 +227,7 @@ exports.googleLogin = async (ctx) => {
     ctx.body = {
       success: true,
       message: "Google login successful",
-      token,
+      token: jwtToken,
       user: {
         id: account._id,
         username: account.username,
