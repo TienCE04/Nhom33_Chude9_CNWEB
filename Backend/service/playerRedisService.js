@@ -24,7 +24,7 @@ async function getRankByRoomId(room_id) {
   try {
     const key = `room:broadScore:${room_id}`;
 
-    const raw = await sendCommand(["ZRANGE", key, "0", "-1", "WITHSCORES"]);
+    const raw = await redis.zrange(key, 0, -1, "WITHSCORES");
 
     const formatted = [];
 
@@ -42,18 +42,13 @@ async function getRankByRoomId(room_id) {
 
 //Quản lý người chơi trong phòng
 //thêm người chơi vào phòng
-async function updatePlayerJoin(room_id, username) {
+async function updatePlayerJoin(room_id, user) {
   const playerListKey = `room:player:${room_id}`;
   const scoreKey = `room:broadScore:${room_id}`;
+  await redis.rpush(playerListKey, user.username);
+  await redis.zadd(scoreKey, "NX", 0, user.username);
+  const curPlayers = await redis.llen(playerListKey);
 
-  // Thêm vào danh sách người chơi
-  await sendCommand(["RPUSH", playerListKey, username]);
-
-  // Thêm/Cập nhật điểm trong Sorted Set (ZSET) với điểm ban đầu là 0
-  await sendCommand(["ZADD", scoreKey, "NX", "0", username]);
-
-  // Trả về số lượng người chơi hiện tại
-  const curPlayers = await sendCommand(["LLEN", playerListKey]);
   return parseInt(curPlayers, 10);
 }
 
@@ -62,14 +57,11 @@ async function updatePlayerLeave(room_id, username) {
   const playerListKey = `room:player:${room_id}`;
   const scoreKey = `room:broadScore:${room_id}`;
 
-  // Xóa khỏi danh sách người chơi
-  await sendCommand(["LREM", playerListKey, "0", username]);
+  await redis.lrem(playerListKey, 0, username);
 
-  // Xóa khỏi bảng điểm (ZREM)
-  await sendCommand(["ZREM", scoreKey, username]);
+  await redis.zrem(scoreKey, username);
+  const curPlayers = await redis.llen(playerListKey);
 
-  // Trả về số lượng người chơi còn lại
-  const curPlayers = await sendCommand(["LLEN", playerListKey]);
   return parseInt(curPlayers, 10);
 }
 
@@ -225,7 +217,6 @@ async function everyoneAnswered(room_id) {
 }
 
 // Quan lý danh sách tạm thời trong Round
-
 async function getTmpPlayers(room_id) {
   const key = `room:tmpPlayers:${room_id}`;
   // Dùng LRANGE để lấy toàn bộ danh sách
@@ -243,7 +234,8 @@ async function setTmpPlayers(room_id, playersList) {
 async function removeTmpPlayer(room_id, username) {
   const key = `room:tmpPlayers:${room_id}`;
   // LREM 1: Xóa 1 lần xuất hiện của username
-  await sendCommand(["LREM", key, "1", username]);
+  await redis.lrem(key, 1, username);
+
 }
 
 async function getTmpKeywords(room_id) {
@@ -260,12 +252,12 @@ async function resetTmpKeywords(room_id) {
   const key = `room:tmpKeywords:${room_id}`;
   await sendCommand(["DEL", key]);
 }
-export async function resetAnswered(room_id) {
+async function resetAnswered(room_id) {
     await redis.del(`room:answered:${room_id}`);
 }
 
 // Export các hàm để Socket và GamePlay có thể sử dụng
-export {
+module.exports = {
   updatePlayerJoin,
   updatePlayerLeave,
   resetPlayerScore,
