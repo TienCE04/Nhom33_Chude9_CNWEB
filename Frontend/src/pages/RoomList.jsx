@@ -4,6 +4,7 @@ import { ArrowLeft, Users, Trophy, Hash, Gamepad2, ArrowRight, Plus, Loader } fr
 import { GameButton } from "@/components/GameButton";
 import { roomApi } from "@/lib/api";
 import { socket } from "@/lib/socket";
+import { getUserInfo } from "../lib/utils";
 
 // Material Icon mapping for room topics (simple mapping for displayed topics)
 const TOPIC_ICONS = {
@@ -29,16 +30,52 @@ const RoomList = () => {
 
   useEffect(() => {
     fetchRooms();
-
-    // Listen for room updates (create/delete)
-    const handleRoomUpdate = () => {
+    const handleRoomUpdate = (data) => {
       fetchRooms();
     };
+    const handleJoinRoomEvent = (roomId) => {
+      console.log("room_join data:");
 
+      setRooms((prevRooms) =>
+        prevRooms.map((room) =>
+          room.id === roomId
+            ? {
+                ...room,
+                currentPlayers: room.currentPlayers + 1,
+                status:
+                  room.currentPlayers + 1 >= room.maxPlayers
+                    ? "Đã đầy"
+                    : "Sẵn sàng",
+              }
+            : room
+        )
+      );
+    };
+    const handleLeaveRoomEvent = (roomId) => {
+      console.log("leaveeee")
+      setRooms((prevRooms) =>
+        prevRooms.map((room) =>
+          room.id === roomId
+            ? {
+                ...room,
+                currentPlayers: room.currentPlayers - 1,
+                status:
+                  room.currentPlayers - 1 < room.maxPlayers
+                    ? "Sẵn sàng"
+                    : "Đã đầy",
+              }
+            : room
+        )
+      );
+    };
     socket.on("room_created", handleRoomUpdate);
-
+    socket.on("joined_room", handleJoinRoomEvent);
+    socket.on("leaved_room", handleLeaveRoomEvent);
     return () => {
       socket.off("room_created", handleRoomUpdate);
+      socket.off("joined_room", handleJoinRoomEvent);
+      socket.off("leaved_room", handleLeaveRoomEvent);
+
     };
   }, []);
 
@@ -82,7 +119,12 @@ const RoomList = () => {
 
   const handleJoinRoom = () => {
     if (selectedRoom) {
-      navigate(`/lobby?room=${selectedRoom.id}`);
+      const userInfo = getUserInfo();
+      if(selectedRoom.currentPlayers < selectedRoom.maxPlayers){
+        socket.emit("join_room", { roomId: selectedRoom.id, user: userInfo });
+        navigate(`/lobby?room=${selectedRoom.id}`);
+      }
+  
     }
   };
 

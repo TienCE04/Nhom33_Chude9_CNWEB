@@ -1,8 +1,8 @@
 // /service/gamePlayService.js
-import * as playerRedisService from "./playerRedisService.js";
-import * as Topic from "../models/topic.js"; 
+const playerRedisService = require("./playerRedisService");
+const Topic = require("../models/topic");
 
-export async function handler(room_id, topic_id, tmpPlayers, tmpKeywords, topic_type) {
+exports.handler = async (room_id, topic_id, tmpPlayers, tmpKeywords, topic_type) =>{
     // người vẽ
     let drawer_username = tmpPlayers.length > 0 ? tmpPlayers[0] : null;
 

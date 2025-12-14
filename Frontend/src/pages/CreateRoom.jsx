@@ -5,6 +5,7 @@ import { GameButton } from "../components/GameButton";
 import { Select } from "antd";
 import { topicApi, authApi, roomApi } from "@/lib/api";
 import { toast } from "sonner";
+import { socket } from "@/lib/socket";
 
 // Material Icon mapping
 const TOPIC_ICONS = {
@@ -101,6 +102,7 @@ const CreateRoom = () => {
 
       if (result.success) {
         toast.success("Tạo phòng thành công!");
+        socket.emit("create_room", roomData)
         // Navigate to lobby with the new room ID
         navigate(`/lobby?room=${result.room.id}`);
       } else {

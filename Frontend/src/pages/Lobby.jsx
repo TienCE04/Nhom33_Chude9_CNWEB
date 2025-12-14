@@ -8,7 +8,8 @@ import { Select } from "antd";
 import { ChatBox } from "../components/ChatBox";
 import Game from "./Game";
 import { PlayRulePopup } from "../components/PlayRulePopup";
-
+import { socket } from "@/lib/socket";
+import { getUserInfo } from "../lib/utils";
 import "../assets/styles/gamePage.css";
 
 const MOCK_PLAYERS = [
@@ -56,6 +57,14 @@ const Lobby = () => {
     toast.success(`Bắt đầu phòng ${roomType}`);
     setIsGameStarted(true);
   };
+
+  const handleLeaveRoom = () =>{
+    const userInfo = getUserInfo();
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get("room");
+    socket.emit("leave_room", { roomId: roomId, username: userInfo.username });
+    navigate("/rooms")
+  }
 
   return (
     <div className="h-screen p-2 md:p-4">
@@ -108,7 +117,7 @@ const Lobby = () => {
             <GameButton
               variant="danger"
               size="md"
-              onClick={() => navigate("/rooms")}
+              onClick={() => handleLeaveRoom()}
             >
               <LogOut className="w-5 h-5 mr-2" />
               Leave
