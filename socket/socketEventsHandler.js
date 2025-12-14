@@ -2,6 +2,7 @@ import * as room from "../controller/roomController.js";
 import * as players from "../service/playerRedisService.js";
 import * as playerMongo from "../models/player.js";
 import * as gamePlay from "../service/gamePlayService.js";
+import * as socketUser from "../socket/socketUserService.js";
 
 const roomIntervals = new Map();
 const countdownIntervals = new Map();
@@ -25,7 +26,7 @@ async function checkAndStopGame(io, room_id, curPlayers) {
 
     io.to(room_id).emit("roomData", await room.getRoomById(room_id));
     io.to(room_id).emit("playersData", await players.getRankByRoomId(room_id));
-    io.emit("rooms", await room.getAllRoom());
+    io.emit("rooms", await room.listRooms());
   }
 }
 
@@ -33,6 +34,8 @@ async function checkAndStopGame(io, room_id, curPlayers) {
 async function startRound(io, room_id, topic_type) {
   const roomData = await room.getRoomById(room_id);
   if (!roomData) return;
+
+  console.log("startRound", "start");
 
   await players.initRoundState(room_id);
   await players.resetAddPoint(room_id);
@@ -62,7 +65,7 @@ async function startRound(io, room_id, topic_type) {
     io.to(room_id).emit("keyword", { drawer_username, keyword: null });
     io.to(room_id).emit("newRound");
 
-    // Bắt đầu đếm ngược thời gian trong Round 
+    // Bắt đầu đếm ngược thời gian trong Round
     startCountdown(io, room_id);
   }
 
@@ -159,12 +162,15 @@ function attachSocketEvents(io, socket) {
 
     await players.updatePlayerJoin(room_id, username);
 
+    //gắn socketId với username
+    socketUser.bindSocketToUser(socket.id, username);
+
     const playersData = await players.getRankByRoomId(room_id);
     io.to(room_id).emit("playersData", playersData);
 
     io.to(room_id).emit("roomData", roomData);
 
-    io.emit("rooms", await room.getAllRoom());
+    io.emit("rooms", await room.listRooms());
 
     if (roomData.status === "playing") {
       const roundState = await players.getRoundState(room_id);
@@ -193,7 +199,7 @@ function attachSocketEvents(io, socket) {
     startRound(io, room_id, topic_type);
   });
 
-  // correctAnswer 
+  // correctAnswer
   socket.on("correctAnswer", async (data) => {
     const { room_id, username, drawer_username, topic_type } = data;
     if (!room_id || !username || !drawer_username) return;
@@ -223,7 +229,7 @@ function attachSocketEvents(io, socket) {
     const playersData = await players.getRankByRoomId(room_id);
     io.to(room_id).emit("playersData", playersData);
 
-    // *** LOGIC KẾT THÚC VÒNG SỚM ***
+    // LOGIC KẾT THÚC VÒNG SỚM
     if (await players.everyoneAnswered(room_id)) {
       console.log(
         `All players in ${room_id} guessed correctly. Ending round early.`
@@ -240,8 +246,8 @@ function attachSocketEvents(io, socket) {
         clearInterval(roomIntervals.get(room_id));
         roomIntervals.delete(room_id);
       }
-      
-      // Dừng interval đếm ngược UI (để nó không chạy trong 3s chờ)
+
+      // Dừng interval đếm ngược UI
       if (countdownIntervals.has(room_id)) {
         clearInterval(countdownIntervals.get(room_id));
         countdownIntervals.delete(room_id);
@@ -272,10 +278,10 @@ function attachSocketEvents(io, socket) {
     socket.leave(room_id);
 
     const curPlayers = await players.updatePlayerLeave(room_id, username);
-    
+
     // Cập nhật danh sách người vẽ tạm thời khi người chơi rời đi
-    // (Cần đảm bảo hàm này có tồn tại trong playerRedisService)
-    await players.removePlayerFromTmp(room_id, username); 
+    //debug
+    await players.removeTmpPlayer(room_id, username);
 
     await checkAndStopGame(io, room_id, curPlayers);
 
@@ -285,7 +291,7 @@ function attachSocketEvents(io, socket) {
         "playersData",
         await players.getRankByRoomId(room_id)
       );
-      io.emit("rooms", await room.getAllRoom());
+      io.emit("rooms", await room.listRooms());
     }
   });
 
@@ -328,17 +334,21 @@ function attachSocketEvents(io, socket) {
     );
 
     for (const room_id of roomsOfSocket) {
-      const username = await players.getUsernameBySocket(socket.id);
+      //debug
+      const username = socketUser.getUsernameBySocket(socket.id);
 
       if (username) {
         const curPlayers = await players.updatePlayerLeave(room_id, username);
 
         //Cập nhật danh sách người vẽ tạm thời khi disconnect
-        await players.removePlayerFromTmp(room_id, username); 
+        await players.removeTmpPlayer(room_id, username);
 
         await checkAndStopGame(io, room_id, curPlayers);
       }
-    } 
+    }
+
+    // Xóa user khoi socket
+     socketUser.removeSocket(socket.id);
   });
 }
 
