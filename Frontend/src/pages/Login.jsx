@@ -48,6 +48,7 @@ const Login = () => {
   const handlePlayNow = () => {
     if (nicknameLogin.trim()) {
       localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem('user', nicknameLogin)
       navigate("/lobby");
     }
   };

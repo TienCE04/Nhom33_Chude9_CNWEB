@@ -17,6 +17,9 @@ const Navbar = ({ onLogout }) => {
   const handleLogout = () => {
     // Xóa trạng thái đăng nhập
     localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("authToken")
+    localStorage.removeItem("user")
+
     // Gọi callback nếu có (để cập nhật state ở component cha)
     if (onLogout) {
       onLogout();
