@@ -52,7 +52,6 @@ const RoomList = () => {
       );
     };
     const handleLeaveRoomEvent = (roomId) => {
-      console.log("leaveeee")
       setRooms((prevRooms) =>
         prevRooms.map((room) =>
           room.id === roomId

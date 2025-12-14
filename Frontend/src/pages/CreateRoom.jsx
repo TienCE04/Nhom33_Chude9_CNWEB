@@ -6,6 +6,7 @@ import { Select } from "antd";
 import { topicApi, authApi, roomApi } from "@/lib/api";
 import { toast } from "sonner";
 import { socket } from "@/lib/socket";
+import { getUserInfo } from "../lib/utils";
 
 // Material Icon mapping
 const TOPIC_ICONS = {
@@ -99,10 +100,14 @@ const CreateRoom = () => {
       };
 
       const result = await roomApi.createRoom(roomData);
-
       if (result.success) {
         toast.success("Tạo phòng thành công!");
-        socket.emit("create_room", roomData)
+        const user = getUserInfo();
+        const data = {
+          roomData: result.room,
+          user: user
+        }
+        socket.emit("create_room", data)
         // Navigate to lobby with the new room ID
         navigate(`/lobby?room=${result.room.id}`);
       } else {
