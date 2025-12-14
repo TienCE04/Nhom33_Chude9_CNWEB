@@ -149,13 +149,17 @@ async function endGame(io, room_id) {
 function attachSocketEvents(io, socket) {
   // Create Room
   socket.on("create_room", async (data) => {
-    if (data.roomType === "public") {
-      io.emit("room_created", data);
-      console.log("Emitted room_created for public room:", data);
+    const {roomData, user} = data
+    socket.join(roomData.id);
+    if (roomData.room_type === "public") {
+      io.emit("room_created", roomData);
     }
     else {
-      io.to(data.id).emit("room_created", data);
+      io.to(roomData.id).emit("room_created", roomData);
     }
+    await players.updatePlayerJoin(roomData.id, user);
+    const playersData = await players.getRankByRoomId(roomData.id);
+    io.to(roomData.id).emit("playersData", playersData);
   })
   // Delete Room 
   socket.on("delete_room", async (data) => {

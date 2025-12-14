@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Copy, LogOut, Play, Pause } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
@@ -37,6 +37,17 @@ const Lobby = () => {
   const [messages, setMessages] = useState(MOCK_MESSAGES);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [showRulesPopup, setShowRulesPopup] = useState(false);
+  const [players, setPlayers] = useState([])
+  useEffect(() => {
+      const handleUpdatePlayerRoomEvent = (playersData) => {
+        console.log(">>>", playersData)
+          players = setPlayers(playersData)
+      };
+      socket.on("playersData", handleUpdatePlayerRoomEvent);
+      return () => {
+        socket.off("playersData", handleUpdatePlayerRoomEvent);
+      };
+    }, []);
 
   const copyRoomCode = () => {
     navigator.clipboard.writeText(roomCode);
@@ -130,7 +141,7 @@ const Lobby = () => {
             messages={messages} 
             onSendMessage={handleSendMessage}
             drawTime={drawTime}
-            players={MOCK_PLAYERS}
+            players={players}
             onLeave={() => {
               setIsGameStarted(false);
               navigate("/");
@@ -144,7 +155,7 @@ const Lobby = () => {
             <div className="game-card overflow-auto flex-1 min-h-0">
               <h3 className="text-xl font-bold mb-4">Players</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                {MOCK_PLAYERS.map((player) => (
+                {players.map((player) => (
                   <PlayerCard key={player.id} {...player} />
                 ))}
               </div>
