@@ -4,7 +4,7 @@ import * as playerMongo from "../models/player.js";
 import * as gamePlay from "../service/gamePlayService.js";
 
 const roomIntervals = new Map();
-const countdownIntervals = new Map(); // QUẢN LÝ INTERVAL ĐẾM NGƯỢC UI
+const countdownIntervals = new Map();
 
 // --- Hàm kiểm tra và dừng game khi không đủ người chơi ---
 async function checkAndStopGame(io, room_id, curPlayers) {
@@ -36,7 +36,7 @@ async function startRound(io, room_id, topic_type) {
 
   await players.initRoundState(room_id);
   await players.resetAddPoint(room_id);
-  await players.resetAnswered(room_id); // Reset danh sách người đã đoán đúng (đúng chức năng)
+  await players.resetAnswered(room_id); // Reset danh sách người đã đoán đúng
 
   // Hàm thực hiện logic 1 vòng chơi
   async function runRoundLogic(currentRoomData) {
@@ -49,20 +49,20 @@ async function startRound(io, room_id, topic_type) {
       topic_type
     );
 
-    // 2. Lưu trạng thái Round
+    //  Lưu trạng thái Round
     await players.setRoundState(room_id, {
       drawer_username,
       keyword,
       timeLeft: 62,
     });
 
-    // 3. Emit sự kiện
+    // Emit sự kiện
     io.to(room_id).emit("roomData", currentRoomData);
     // Gửi từ khóa cho người vẽ, null cho người đoán
     io.to(room_id).emit("keyword", { drawer_username, keyword: null });
     io.to(room_id).emit("newRound");
 
-    // 4. Bắt đầu đếm ngược thời gian trong Round (chỉ để cập nhật UI)
+    // Bắt đầu đếm ngược thời gian trong Round 
     startCountdown(io, room_id);
   }
 
@@ -99,7 +99,7 @@ async function startRound(io, room_id, topic_type) {
   roomIntervals.set(room_id, intervalID);
 }
 
-// Hàm Đếm ngược UI (ĐÃ SỬA LỖI TRÙNG LẶP)
+// hàm đếm ngược
 function startCountdown(io, room_id) {
   // Dừng interval đếm ngược cũ nếu có
   if (countdownIntervals.has(room_id)) {
@@ -122,9 +122,9 @@ function startCountdown(io, room_id) {
   countdownIntervals.set(room_id, countdownInterval);
 }
 
-// -------------------- END GAME --------------------
+// kết thúc game
 async function endGame(io, room_id) {
-  // Dừng interval đếm ngược UI (phòng trường hợp kết thúc game sớm)
+  // Dừng interval đếm ngược UI
   if (countdownIntervals.has(room_id)) {
     clearInterval(countdownIntervals.get(room_id));
     countdownIntervals.delete(room_id);
@@ -145,9 +145,9 @@ async function endGame(io, room_id) {
   io.to(room_id).emit("playersData", await players.getRankByRoomId(room_id));
 }
 
-// -------------------- ATTACH SOCKET EVENTS --------------------
+// gắn các sự kiện socket
 function attachSocketEvents(io, socket) {
-  // ---------------- JOIN ROOM ----------------
+  //Join Room
   socket.on("joinRoom", async (data) => {
     const { room_id, username } = data;
     if (!room_id || !username) return;
@@ -172,7 +172,7 @@ function attachSocketEvents(io, socket) {
     }
   });
 
-  // ---------------- START GAME ----------------
+  //startGame
   socket.on("startGame", async (data) => {
     const { room_id, topic_type } = data;
     const roomData = await room.getRoomById(room_id);
@@ -193,7 +193,7 @@ function attachSocketEvents(io, socket) {
     startRound(io, room_id, topic_type);
   });
 
-  // ---------------- CORRECT ANSWER (ĐÃ CẬP NHẬT) ----------------
+  // correctAnswer 
   socket.on("correctAnswer", async (data) => {
     const { room_id, username, drawer_username, topic_type } = data;
     if (!room_id || !username || !drawer_username) return;
