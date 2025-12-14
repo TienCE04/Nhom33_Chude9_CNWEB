@@ -1,5 +1,6 @@
 const {Server} = require("socket.io");
 let io;
+const {attachSocketEvents} = require("./socketEventsHandler")
 
 function initSocket(server) {
   io = new Server(server, {
@@ -10,7 +11,7 @@ function initSocket(server) {
 
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
-
+    attachSocketEvents(io, socket);
     socket.on("disconnect", () => {
       console.log("Client disconnected:", socket.id);
     });

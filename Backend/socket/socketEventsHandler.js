@@ -1,7 +1,7 @@
-import * as room from "../controller/roomController.js";
-import * as players from "../service/playerRedisService.js";
-import * as playerMongo from "../models/player.js";
-import * as gamePlay from "../service/gamePlayService.js";
+const room = require("../models/room");
+const players = require("../service/playerRedisService");
+const playerMongo = require("../models/player");
+const gamePlay = require("../service/gamePlayService");
 
 const roomIntervals = new Map();
 const countdownIntervals = new Map();
@@ -25,7 +25,7 @@ async function checkAndStopGame(io, room_id, curPlayers) {
 
     io.to(room_id).emit("roomData", await room.getRoomById(room_id));
     io.to(room_id).emit("playersData", await players.getRankByRoomId(room_id));
-    io.emit("rooms", await room.getAllRoom());
+    io.emit("rooms", await room.listRooms());
   }
 }
 
@@ -147,27 +147,51 @@ async function endGame(io, room_id) {
 
 // gắn các sự kiện socket
 function attachSocketEvents(io, socket) {
+  // Create Room
+  socket.on("create_room", async (data) => {
+    if (data.roomType === "public") {
+      io.emit("room_created", data);
+      console.log("Emitted room_created for public room:", data);
+    }
+    else {
+      io.to(data.id).emit("room_created", data);
+    }
+  })
+  // Delete Room 
+  socket.on("delete_room", async (data) => {
+    io.to(data.roomId).emit("room_updated", { action: "deleted", data });
+
+    try {
+      const sockets = await io.in(data.roomId).fetchSockets();
+      sockets.forEach((s) => s.leave(data.roomId));
+    } catch (e) {
+      console.error("Error while removing sockets from room:", e);
+    }
+
+  })
   //Join Room
-  socket.on("joinRoom", async (data) => {
-    const { room_id, username } = data;
-    if (!room_id || !username) return;
+  socket.on("join_room", async (data) => {
+    const { roomId, user } = data;
+    if (!roomId || !user) return;
 
-    const roomData = await room.getRoomById(room_id);
-    if (!roomData) return;
+    const result = await room.updateRoomPlayer(roomId, 1);
+    const success = result.success;
+    roomData = result?.room || null;
+    if (!success) return;
 
-    socket.join(room_id);
+    socket.join(roomId);
 
-    await players.updatePlayerJoin(room_id, username);
+    await players.updatePlayerJoin(roomId, user);
 
-    const playersData = await players.getRankByRoomId(room_id);
-    io.to(room_id).emit("playersData", playersData);
+    const playersData = await players.getRankByRoomId(roomId);
+    io.to(roomId).emit("playersData", playersData);
 
-    io.to(room_id).emit("roomData", roomData);
-
-    io.emit("rooms", await room.getAllRoom());
+    io.to(roomId).emit("roomData", roomData);
+    io.emit("joined_room", roomId, user)
+    // io.emit("rooms", await room.getAllRoom());
 
     if (roomData.status === "playing") {
-      const roundState = await players.getRoundState(room_id);
+      const roundState = await players.getRoundState(roomId);
       socket.emit("syncGameState", roundState);
     }
   });
@@ -265,27 +289,25 @@ function attachSocketEvents(io, socket) {
   });
 
   // ---------------- LEAVE ROOM ----------------
-  socket.on("leaveRoom", async (data) => {
-    const { room_id, username } = data;
-    if (!room_id || !username) return;
+  socket.on("leave_room", async (data) => {
+    const { roomId, username } = data;
+    if (!roomId || !username) return;
+    const result = await room.updateRoomPlayer(roomId, -1);
+    io.emit("leaved_room", roomId)
+    socket.leave(roomId);
 
-    socket.leave(room_id);
-
-    const curPlayers = await players.updatePlayerLeave(room_id, username);
+    const curPlayers = await players.updatePlayerLeave(roomId, username);
     
-    // Cập nhật danh sách người vẽ tạm thời khi người chơi rời đi
-    // (Cần đảm bảo hàm này có tồn tại trong playerRedisService)
-    await players.removePlayerFromTmp(room_id, username); 
-
-    await checkAndStopGame(io, room_id, curPlayers);
+    await players.removeTmpPlayer(roomId, username); 
+    await checkAndStopGame(io, roomId, curPlayers);
 
     if (curPlayers >= 2) {
-      io.to(room_id).emit("roomData", await room.getRoomById(room_id));
-      io.to(room_id).emit(
+      io.to(roomId).emit("roomData", await room.getRoomById(roomId));
+      io.to(roomId).emit(
         "playersData",
-        await players.getRankByRoomId(room_id)
+        await players.getRankByRoomId(roomId)
       );
-      io.emit("rooms", await room.getAllRoom());
+      io.emit("rooms", await room.listRooms());
     }
   });
 
@@ -342,4 +364,4 @@ function attachSocketEvents(io, socket) {
   });
 }
 
-export { attachSocketEvents };
+module.exports = { attachSocketEvents };
