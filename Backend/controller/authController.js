@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
+const axios = require("axios");
 
 const {
   getAccountByUsername,
@@ -235,7 +236,7 @@ exports.changePassword = async (ctx) => {
 };
 
 exports.googleLogin = async (ctx) => {
-  const { token } = ctx.request.body;
+  const { token } = ctx.request.body; // đây là access_token từ frontend
 
   if (!token) {
     ctx.status = 400;
@@ -244,32 +245,33 @@ exports.googleLogin = async (ctx) => {
   }
 
   try {
-    // 
-    const ticket = await client.verifyIdToken({
-      idToken: token,
-      audience: process.env.GOOGLE_CLIENT_ID,
+    // Lấy thông tin người dùng từ Google API
+    const response = await axios.get(`https://www.googleapis.com/oauth2/v2/userinfo`, {
+      headers: { Authorization: `Bearer ${token}` },
     });
 
-    const payload = ticket.getPayload();
-    if (!payload) {
-      ctx.throw(401, "Invalid Google payload");
+    const payload = response.data; // payload sẽ chứa email, name, id
+    if (!payload || !payload.id || !payload.email) {
+      ctx.status = 401;
+      ctx.body = { success: false, message: "Invalid Google payload" };
+      return;
     }
 
     const email = payload.email;
     const name = payload.name;
-    const googleId = payload.sub;
+    const googleId = payload.id; // ID Google
 
-    //
     const ggUsername = `GG_${email}`;
 
+    // Kiểm tra account đã có chưa
     let account = await getAccountByUsername(ggUsername);
 
     if (!account || account.success === false) {
+      // Tạo account mới
       const newAcc = {
         username: ggUsername,
         password: `google_${googleId}`,
       };
-
       account = await createAccount(newAcc);
 
       if (!account || account.success === false) {
@@ -286,6 +288,7 @@ exports.googleLogin = async (ctx) => {
       });
     }
 
+    // Tạo accessToken JWT và refreshToken
     const accessToken = jwt.sign(
       { id: account._id, username: account.username },
       process.env.JWT_SECRET,
@@ -293,11 +296,10 @@ exports.googleLogin = async (ctx) => {
     );
 
     const refreshToken = generateRefreshToken();
-
     await RefreshToken.create({
       token: refreshToken,
       userId: account._id,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     ctx.body = {
@@ -317,6 +319,3 @@ exports.googleLogin = async (ctx) => {
     ctx.body = { success: false, message: "Invalid Google token" };
   }
 };
-
-
-
