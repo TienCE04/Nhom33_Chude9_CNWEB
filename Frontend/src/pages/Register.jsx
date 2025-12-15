@@ -296,10 +296,6 @@ const Register = () => {
                     <FontAwesomeIcon icon={faDiscord} className="w-5 h-5" />
                     <span>Đăng ký với Discord</span>
                   </GameButton>
-
-                  <p className="mt-2 text-xs text-muted-foreground text-center">
-                    Chưa kết nối backend — đây là phần giữ chỗ.
-                  </p>
                 </div>
               </div>
             </div>

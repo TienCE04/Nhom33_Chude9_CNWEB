@@ -149,6 +149,33 @@ export const topicApi = {
       return { ...errorResult, data: [] };
     }
   },
+
+  createTopic: async (topicData) => {
+    try {
+      const response = await api.post("/create/topic", topicData);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, "Failed to create topic");
+    }
+  },
+
+  deleteTopic: async (topicId) => {
+    try {
+      const response = await api.delete(`/topic/${topicId}`);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, "Failed to delete topic");
+    }
+  },
+
+  updateTopic: async (topicId, topicData) => {
+    try {
+      const response = await api.put(`/topic/${topicId}`, topicData);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, "Failed to update topic");
+    }
+  },
 };
 
 export const playerApi = {

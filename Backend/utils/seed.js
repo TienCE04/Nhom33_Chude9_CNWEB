@@ -11,6 +11,8 @@ const DEFAULT_TOPICS = [
   { nameTopic: "Du lịch", topicIcon: "flight" },
   { nameTopic: "Nghệ thuật", topicIcon: "palette" },
   { nameTopic: "Trò chơi", topicIcon: "sports_esports" },
+  {nameTopic: "testsadas",
+  topicIcon: "sports_esports",}
 ];
 
 const seedDefaultTopics = async () => {
@@ -26,7 +28,7 @@ const seedDefaultTopics = async () => {
         await Topic.createTopic({
           ...topicData,
           createdBy: "system",
-          keyWord: [], 
+          keyWord: ["history", "deptrai", "con ca"], 
         });
         console.log(`   Created default topic: ${topicData.nameTopic}`);
       } else {

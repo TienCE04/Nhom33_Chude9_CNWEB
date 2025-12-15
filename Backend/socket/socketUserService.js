@@ -12,7 +12,7 @@ function removeSocket(socketId) {
   socketUserMap.delete(socketId);
 }
 
-export {
+module.exports = {
   bindSocketToUser,
   getUsernameBySocket,
   removeSocket
