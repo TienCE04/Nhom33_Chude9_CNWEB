@@ -21,6 +21,10 @@ module.exports = class Topic {
   static async findOne(query) {
     return await TopicModel.findOne(query);
   }
+  static  async findById(id){
+    const topic = await TopicModel.findOne({_id: id}).lean();
+    return topic
+  }
 
   static async getAllTopics() {
     return await TopicModel.find();

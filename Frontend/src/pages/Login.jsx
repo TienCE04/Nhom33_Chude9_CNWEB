@@ -86,7 +86,9 @@ const Login = () => {
       
       if (result.success) {
         // Lưu token và user info
-        localStorage.setItem("authToken", result.token);
+        localStorage.setItem("authToken", result.accessToken);
+        localStorage.setItem("refreshToken", result.refreshToken);
+        
         localStorage.setItem("user", JSON.stringify(result.user));
         localStorage.setItem("isLoggedIn", "true");
         
