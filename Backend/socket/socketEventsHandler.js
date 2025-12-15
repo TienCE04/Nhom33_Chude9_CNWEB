@@ -2,7 +2,7 @@ const room = require("../models/room");
 const players = require("../service/playerRedisService");
 const playerMongo = require("../models/player");
 const gamePlay = require("../service/gamePlayService");
-import * as socketUser from "../socket/socketUserService.js";
+const socketUser = require("../socket/socketUserService");
 
 const roomIntervals = new Map();
 const countdownIntervals = new Map();
