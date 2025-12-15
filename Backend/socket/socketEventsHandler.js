@@ -41,9 +41,10 @@ async function startRound(io, room_id, topic_type) {
   // Hàm thực hiện logic 1 vòng chơi
   async function runRoundLogic(currentRoomData) {
     // Lấy người vẽ và từ khóa
+    console.log(currentRoomData)
     const { drawer_username, keyword } = await gamePlay.handler(
-      room_id,
-      currentRoomData.topic_id,
+      room_id ,
+      currentRoomData.room.idTopic,
       await players.getTmpPlayers(room_id),
       await players.getTmpKeywords(room_id),
       topic_type

@@ -152,9 +152,10 @@ const ROUND_STATE_KEY = "roundState"; // Tên trường chung trong Hash
 async function initRoundState(room_id) {
   const key = `room:${room_id}:${ROUND_STATE_KEY}`;
   // Xóa key cũ và tạo lại
-  await sendCommand(["DEL", key]);
-  // Thêm trường 'answered' (danh sách người chơi đã đoán đúng)
-  await sendCommand(["HSET", key, "answered", "[]"]);
+  await redis.del(key);
+
+  // Thêm trường 'answered' với giá trị mảng rỗng
+  await redis.hmset(key, "answered", JSON.stringify([]));
 }
 
 async function setRoundState(room_id, state) {
@@ -167,7 +168,8 @@ async function setRoundState(room_id, state) {
   if (state.timeLeft !== undefined)
     args.push("timeLeft", state.timeLeft.toString());
 
-  await sendCommand(["HMSET", ...args]);
+  await redis.hmset(...args);
+
 }
 
 async function getRoundState(room_id) {
@@ -199,7 +201,7 @@ async function addAnsweredPlayer(room_id, username) {
   if (!state.answered.includes(username)) {
     state.answered.push(username);
     const answeredJson = JSON.stringify(state.answered);
-    await sendCommand(["HSET", key, "answered", answeredJson]);
+    await redis.hmset(key, { answered: answeredJson });
   }
 }
 
@@ -240,17 +242,18 @@ async function removeTmpPlayer(room_id, username) {
 
 async function getTmpKeywords(room_id) {
   const key = `room:tmpKeywords:${room_id}`;
-  return await sendCommand(["LRANGE", key, "0", "-1"]);
+  return await redis.lrange(key, 0, -1);
 }
 
 async function addTmpKeyword(room_id, keyword) {
   const key = `room:tmpKeywords:${room_id}`;
-  await sendCommand(["RPUSH", key, keyword]);
+  await redis.rpush(key, keyword);
+
 }
 
 async function resetTmpKeywords(room_id) {
   const key = `room:tmpKeywords:${room_id}`;
-  await sendCommand(["DEL", key]);
+  await redis.del(key);
 }
 async function resetAnswered(room_id) {
     await redis.del(`room:answered:${room_id}`);

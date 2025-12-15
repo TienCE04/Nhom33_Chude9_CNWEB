@@ -2,6 +2,8 @@ const Joi = require("joi");
 const { v4: uuidv4 } = require("uuid");
 const { redis } = require("../models/index");
 const Room = require("../models/room");
+const Topic = require("../models/topic");
+
 const ROOMS_SET_KEY = "rooms";
 const roomKey = (id) => `room:${id}`;
 
@@ -22,7 +24,18 @@ exports.createRoom = async (ctx) => {
     ctx.body = { success: false, message: "Invalid params", verbosity: err.message };
     return;
   }
-
+  if( !body.metadata.topicId ){
+    ctx.status = 400;
+    ctx.body = { success: false, message: "Miss topic" };
+    return;
+  }
+  const topic = await Topic.findById(body.metadata.topicId)
+  console.log(topic)
+  if( !topic || !topic.keyWord) {
+      ctx.status = 400;
+      ctx.body = { success: false, message: "Invalid topic" };
+      return;
+  }
   const id = body.id || uuidv4();
   const key = roomKey(id);
   const nowIso = new Date().toISOString();
