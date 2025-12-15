@@ -1,14 +1,20 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Palette, X } from "lucide-react";
 import { GameButton } from "../components/GameButton";
 import { Input } from "antd";
+import { topicApi } from "../lib/api";
+import { useAuth } from "../hooks/useAuth";
 
 export const CreateTheme = () => {
   const navigate = useNavigate();
-  const [themeName, setThemeName] = useState("");
+  const location = useLocation();
+  const editingTopic = location.state?.topic;
+  
+  const { user } = useAuth();
+  const [themeName, setThemeName] = useState(editingTopic?.nameTopic || "");
   const [keywordInput, setKeywordInput] = useState("");
-  const [keywords, setKeywords] = useState([]);
+  const [keywords, setKeywords] = useState(editingTopic?.keyWord || []);
   const [duplicateMessage, setDuplicateMessage] = useState("");
 
   const handleAddKeyword = (e) => {
@@ -32,17 +38,42 @@ export const CreateTheme = () => {
     setKeywords(keywords.filter((_, i) => i !== index));
   };
 
-  const handleCreateTheme = () => {
+  const handleCreateTheme = async () => {
     if (!themeName.trim()) {
       alert("Vui lòng nhập tên chủ đề");
       return;
     }
-    if (keywords.length === 0) {
-      alert("Vui lòng nhập ít nhất một từ khóa");
+    if (keywords.length < 20) {
+      alert("Cần ít nhất 20 từ khóa để tạo chủ đề mới");
       return;
     }
-    console.log({ themeName, keywords });
-    navigate("/lobby");
+    
+    try {
+      let result;
+      if (editingTopic) {
+        result = await topicApi.updateTopic(editingTopic._id || editingTopic.idTopic, {
+          nameTopic: themeName,
+          keyWord: keywords,
+        });
+      } else {
+        result = await topicApi.createTopic({
+          nameTopic: themeName,
+          keyWord: keywords,
+          createdBy: user?.username || "system",
+          topicIcon: "extension"
+        });
+      }
+
+      if (result.success) {
+        alert(editingTopic ? "Cập nhật chủ đề thành công!" : "Tạo chủ đề thành công!");
+        navigate("/create/room");
+      } else {
+        alert(result.message || (editingTopic ? "Cập nhật thất bại" : "Tạo chủ đề thất bại"));
+      }
+    } catch (error) {
+      console.error("Error saving theme:", error);
+      alert("Có lỗi xảy ra khi lưu chủ đề");
+    }
   };
 
   return (
@@ -51,7 +82,7 @@ export const CreateTheme = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3 px-6">
           <Palette className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-extrabold">Tạo chủ đề</h1>
+          <h1 className="text-3xl font-extrabold">{editingTopic ? "Chỉnh sửa chủ đề" : "Tạo chủ đề"}</h1>
         </div>
         <GameButton variant="secondary" size="md" onClick={() => navigate("/create/room")}>
           <ArrowLeft className="w-5 h-5 mr-2" />
@@ -100,6 +131,9 @@ export const CreateTheme = () => {
                 {duplicateMessage}
               </p>
             )}
+            <p className="text-xs text-muted-foreground mt-3">
+              Nhập tối thiểu 20 từ khóa để tạo chủ đề mới.
+            </p>
           </div>
 
           {/* Display Settings Summary */}
@@ -169,10 +203,10 @@ export const CreateTheme = () => {
               variant="success"
               size="lg"
               onClick={handleCreateTheme}
-              disabled={!themeName.trim() || keywords.length === 0}
+              disabled={!themeName.trim() || keywords.length < 20}
               className="flex-1"
             >
-              Tạo chủ đề
+              {editingTopic ? "Lưu thay đổi" : "Tạo chủ đề"}
             </GameButton>
           </div>
         </div>

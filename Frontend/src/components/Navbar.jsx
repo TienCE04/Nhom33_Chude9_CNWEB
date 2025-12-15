@@ -1,9 +1,10 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { Home, User, Settings, LogOut, Gamepad2, Palette } from "lucide-react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Home, User, Settings, LogOut, Gamepad2, Palette, Library } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 
 const Navbar = ({ onLogout }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Hàm tạo class cho link, tự động highlight khi active
   const navLinkClass = ({ isActive }) =>
@@ -51,9 +52,34 @@ const Navbar = ({ onLogout }) => {
             <span className="hidden md:block">Home</span>
           </NavLink>
 
-          <NavLink to="/rooms" className={navLinkClass} title="Danh sách phòng">
+          <NavLink
+            to="/rooms"
+            className={({ isActive }) =>
+              navLinkClass({
+                isActive:
+                  isActive ||
+                  location.pathname.startsWith("/create/room"),
+              })
+            }
+            title="Danh sách phòng"
+          >
             <Gamepad2 className="w-5 h-5" />
             <span className="hidden md:block">Rooms</span>
+          </NavLink>
+
+          <NavLink
+            to="/topics"
+            className={({ isActive }) =>
+              navLinkClass({
+                isActive:
+                  isActive ||
+                  location.pathname.startsWith("/create/theme"),
+              })
+            }
+            title="Thư viện chủ đề"
+          >
+            <Library className="w-5 h-5" />
+            <span className="hidden md:block">Topics</span>
           </NavLink>
 
           <NavLink to="/profile" className={navLinkClass} title="Hồ sơ">

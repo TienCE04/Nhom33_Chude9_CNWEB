@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Gamepad2, Plus, Loader } from "lucide-react";
+import { ArrowLeft, Gamepad2, Plus, Loader, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { GameButton } from "../components/GameButton";
-import { Select } from "antd";
+import { Select, Dropdown } from "antd";
 import { topicApi, authApi, roomApi } from "@/lib/api";
 import { toast } from "sonner";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
+
+import { ConfirmModal } from "../components/ConfirmModal";
 
 // Material Icon mapping
 const TOPIC_ICONS = {
@@ -50,6 +52,7 @@ const CreateRoom = () => {
   const [topics, setTopics] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, topicId: null });
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -80,6 +83,39 @@ const CreateRoom = () => {
 
     fetchTopics();
   }, []);
+
+  const handleDeleteTopic = (topicId, e) => {
+    e.stopPropagation();
+    setDeleteModal({ isOpen: true, topicId });
+  };
+
+  const confirmDeleteTopic = async () => {
+    const topicId = deleteModal.topicId;
+    if (!topicId) return;
+
+    try {
+      const result = await topicApi.deleteTopic(topicId);
+      if (result.success) {
+        toast.success("Xóa chủ đề thành công");
+        const updatedTopics = topics.filter(t => (t._id || t.idTopic) !== topicId);
+        setTopics(updatedTopics);
+        if (selectedTopic && (selectedTopic._id === topicId || selectedTopic.idTopic === topicId)) {
+          setSelectedTopic(null);
+        }
+      } else {
+        toast.error(result.message || "Xóa chủ đề thất bại");
+      }
+    } catch (error) {
+      console.error("Error deleting topic:", error);
+      toast.error("Có lỗi xảy ra khi xóa chủ đề");
+    }
+  };
+
+  const handleEditTopic = (topic, e) => {
+    e.stopPropagation();
+    navigate("/create/theme", { state: { topic } });
+  };
+
   const handleCreateRoom = async () => {
     if (!selectedTopic) {
       toast.error("Vui lòng chọn một chủ đề");
@@ -242,51 +278,84 @@ const CreateRoom = () => {
               <div className="flex flex-wrap gap-4">
                 {topics.length > 0 ? (
                   topics.map((topic) => (
-                    <button
-                      key={topic._id || topic.idTopic}
-                      onClick={() => setSelectedTopic(topic)}
-                      className={`
-                        w-32 h-32 border-2 border-border flex flex-col items-center justify-center gap-3 rounded-xl
-                        transition-all duration-500
-                        hover:scale-105
-                        ${
-                          selectedTopic?._id === topic._id || selectedTopic?.idTopic === topic.idTopic
-                            ? "bg-primary border-primary shadow-[0_8px_24px_hsl(210_60%_70%_/_0.25)]"
-                            : "bg-card hover:bg-muted/30"
-                        }
-                      `}
-                    >
-                      <div
+                    <div key={topic._id || topic.idTopic} className="relative group">
+                      <button
+                        onClick={() => setSelectedTopic(topic)}
                         className={`
-                          w-16 h-16 rounded-full
-                          flex items-center justify-center
-                          transition-colors duration-200
+                          w-32 h-32 border-2 border-border flex flex-col items-center justify-center gap-3 rounded-xl
+                          transition-all duration-500
+                          hover:scale-105
                           ${
                             selectedTopic?._id === topic._id || selectedTopic?.idTopic === topic.idTopic
-                              ? "bg-white"
-                              : "bg-primary/20"
+                              ? "bg-primary border-primary shadow-[0_8px_24px_hsl(210_60%_70%_/_0.25)]"
+                              : "bg-card hover:bg-muted/30"
                           }
                         `}
                       >
-                        <MaterialIcon
-                          iconName={TOPIC_ICONS[topic.nameTopic] || "category"}
-                          className={`text-3xl ${
+                        <div
+                          className={`
+                            w-16 h-16 rounded-full
+                            flex items-center justify-center
+                            transition-colors duration-200
+                            ${
+                              selectedTopic?._id === topic._id || selectedTopic?.idTopic === topic.idTopic
+                                ? "bg-white"
+                                : "bg-primary/20"
+                            }
+                          `}
+                        >
+                          <MaterialIcon
+                            iconName={TOPIC_ICONS[topic.nameTopic] || topic.topicIcon || "category"}
+                            className={`text-3xl ${
+                              selectedTopic?._id === topic._id || selectedTopic?.idTopic === topic.idTopic
+                                ? "text-primary"
+                                : "text-primary"
+                            }`}
+                          />
+                        </div>
+                        <span
+                          className={`font-semibold text-center text-md line-clamp-2 px-2 ${
                             selectedTopic?._id === topic._id || selectedTopic?.idTopic === topic.idTopic
-                              ? "text-primary"
-                              : "text-primary"
+                              ? "text-primary-foreground"
+                              : "text-foreground"
                           }`}
-                        />
-                      </div>
-                      <span
-                        className={`font-semibold text-center text-md line-clamp-2 px-2 ${
-                          selectedTopic?._id === topic._id || selectedTopic?.idTopic === topic.idTopic
-                            ? "text-primary-foreground"
-                            : "text-foreground"
-                        }`}
-                      >
-                        {topic.nameTopic}
-                      </span>
-                    </button>
+                        >
+                          {topic.nameTopic}
+                        </span>
+                      </button>
+                      
+                      {topic.createdBy !== "system" && (
+                        <div className="absolute top-2 right-2 z-10">
+                          <Dropdown
+                            menu={{
+                              items: [
+                                {
+                                  key: 'edit',
+                                  label: 'Chỉnh sửa',
+                                  icon: <Edit className="w-4 h-4" />,
+                                  onClick: ({ domEvent }) => handleEditTopic(topic, domEvent)
+                                },
+                                {
+                                  key: 'delete',
+                                  label: 'Xóa',
+                                  icon: <Trash2 className="w-4 h-4 text-danger" />,
+                                  danger: true,
+                                  onClick: ({ domEvent }) => handleDeleteTopic(topic._id || topic.idTopic, domEvent)
+                                }
+                              ]
+                            }}
+                            trigger={['click']}
+                          >
+                            <button 
+                              className="p-1 rounded-full hover:bg-black/10 transition-colors bg-white/50 backdrop-blur-sm"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreVertical className="w-4 h-4 text-foreground/80" />
+                            </button>
+                          </Dropdown>
+                        </div>
+                      )}
+                    </div>
                   ))
                 ) : (
                   <div className="w-full text-center text-muted-foreground py-10">
@@ -320,6 +389,17 @@ const CreateRoom = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={confirmDeleteTopic}
+        title="Xóa chủ đề"
+        message="Bạn có chắc chắn muốn xóa chủ đề này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        type="danger"
+      />
     </div>
   );
 };

@@ -15,8 +15,9 @@ exports.handler = async (room_id, topic_id, tmpPlayers, tmpKeywords, topic_type)
 
     // Chọn từ khóa
     // Lấy danh sách tất cả từ khóa từ MongoDB
-    const topicData = await Topic.TopicModel.findById(topic_id).lean(); 
-    let availableKeywords = topicData.keyWord.filter(kw => !tmpKeywords.includes(kw));
+    const topicData = await Topic.findById(topic_id); 
+    console.log(topic_id)
+    let availableKeywords = topicData.keyWord?.filter(kw => !tmpKeywords.includes(kw));
 
     // Nếu hết từ khóa tạm thời, reset danh sách từ khóa đã dùng
     if (availableKeywords.length === 0) {

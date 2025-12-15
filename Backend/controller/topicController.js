@@ -9,6 +9,7 @@ exports.createTopic = async (ctx) => {
         .items(Joi.string())
         .default([]),
       createdBy: Joi.string().default("system"),
+      topicIcon: Joi.string().default("extension"),
     });
 
     const { error, value } = schema.validate(ctx.request.body);
