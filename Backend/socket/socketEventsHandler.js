@@ -192,7 +192,7 @@ function attachSocketEvents(io, socket) {
     await players.updatePlayerJoin(roomId, user);
 
      //gắn socketId với username
-    socketUser.bindSocketToUser(socket.id, username);
+    socketUser.bindSocketToUser(socket.id, user.username);
 
 
     const playersData = await players.getRankByRoomId(roomId);
