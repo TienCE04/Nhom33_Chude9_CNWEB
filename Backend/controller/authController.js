@@ -244,39 +244,50 @@ exports.googleLogin = async (ctx) => {
   }
 
   try {
+    // 
     const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
-    const { email, name, sub: googleId, email_verified } = payload;
-
-    if (!email_verified) {
-      ctx.throw(401, "Email not verified");
+    if (!payload) {
+      ctx.throw(401, "Invalid Google payload");
     }
 
-    const username = `GG_${googleId}`;
+    const email = payload.email;
+    const name = payload.name;
+    const googleId = payload.sub;
 
-    let account = await getAccountByUsername(username);
+    //
+    const ggUsername = `GG_${email}`;
 
-    if (!account) {
-      account = await createAccount({
-        username,
-        authProvider: "google",
-        googleId,
-      });
+    let account = await getAccountByUsername(ggUsername);
 
-      await createPlayer(username);
+    if (!account || account.success === false) {
+      const newAcc = {
+        username: ggUsername,
+        password: `google_${googleId}`,
+      };
+
+      account = await createAccount(newAcc);
+
+      if (!account || account.success === false) {
+        ctx.status = 500;
+        ctx.body = { success: false, message: "Failed to create account" };
+        return;
+      }
+
+      await createPlayer(ggUsername);
       await createProfile({
-        username,
+        username: ggUsername,
         email,
         nickname: name,
       });
     }
 
     const accessToken = jwt.sign(
-      { id: account._id, username },
+      { id: account._id, username: account.username },
       process.env.JWT_SECRET,
       { expiresIn: "2h" }
     );
@@ -295,16 +306,17 @@ exports.googleLogin = async (ctx) => {
       refreshToken,
       user: {
         id: account._id,
-        username,
+        username: account.username,
         email,
         nickname: name,
       },
     };
   } catch (err) {
-    console.error(err);
+    console.error("Google login error:", err);
     ctx.status = 401;
     ctx.body = { success: false, message: "Invalid Google token" };
   }
 };
+
 
 
