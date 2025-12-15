@@ -12,21 +12,6 @@ import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
 import "../assets/styles/gamePage.css";
 
-const MOCK_PLAYERS = [
-  { id: "1", name: "Player 1", isReady: true },
-  { id: "2", name: "Player 2", isReady: true },
-  { id: "3", name: "Player 3", isReady: false },
-  { id: "4", name: "Player 4", isReady: false },
-  { id: "5", name: "Player 5", isReady: true },
-  { id: "6", name: "Player 6", isReady: true },
-];
-
-const MOCK_MESSAGES = [
-  { id: "1", player: "System", text: "Welcome to the room!", isSystem: true },
-  { id: "2", player: "Player 1", text: "Let's play!" },
-  { id: "3", player: "Player 2", text: "Ready when you are!" },
-];
-
 const Lobby = () => {
   const navigate = useNavigate();
   const [roomCode] = useState("GAME-1234");
@@ -34,18 +19,35 @@ const Lobby = () => {
   const [drawTime, setDrawTime] = useState(60);
   const [topic, setTopic] = useState("Animals");
   const [roomType, setRoomType] = useState("Public");
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [messages, setMessages] = useState([]);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [showRulesPopup, setShowRulesPopup] = useState(false);
   const [players, setPlayers] = useState([])
   useEffect(() => {
       const handleUpdatePlayerRoomEvent = (playersData) => {
-        console.log(">>>", playersData)
-          players = setPlayers(playersData)
+        setPlayers(playersData)
       };
+      const handleUpdateChat = (data) => {
+        const { username, message } = data;
+        const user = getUserInfo();
+
+        if (user.username === username) return;
+
+        setMessages(prev => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            player: username,
+            text: message,
+          },
+        ]);
+      };
+
       socket.on("playersData", handleUpdatePlayerRoomEvent);
+      socket.on("updateChat", handleUpdateChat)
       return () => {
         socket.off("playersData", handleUpdatePlayerRoomEvent);
+        socket.off("updateChat", handleUpdateChat)
       };
     }, []);
 
@@ -55,10 +57,20 @@ const Lobby = () => {
   };
 
   const handleSendMessage = (message) => {
+    const user = getUserInfo();
     setMessages([
       ...messages,
-      { id: Date.now().toString(), player: "You", text: message },
+      { id: Date.now().toString() + user.username, player: "You", text: message },
     ]);
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get("room");
+
+    const data = {
+      message: message,
+      user: user,
+      room_id: roomId
+    }
+    socket.emit("newChat", data)
   };
 
   const handleConfirmRules = () => {
