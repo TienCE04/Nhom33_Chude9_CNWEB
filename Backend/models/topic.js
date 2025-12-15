@@ -3,7 +3,7 @@ const { mongoose, redis } = require("./index");
 const topicSchema = new mongoose.Schema({
   idTopic: { type: mongoose.Schema.Types.ObjectId, auto: true },
   nameTopic: { type: String, required: true },
-  topicIcon: { type: String, default: "category" },
+  topicIcon: { type: String, default: "extension" },
   keyWord: { type: [String], default: [] },
   createdBy: { type: String, required: true, default: "system" },
   timeStamp: { type: Date, default: Date.now },

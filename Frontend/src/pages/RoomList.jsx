@@ -86,7 +86,7 @@ const RoomList = () => {
         const mappedRooms = result.rooms.map((room) => ({
           id: room.id,
           topic: room.name,
-          topicIcon: room.metadata?.topicIcon || "category",
+          topicIcon: room.metadata?.topicIcon || "extension",
           roomCode: room.id.substring(0, 8).toUpperCase(),
           currentPlayers: room.currentPlayers || 0,
           maxPlayers: room.maxPlayer,
@@ -205,7 +205,7 @@ const RoomList = () => {
                 <div className="w-24 h-24 rounded-full flex items-center justify-center border-2 border-border shadow-sm">
                   <div className="w-20 h-20 rounded-full flex items-center justify-center transition-all duration-200 bg-primary/20">
                     <MaterialIcon
-                      iconName={room.topicIcon || "category"}
+                      iconName={room.topicIcon || "extension"}
                       className="text-3xl text-primary"
                     />
                   </div>

@@ -3,9 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Palette, X } from "lucide-react";
 import { GameButton } from "../components/GameButton";
 import { Input } from "antd";
+import { topicApi } from "../lib/api";
+import { useAuth } from "../hooks/useAuth";
 
 export const CreateTheme = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [themeName, setThemeName] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
   const [keywords, setKeywords] = useState([]);
@@ -32,17 +35,34 @@ export const CreateTheme = () => {
     setKeywords(keywords.filter((_, i) => i !== index));
   };
 
-  const handleCreateTheme = () => {
+  const handleCreateTheme = async () => {
     if (!themeName.trim()) {
       alert("Vui lòng nhập tên chủ đề");
       return;
     }
-    if (keywords.length === 0) {
-      alert("Vui lòng nhập ít nhất một từ khóa");
+    if (keywords.length < 20) {
+      alert("Cần ít nhất 20 từ khóa để tạo chủ đề mới");
       return;
     }
-    console.log({ themeName, keywords });
-    navigate("/lobby");
+    
+    try {
+      const result = await topicApi.createTopic({
+        nameTopic: themeName,
+        keyWord: keywords,
+        createdBy: user?.username || "system",
+        topicIcon: "extension"
+      });
+
+      if (result.success) {
+        alert("Tạo chủ đề thành công!");
+        navigate("/create/room");
+      } else {
+        alert(result.message || "Tạo chủ đề thất bại");
+      }
+    } catch (error) {
+      console.error("Error creating theme:", error);
+      alert("Có lỗi xảy ra khi tạo chủ đề");
+    }
   };
 
   return (
@@ -100,6 +120,9 @@ export const CreateTheme = () => {
                 {duplicateMessage}
               </p>
             )}
+            <p className="text-xs text-muted-foreground mt-3">
+              Nhập tối thiểu 20 từ khóa để tạo chủ đề mới.
+            </p>
           </div>
 
           {/* Display Settings Summary */}
@@ -169,7 +192,7 @@ export const CreateTheme = () => {
               variant="success"
               size="lg"
               onClick={handleCreateTheme}
-              disabled={!themeName.trim() || keywords.length === 0}
+              disabled={!themeName.trim() || keywords.length < 20}
               className="flex-1"
             >
               Tạo chủ đề
