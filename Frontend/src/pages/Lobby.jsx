@@ -77,7 +77,7 @@ const Lobby = () => {
     const data = {
       message: message,
       user: user,
-      room_id: room.id
+      room_id: room.id||room.room.id
     }
     socket.emit("newChat", data)
   };

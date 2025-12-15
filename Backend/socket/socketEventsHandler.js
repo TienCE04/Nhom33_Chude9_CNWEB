@@ -164,6 +164,7 @@ function attachSocketEvents(io, socket) {
     await players.updatePlayerJoin(roomData.id, user);
     const playersData = await players.getRankByRoomId(roomData.id);
     io.to(roomData.id).emit("playersData", playersData);
+    io.to(roomData.id).emit("roomData", roomData);
   })
   // Delete Room 
   socket.on("delete_room", async (data) => {
