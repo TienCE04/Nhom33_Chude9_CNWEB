@@ -245,49 +245,44 @@ exports.googleLogin = async (ctx) => {
 
   try {
     const ticket = await client.verifyIdToken({
-      idToken,
+      idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
     const payload = ticket.getPayload();
-    const email = payload.email;
-    const name = payload.name;
-    const googleId = payload.sub;
+    const { email, name, sub: googleId, email_verified } = payload;
 
-    // 
-    const ggUsername = `GG_${email}`;
+    if (!email_verified) {
+      ctx.throw(401, "Email not verified");
+    }
 
-    let account = await getAccountByUsername(ggUsername);
+    const username = `GG_${googleId}`;
 
-    if (!account || account.success === false) {
-      const newAcc = {
-        username: ggUsername,
-        password: `google_${googleId}`,
-      };
+    let account = await getAccountByUsername(username);
 
-      account = await createAccount(newAcc);
+    if (!account) {
+      account = await createAccount({
+        username,
+        authProvider: "google",
+        googleId,
+      });
 
-      if (account.success === false) {
-        ctx.status = 500;
-        ctx.body = { success: false, message: "Failed to create account" };
-        return;
-      }
-
-      await createPlayer(ggUsername);
+      await createPlayer(username);
       await createProfile({
-        username: ggUsername,
+        username,
         email,
         nickname: name,
       });
     }
 
     const accessToken = jwt.sign(
-      { id: account._id, username: account.username },
+      { id: account._id, username },
       process.env.JWT_SECRET,
       { expiresIn: "2h" }
     );
 
     const refreshToken = generateRefreshToken();
+
     await RefreshToken.create({
       token: refreshToken,
       userId: account._id,
@@ -300,7 +295,7 @@ exports.googleLogin = async (ctx) => {
       refreshToken,
       user: {
         id: account._id,
-        username: account.username,
+        username,
         email,
         nickname: name,
       },
@@ -311,4 +306,5 @@ exports.googleLogin = async (ctx) => {
     ctx.body = { success: false, message: "Invalid Google token" };
   }
 };
+
 
