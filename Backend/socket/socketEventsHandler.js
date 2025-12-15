@@ -323,9 +323,10 @@ function attachSocketEvents(io, socket) {
 
   // ---------------- CHAT ----------------
   socket.on("newChat", async (data) => {
-    const { room_id, username, chat } = data;
-    if (!chat) return;
-    io.to(room_id).emit("newChat", { username, chat });
+    const { room_id, user, message } = data;
+    const username = user.username
+    if (!message) return;
+    io.to(room_id).emit("updateChat", { username, message });
   });
 
   // ---------------- HINT REQUEST ----------------
