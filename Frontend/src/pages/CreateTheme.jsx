@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Palette, X } from "lucide-react";
 import { GameButton } from "../components/GameButton";
 import { Input } from "antd";
@@ -8,10 +8,13 @@ import { useAuth } from "../hooks/useAuth";
 
 export const CreateTheme = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editingTopic = location.state?.topic;
+  
   const { user } = useAuth();
-  const [themeName, setThemeName] = useState("");
+  const [themeName, setThemeName] = useState(editingTopic?.nameTopic || "");
   const [keywordInput, setKeywordInput] = useState("");
-  const [keywords, setKeywords] = useState([]);
+  const [keywords, setKeywords] = useState(editingTopic?.keyWord || []);
   const [duplicateMessage, setDuplicateMessage] = useState("");
 
   const handleAddKeyword = (e) => {
@@ -46,22 +49,30 @@ export const CreateTheme = () => {
     }
     
     try {
-      const result = await topicApi.createTopic({
-        nameTopic: themeName,
-        keyWord: keywords,
-        createdBy: user?.username || "system",
-        topicIcon: "extension"
-      });
+      let result;
+      if (editingTopic) {
+        result = await topicApi.updateTopic(editingTopic._id || editingTopic.idTopic, {
+          nameTopic: themeName,
+          keyWord: keywords,
+        });
+      } else {
+        result = await topicApi.createTopic({
+          nameTopic: themeName,
+          keyWord: keywords,
+          createdBy: user?.username || "system",
+          topicIcon: "extension"
+        });
+      }
 
       if (result.success) {
-        alert("Tạo chủ đề thành công!");
+        alert(editingTopic ? "Cập nhật chủ đề thành công!" : "Tạo chủ đề thành công!");
         navigate("/create/room");
       } else {
-        alert(result.message || "Tạo chủ đề thất bại");
+        alert(result.message || (editingTopic ? "Cập nhật thất bại" : "Tạo chủ đề thất bại"));
       }
     } catch (error) {
-      console.error("Error creating theme:", error);
-      alert("Có lỗi xảy ra khi tạo chủ đề");
+      console.error("Error saving theme:", error);
+      alert("Có lỗi xảy ra khi lưu chủ đề");
     }
   };
 
@@ -71,7 +82,7 @@ export const CreateTheme = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3 px-6">
           <Palette className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-extrabold">Tạo chủ đề</h1>
+          <h1 className="text-3xl font-extrabold">{editingTopic ? "Chỉnh sửa chủ đề" : "Tạo chủ đề"}</h1>
         </div>
         <GameButton variant="secondary" size="md" onClick={() => navigate("/create/room")}>
           <ArrowLeft className="w-5 h-5 mr-2" />
@@ -195,7 +206,7 @@ export const CreateTheme = () => {
               disabled={!themeName.trim() || keywords.length < 20}
               className="flex-1"
             >
-              Tạo chủ đề
+              {editingTopic ? "Lưu thay đổi" : "Tạo chủ đề"}
             </GameButton>
           </div>
         </div>

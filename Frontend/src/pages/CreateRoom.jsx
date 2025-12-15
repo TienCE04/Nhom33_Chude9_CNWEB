@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
 
+import { ConfirmModal } from "../components/ConfirmModal";
+
 // Material Icon mapping
 const TOPIC_ICONS = {
   "Động vật": "cruelty_free",
@@ -50,6 +52,7 @@ const CreateRoom = () => {
   const [topics, setTopics] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, topicId: null });
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -81,31 +84,36 @@ const CreateRoom = () => {
     fetchTopics();
   }, []);
 
-  const handleDeleteTopic = async (topicId, e) => {
+  const handleDeleteTopic = (topicId, e) => {
     e.stopPropagation();
-    if (window.confirm("Bạn có chắc chắn muốn xóa chủ đề này?")) {
-      try {
-        const result = await topicApi.deleteTopic(topicId);
-        if (result.success) {
-          toast.success("Xóa chủ đề thành công");
-          const updatedTopics = topics.filter(t => (t._id || t.idTopic) !== topicId);
-          setTopics(updatedTopics);
-          if (selectedTopic && (selectedTopic._id === topicId || selectedTopic.idTopic === topicId)) {
-            setSelectedTopic(null);
-          }
-        } else {
-          toast.error(result.message || "Xóa chủ đề thất bại");
+    setDeleteModal({ isOpen: true, topicId });
+  };
+
+  const confirmDeleteTopic = async () => {
+    const topicId = deleteModal.topicId;
+    if (!topicId) return;
+
+    try {
+      const result = await topicApi.deleteTopic(topicId);
+      if (result.success) {
+        toast.success("Xóa chủ đề thành công");
+        const updatedTopics = topics.filter(t => (t._id || t.idTopic) !== topicId);
+        setTopics(updatedTopics);
+        if (selectedTopic && (selectedTopic._id === topicId || selectedTopic.idTopic === topicId)) {
+          setSelectedTopic(null);
         }
-      } catch (error) {
-        console.error("Error deleting topic:", error);
-        toast.error("Có lỗi xảy ra khi xóa chủ đề");
+      } else {
+        toast.error(result.message || "Xóa chủ đề thất bại");
       }
+    } catch (error) {
+      console.error("Error deleting topic:", error);
+      toast.error("Có lỗi xảy ra khi xóa chủ đề");
     }
   };
 
   const handleEditTopic = (topic, e) => {
     e.stopPropagation();
-    toast.info("Tính năng chỉnh sửa đang được phát triển");
+    navigate("/create/theme", { state: { topic } });
   };
 
   const handleCreateRoom = async () => {
@@ -381,6 +389,17 @@ const CreateRoom = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={confirmDeleteTopic}
+        title="Xóa chủ đề"
+        message="Bạn có chắc chắn muốn xóa chủ đề này? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        type="danger"
+      />
     </div>
   );
 };
