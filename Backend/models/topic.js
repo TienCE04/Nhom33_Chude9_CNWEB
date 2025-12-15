@@ -38,11 +38,17 @@ module.exports = class Topic {
     return await TopicModel.find({ createdBy: username }).sort({ timeStamp: -1 });
   }
 
-  static async updateTopic(idTopic, updateData) {
-    return await TopicModel.findOneAndUpdate({ idTopic: idTopic }, updateData, { new: true });
+  static async updateTopic(id, updateData) {
+    return await TopicModel.findOneAndUpdate(
+      { $or: [{ idTopic: id }, { _id: id }] },
+      updateData,
+      { new: true }
+    );
   }
 
-  static async deleteTopic(idTopic) {
-    return await TopicModel.findOneAndDelete({ idTopic: idTopic });
+  static async deleteTopic(id) {
+    return await TopicModel.findOneAndDelete({
+      $or: [{ idTopic: id }, { _id: id }],
+    });
   }
 };

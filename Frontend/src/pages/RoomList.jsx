@@ -6,17 +6,6 @@ import { roomApi } from "@/lib/api";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
 
-// Material Icon mapping for room topics (simple mapping for displayed topics)
-const TOPIC_ICONS = {
-  Animals: "cruelty_free",
-  Food: "cookie",
-  Objects: "directions_car",
-  Nature: "nature",
-  Sports: "sports_soccer",
-  Technology: "laptop_mac",
-};
-
-// Small wrapper to render Google Material Symbols
 const MaterialIcon = ({ iconName, className = "" }) => (
   <span className={`material-symbols-rounded ${className}`}>{iconName}</span>
 );
@@ -102,18 +91,6 @@ const RoomList = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getAvatarForTopic = (topic) => {
-    const avatars = {
-      Animals: "🦁",
-      Food: "🍕",
-      Objects: "🚗",
-      Nature: "🌲",
-      Sports: "⚽",
-      Technology: "💻",
-    };
-    return avatars[topic] || "🎮";
   };
 
   const handleJoinRoom = () => {
