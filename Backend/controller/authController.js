@@ -1,68 +1,129 @@
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
-const request = require("request");
+
 const {
   getAccountByUsername,
   createAccount,
   changePassword,
+  forgetPassword,
+  resetPassword,
 } = require("../models/account");
+
 const { createPlayer } = require("../models/player");
 const { createProfile } = require("../models/profile");
-const { compareHash } = require("../utils/auth");
+
+const {
+  compareHash,
+  generateRefreshToken,
+} = require("../utils/auth");
+
+const RefreshToken = require("../models/refreshToken");
+
 exports.login = async (ctx) => {
   const schema = Joi.object({
     username: Joi.string().required(),
     password: Joi.string().required(),
   });
 
-  const { body } = ctx.request;
-  const err = schema.validate(body).error;
-
-  if (err) {
+  const { error } = schema.validate(ctx.request.body);
+  if (error) {
     ctx.status = 400;
-    ctx.body = {
-      success: false,
-      message: "Missing or invalid params",
-      verbosity: err.message,
-    };
+    ctx.body = { success: false, message: error.message };
     return;
   }
 
-  let account = await getAccountByUsername(body.username);
-  if (account.success === false) {
+  const { username, password } = ctx.request.body;
+  const account = await getAccountByUsername(username);
+
+  if (!account || account.success === false) {
     ctx.status = 401;
     ctx.body = { success: false, message: "Account not found" };
     return;
   }
 
-  if (!compareHash(body.password, account.password)) {
+  if (!compareHash(password, account.password)) {
     ctx.status = 401;
     ctx.body = { success: false, message: "Invalid password" };
     return;
   }
 
-  const token = jwt.sign(
+  const accessToken = jwt.sign(
     { id: account._id, username: account.username },
     process.env.JWT_SECRET,
     { expiresIn: "6h" }
   );
 
+  const refreshToken = generateRefreshToken();
+  await RefreshToken.create({
+    token: refreshToken,
+    userId: account._id,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
+
   ctx.body = {
     success: true,
-    message: "Login successful",
-    token,
+    accessToken,
+    refreshToken,
     user: { id: account._id, username: account.username },
   };
 };
+
+exports.refreshToken = async (ctx) => {
+  const { refreshToken } = ctx.request.body;
+  if (!refreshToken) {
+    ctx.status = 400;
+    ctx.body = { success: false, message: "Missing refresh token" };
+    return;
+  }
+
+  const stored = await RefreshToken.findOne({ token: refreshToken });
+  if (!stored || stored.expiresAt < new Date()) {
+    ctx.status = 401;
+    ctx.body = { success: false, message: "Invalid refresh token" };
+    return;
+  }
+
+  await RefreshToken.deleteOne({ token: refreshToken });
+
+  const newRefreshToken = generateRefreshToken();
+  await RefreshToken.create({
+    token: newRefreshToken,
+    userId: stored.userId,
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  });
+
+  const newAccessToken = jwt.sign(
+    { id: stored.userId },
+    process.env.JWT_SECRET,
+    { expiresIn: "15m" }
+  );
+
+  ctx.body = {
+    success: true,
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  };
+};
+
+//logout
+exports.logout = async (ctx) => {
+  const { refreshToken } = ctx.request.body;
+  if (refreshToken) {
+    await RefreshToken.deleteOne({ token: refreshToken });
+  }
+
+  ctx.body = { success: true, message: "Logged out" };
+};
+
 exports.forgetPassword = async (ctx) => {
   const { username } = ctx.request.body;
-  const result = await Account.forgetPassword(username);
+  const result = await forgetPassword(username);
   ctx.body = result;
 };
 
 exports.resetPassword = async (ctx) => {
   const { token, newPassword } = ctx.request.body;
-  const result = await Account.resetPassword(token, newPassword);
+  const result = await resetPassword(token, newPassword);
   ctx.body = result;
 };
 
@@ -172,6 +233,7 @@ exports.changePassword = async (ctx) => {
     ctx.body = result;
   }
 };
+
 exports.googleLogin = async (ctx) => {
   const { token } = ctx.request.body;
 
@@ -182,52 +244,60 @@ exports.googleLogin = async (ctx) => {
   }
 
   try {
-    // Verify token từ Google bằng cách gọi UserInfo endpoint
-    const userInfo = await new Promise((resolve, reject) => {
-      request(
-        {
-          url: "https://www.googleapis.com/oauth2/v3/userinfo",
-          headers: { Authorization: `Bearer ${token}` },
-          json: true,
-        },
-        (err, response, body) => {
-          if (err) reject(err);
-          else if (response.statusCode !== 200)
-            reject(new Error("Failed to fetch user info"));
-          else resolve(body);
-        }
-      );
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
     });
 
-    const email = userInfo.email;
-    const name = userInfo.name;
-    const googleId = userInfo.sub;
+    const payload = ticket.getPayload();
+    const email = payload.email;
+    const name = payload.name;
+    const googleId = payload.sub;
 
-    // Kiểm tra account tồn tại chưa
-    let account = await getAccountByUsername(email);
+    // 
+    const ggUsername = `GG_${email}`;
 
-    if (account.success === false) {
+    let account = await getAccountByUsername(ggUsername);
+
+    if (!account || account.success === false) {
       const newAcc = {
-        username: email,
+        username: ggUsername,
         password: `google_${googleId}`,
       };
 
       account = await createAccount(newAcc);
 
-      await createPlayer(email);
-      await createProfile({ username: email, nickname: name, email });
+      if (account.success === false) {
+        ctx.status = 500;
+        ctx.body = { success: false, message: "Failed to create account" };
+        return;
+      }
+
+      await createPlayer(ggUsername);
+      await createProfile({
+        username: ggUsername,
+        email,
+        nickname: name,
+      });
     }
 
-    const jwtToken = jwt.sign(
+    const accessToken = jwt.sign(
       { id: account._id, username: account.username },
       process.env.JWT_SECRET,
-      { expiresIn: "6h" }
+      { expiresIn: "2h" }
     );
+
+    const refreshToken = generateRefreshToken();
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: account._id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
 
     ctx.body = {
       success: true,
-      message: "Google login successful",
-      token: jwtToken,
+      accessToken,
+      refreshToken,
       user: {
         id: account._id,
         username: account.username,
@@ -236,8 +306,9 @@ exports.googleLogin = async (ctx) => {
       },
     };
   } catch (err) {
-    console.log(err);
+    console.error(err);
     ctx.status = 401;
     ctx.body = { success: false, message: "Invalid Google token" };
   }
 };
+
