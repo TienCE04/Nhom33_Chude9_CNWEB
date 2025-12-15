@@ -19,6 +19,7 @@ const Lobby = () => {
   const [drawTime, setDrawTime] = useState(60);
   const [topic, setTopic] = useState("Animals");
   const [roomType, setRoomType] = useState("Public");
+  const [room, setRoom] = useState({})
   const [messages, setMessages] = useState([]);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [showRulesPopup, setShowRulesPopup] = useState(false);
@@ -42,12 +43,24 @@ const Lobby = () => {
           },
         ]);
       };
+      const handleUpdateRoomData = (data) =>{
+        setRoom(data)
+      };
+      const handleStartGame = (data) => {
+        setIsGameStarted(true);
+      };
 
+      socket.on("gameStarted", handleStartGame);
+      socket.on("roomData", handleUpdateRoomData);
       socket.on("playersData", handleUpdatePlayerRoomEvent);
       socket.on("updateChat", handleUpdateChat)
       return () => {
         socket.off("playersData", handleUpdatePlayerRoomEvent);
         socket.off("updateChat", handleUpdateChat)
+        socket.off("roomData", handleUpdateRoomData);
+        socket.off("gameStarted", handleStartGame);
+
+
       };
     }, []);
 
@@ -62,19 +75,18 @@ const Lobby = () => {
       ...messages,
       { id: Date.now().toString() + user.username, player: "You", text: message },
     ]);
-    const params = new URLSearchParams(window.location.search);
-    const roomId = params.get("room");
-
     const data = {
       message: message,
       user: user,
-      room_id: roomId
+      room_id: room.id
     }
     socket.emit("newChat", data)
   };
 
   const handleConfirmRules = () => {
     // include roomType in confirmation flow
+    const data = {room_id: room.id, topic_id: room.idTopic}
+    socket.emit("startGame", data)
     setShowRulesPopup(false);
     console.log("Starting game with roomType:", roomType);
     toast.success(`Bắt đầu phòng ${roomType}`);
@@ -83,9 +95,7 @@ const Lobby = () => {
 
   const handleLeaveRoom = () =>{
     const userInfo = getUserInfo();
-    const params = new URLSearchParams(window.location.search);
-    const roomId = params.get("room");
-    socket.emit("leave_room", { roomId: roomId, username: userInfo.username });
+    socket.emit("leave_room", { roomId: room.id, username: userInfo.username });
     navigate("/rooms")
   }
 

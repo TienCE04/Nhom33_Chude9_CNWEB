@@ -10,7 +10,7 @@ async function getPlayersByRoomId(room_id) {
   try {
     const key = `room:player:${room_id}`;
 
-    const listPlayers = await sendCommand(["LRANGE", key, "0", "-1"]);
+    const listPlayers = await redis.lrange(key, 0, -1);
 
     return Array.isArray(listPlayers) ? listPlayers : [];
   } catch (err) {
@@ -69,17 +69,18 @@ async function updatePlayerLeave(room_id, username) {
 async function resetPlayerScore(room_id) {
   const scoreKey = `room:broadScore:${room_id}`;
   // Xóa toàn bộ ZSET bảng điểm tạm thời
-  await sendCommand(["DEL", scoreKey]);
+  await redis.del(scoreKey);
 
   // Sau khi DEL, cần ZADD lại tất cả người chơi trong danh sách LIST với điểm 0
   const listPlayers = await getPlayersByRoomId(room_id);
+
   if (listPlayers.length > 0) {
-    const scoreKey = `room:broadScore:${room_id}`;
-    const zaddArgs = [scoreKey];
-    listPlayers.forEach((username) => {
-      zaddArgs.push("0", username);
+    const args = [];
+    listPlayers.forEach(username => {
+      args.push(0, username); // 0 là điểm ban đầu
     });
-    await sendCommand(["ZADD", ...zaddArgs]);
+
+    await redis.zadd(scoreKey, ...args);
   }
 }
 
@@ -141,7 +142,7 @@ async function updateAddPoint(room_id, point) {
 
 async function resetAddPoint(room_id) {
   const key = `room:addPoint:${room_id}`;
-  await sendCommand(["SET", key, "10"]); // Đặt lại về 10
+  await redis.set(key, "10"); // Đặt giá trị key = "10"
 }
 
 // Quanl lý trạng thái Round
@@ -172,8 +173,7 @@ async function setRoundState(room_id, state) {
 async function getRoundState(room_id) {
   const key = `room:${room_id}:${ROUND_STATE_KEY}`;
 
-  const raw = await sendCommand(["HGETALL", key]);
-
+  const raw = await redis.hgetall(key);
   const state = {};
   for (let i = 0; i < raw.length; i += 2) {
     state[raw[i]] = raw[i + 1];
@@ -219,15 +219,15 @@ async function everyoneAnswered(room_id) {
 // Quan lý danh sách tạm thời trong Round
 async function getTmpPlayers(room_id) {
   const key = `room:tmpPlayers:${room_id}`;
-  // Dùng LRANGE để lấy toàn bộ danh sách
-  return await sendCommand(["LRANGE", key, "0", "-1"]);
+  return await redis.lrange(key, 0, -1);
 }
 
 async function setTmpPlayers(room_id, playersList) {
   const key = `room:tmpPlayers:${room_id}`;
-  await sendCommand(["DEL", key]);
-  if (playersList.length > 0) {
-    await sendCommand(["RPUSH", key, ...playersList]);
+  await redis.del(key);
+
+  if (playersList && playersList.length > 0) {
+    await redis.rpush(key, ...playersList);
   }
 }
 
