@@ -57,7 +57,7 @@ exports.login = async (ctx) => {
   await RefreshToken.create({
     token: refreshToken,
     userId: account._id,
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   });
 
   ctx.body = {
