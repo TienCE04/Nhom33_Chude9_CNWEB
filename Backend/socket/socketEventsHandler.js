@@ -202,7 +202,7 @@ function attachSocketEvents(io, socket) {
 
   //startGame
   socket.on("startGame", async (data) => {
-    const { room_id, topic_type } = data;
+    const { room_id, topic_id } = data;
     const roomData = await room.getRoomById(room_id);
 
     if (!roomData || roomData.cur_players < 2) {
@@ -217,8 +217,12 @@ function attachSocketEvents(io, socket) {
     // Cần reset lại danh sách người vẽ tạm thời
     const allPlayers = await players.getPlayersByRoomId(room_id);
     await players.setTmpPlayers(room_id, allPlayers);
-
-    startRound(io, room_id, topic_type);
+    io.to(room_id).emit("gameStarted", {
+        room_id,
+        topic_id,
+        players: allPlayers,
+      });
+    startRound(io, room_id, topic_id);
   });
 
   // correctAnswer 
@@ -306,7 +310,7 @@ function attachSocketEvents(io, socket) {
     await checkAndStopGame(io, roomId, curPlayers);
 
     if (curPlayers >= 2) {
-      io.to(roomId).emit("roomData", await room.getRoomById(roomId));
+      io.to(roomId).emit("roomData", result?.room);
       io.to(roomId).emit(
         "playersData",
         await players.getRankByRoomId(roomId)
