@@ -17,6 +17,7 @@ import RoomList from "./pages/RoomList";
 import NotFound from "./pages/NotFound";
 import CreateRoom from "./pages/CreateRoom";
 import CreateTheme from "./pages/CreateTheme";
+import Topics from "./pages/Topics";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
@@ -52,6 +53,7 @@ const App = () => {
               <Route path="/results" element={<ProtectedRoute element={<Results />} />} />
               <Route path="/create/room" element={<ProtectedRoute element={<CreateRoom />} />} />
               <Route path="/create/theme" element={<ProtectedRoute element={<CreateTheme />} />} />
+              <Route path="/topics" element={<ProtectedRoute element={<Topics />} />} />
             </Route>
 
             <Route path="/game" element={<ProtectedRoute element={<Game />} />} />
