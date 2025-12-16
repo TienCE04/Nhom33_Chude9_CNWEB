@@ -27,6 +27,7 @@ const Lobby = () => {
   useEffect(() => {
       const handleUpdatePlayerRoomEvent = (playersData) => {
         setPlayers(playersData)
+        if(players.length < 2) setIsGameStarted(false)
       };
       const handleUpdateChat = (data) => {
         const { username, message } = data;
@@ -59,8 +60,6 @@ const Lobby = () => {
         socket.off("updateChat", handleUpdateChat)
         socket.off("roomData", handleUpdateRoomData);
         socket.off("gameStarted", handleStartGame);
-
-
       };
     }, []);
 
@@ -95,7 +94,8 @@ const Lobby = () => {
 
   const handleLeaveRoom = () =>{
     const userInfo = getUserInfo();
-    socket.emit("leave_room", { roomId: room.id, username: userInfo.username });
+    console.log(room)
+    socket.emit("leave_room", { roomId: room.id||room.room.id, username: userInfo.username });
     navigate("/rooms")
   }
 
@@ -132,6 +132,7 @@ const Lobby = () => {
               <GameButton
                 variant="success"
                 size="md"
+                disabled={players.length < 2}
                 onClick={() => setShowRulesPopup(true)}
               >
                 <Play className="w-5 h-5 mr-2" />
