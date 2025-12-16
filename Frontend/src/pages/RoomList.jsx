@@ -98,7 +98,7 @@ const RoomList = () => {
       const userInfo = getUserInfo();
       if(selectedRoom.currentPlayers < selectedRoom.maxPlayers){
         socket.emit("join_room", { roomId: selectedRoom.id, user: userInfo });
-        navigate(`/lobby?room=${selectedRoom.id}`);
+        navigate(`/lobby/${selectedRoom.id}`);
       }
   
     }
