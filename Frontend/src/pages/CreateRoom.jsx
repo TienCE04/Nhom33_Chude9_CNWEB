@@ -146,6 +146,7 @@ const CreateRoom = () => {
         metadata: {
           topicId: selectedTopic._id || selectedTopic.idTopic,
           topicIcon: selectedTopic.topicIcon || "category",
+          topicName: selectedTopic.nameTopic
         },
         roomType: typeRoom,
       };
