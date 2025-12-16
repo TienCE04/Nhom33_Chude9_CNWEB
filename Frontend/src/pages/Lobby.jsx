@@ -51,11 +51,18 @@ const Lobby = () => {
         setIsGameStarted(true);
       };
 
+      const handleGamePaused = (data) => {
+         setIsGameStarted(false);
+      };
+
+
+      socket.on("gamePaused", handleGamePaused)
       socket.on("gameStarted", handleStartGame);
       socket.on("roomData", handleUpdateRoomData);
       socket.on("playersData", handleUpdatePlayerRoomEvent);
       socket.on("updateChat", handleUpdateChat)
       return () => {
+        socket.on("gamePaused", handleGamePaused)
         socket.off("playersData", handleUpdatePlayerRoomEvent);
         socket.off("updateChat", handleUpdateChat)
         socket.off("roomData", handleUpdateRoomData);
@@ -84,7 +91,7 @@ const Lobby = () => {
 
   const handleConfirmRules = () => {
     // include roomType in confirmation flow
-    const data = {room_id: room.id, topic_id: room.idTopic}
+    const data = {room_id: room.id||room.room.id, topic_id: room.idTopic||room.room.idTopic}
     socket.emit("startGame", data)
     setShowRulesPopup(false);
     console.log("Starting game with roomType:", roomType);
@@ -99,6 +106,11 @@ const Lobby = () => {
     navigate("/rooms")
   }
 
+  const emitPauseGame = () =>{
+    console.log(room)
+    socket.emit("pauseGame",{ roomId: room.id||room.room.id})
+    setIsGameStarted(false);
+  }
   return (
     <div className="p-2 md:p-4">
 
@@ -142,7 +154,7 @@ const Lobby = () => {
               <GameButton
                 variant="pause"
                 size="md"
-                onClick={() => setIsGameStarted(false)}
+                onClick={() => emitPauseGame()}
               >
                 <Pause className="w-5 h-5 mr-2" />
                 Pause Game
