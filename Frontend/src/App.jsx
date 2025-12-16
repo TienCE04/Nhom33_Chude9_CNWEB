@@ -1,5 +1,5 @@
 import { useEffect } from "react"; // 1. Import useEffect
-import { Toaster } from "@/components/ui/toaster";
+import { Notification } from "@/components/Notification";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -37,7 +37,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
+        <Notification />
         <Sonner />
         <BrowserRouter>
           <Routes>

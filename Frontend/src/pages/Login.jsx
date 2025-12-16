@@ -4,6 +4,7 @@ import { Palette, Users, LogIn, Loader, Globe, Volume2, Settings } from "lucide-
 import { GameButton } from "@/components/GameButton";
 import { authApi } from "@/lib/api";
 import { useGoogleLogin } from "@react-oauth/google";
+import { useToast } from "@/hooks/use-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDiscord } from "@fortawesome/free-brands-svg-icons";
 
@@ -12,13 +13,12 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [regTab, setRegTab] = useState("account");
-  const [loginError, setLoginError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      setLoginError("");
       setIsLoading(true);
       try {
         // Gọi API backend với access token từ Google
@@ -28,12 +28,25 @@ const Login = () => {
           localStorage.setItem("authToken", result.token);
           localStorage.setItem("user", JSON.stringify(result.user));
           localStorage.setItem("isLoggedIn", "true");
-          navigate("/rooms");
+          toast({
+            title: "Đăng nhập thành công!",
+            description: `Chào mừng ${result.user.username}`,
+            variant: "success",
+          });
+          setTimeout(() => navigate("/rooms"), 1500);
         } else {
-          setLoginError(result.message || "Đăng nhập Google thất bại");
+          toast({
+            title: "Đăng nhập thất bại",
+            description: result.message || "Có lỗi xảy ra, vui lòng thử lại",
+            variant: "destructive",
+          });
         }
       } catch (error) {
-        setLoginError("Lỗi kết nối. Vui lòng thử lại.");
+        toast({
+          title: "Lỗi kết nối",
+          description: "Vui lòng thử lại sau",
+          variant: "destructive",
+        });
         console.error("Google login error:", error);
       } finally {
         setIsLoading(false);
@@ -41,7 +54,11 @@ const Login = () => {
     },
     onError: (error) => {
       console.error("Google Login Failed:", error);
-      setLoginError("Đăng nhập Google thất bại");
+      toast({
+        title: "Đăng nhập Google thất bại",
+        description: "Vui lòng thử lại",
+        variant: "destructive",
+      });
     },
   });
 
@@ -66,17 +83,28 @@ const Login = () => {
   };
 
   const handleLogin = async () => {
-    setLoginError("");
     if (!username.trim()) {
-      setLoginError("Tên đăng nhập là bắt buộc");
+      toast({
+        title: "Lỗi",
+        description: "Tên đăng nhập là bắt buộc",
+        variant: "destructive",
+      });
       return;
     }
     if (!password.trim()) {
-      setLoginError("Mật khẩu là bắt buộc");
+      toast({
+        title: "Lỗi",
+        description: "Mật khẩu là bắt buộc",
+        variant: "destructive",
+      });
       return;
     }
     if (password.length < 4) {
-      setLoginError("Mật khẩu phải có ít nhất 4 ký tự");
+      toast({
+        title: "Lỗi",
+        description: "Mật khẩu phải có ít nhất 4 ký tự",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -92,13 +120,27 @@ const Login = () => {
         localStorage.setItem("user", JSON.stringify(result.user));
         localStorage.setItem("isLoggedIn", "true");
         
-        // Redirect tới lobby
-        navigate("/rooms");
+        toast({
+          title: "Đăng nhập thành công!",
+          description: `Chào mừng ${result.user.username}`,
+          variant: "success",
+        });
+        
+        // Redirect tới lobby sau 1.5s
+        setTimeout(() => navigate("/rooms"), 1500);
       } else {
-        setLoginError(result.message || "Đăng nhập thất bại");
+        toast({
+          title: "Đăng nhập thất bại",
+          description: result.message || "Tên đăng nhập hoặc mật khẩu không đúng",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      setLoginError("Lỗi kết nối. Vui lòng thử lại.");
+      toast({
+        title: "Lỗi kết nối",
+        description: "Vui lòng thử lại sau",
+        variant: "destructive",
+      });
       console.error("Login error:", error);
     } finally {
       setIsLoading(false);
@@ -231,12 +273,6 @@ const Login = () => {
                   className="input-rounded w-full text-center text-lg mb-3"
                   autoComplete="current-password"
                 />
-
-                {loginError && (
-                  <p className="text-sm text-red-500 mb-2 text-center">
-                    {loginError}
-                  </p>
-                )}
 
                 <GameButton
                   variant="primary"
