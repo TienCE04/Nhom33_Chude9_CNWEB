@@ -33,7 +33,6 @@ const Login = () => {
             description: `Chào mừng ${result.user.username}`,
             variant: "success",
           });
-          setTimeout(() => navigate("/rooms"), 1500);
         } else {
           toast({
             title: "Đăng nhập thất bại",
