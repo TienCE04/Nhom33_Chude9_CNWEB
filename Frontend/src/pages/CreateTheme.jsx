@@ -5,6 +5,7 @@ import { GameButton } from "../components/GameButton";
 import { Input } from "antd";
 import { topicApi } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
+import { toast } from "@/hooks/use-toast";
 
 export const CreateTheme = () => {
   const navigate = useNavigate();
@@ -40,11 +41,19 @@ export const CreateTheme = () => {
 
   const handleCreateTheme = async () => {
     if (!themeName.trim()) {
-      alert("Vui lòng nhập tên chủ đề");
+      toast({
+        title: "Thiếu tên chủ đề",
+        description: "Vui lòng nhập tên chủ đề",
+        variant: "error",
+      });
       return;
     }
     if (keywords.length < 20) {
-      alert("Cần ít nhất 20 từ khóa để tạo chủ đề mới");
+      toast({
+        title: "Chưa đủ từ khóa",
+        description: "Cần ít nhất 20 từ khóa để tạo chủ đề mới",
+        variant: "error",
+      });
       return;
     }
     
@@ -65,14 +74,25 @@ export const CreateTheme = () => {
       }
 
       if (result.success) {
-        alert(editingTopic ? "Cập nhật chủ đề thành công!" : "Tạo chủ đề thành công!");
+        toast({
+          title: editingTopic ? "Cập nhật chủ đề thành công" : "Tạo chủ đề thành công",
+          variant: "success",
+        });
         navigate("/create/room");
       } else {
-        alert(result.message || (editingTopic ? "Cập nhật thất bại" : "Tạo chủ đề thất bại"));
+        toast({
+          title: editingTopic ? "Cập nhật chủ đề thất bại" : "Tạo chủ đề thất bại",
+          description: result.message,
+          variant: "error",
+        });
       }
     } catch (error) {
       console.error("Error saving theme:", error);
-      alert("Có lỗi xảy ra khi lưu chủ đề");
+      toast({
+        title: "Lỗi khi lưu chủ đề",
+        description: "Có lỗi xảy ra khi lưu chủ đề",
+        variant: "error",
+      });
     }
   };
 

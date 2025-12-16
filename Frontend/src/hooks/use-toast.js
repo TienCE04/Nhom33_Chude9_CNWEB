@@ -1,7 +1,9 @@
 import * as React from "react";
 
 const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1000000;
+// Delay before a dismissed toast is removed from state
+// (match or slightly exceed the exit transition duration)
+const TOAST_REMOVE_DELAY = 400;
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",

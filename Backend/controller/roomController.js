@@ -50,6 +50,8 @@ exports.createRoom = async (ctx) => {
     metadata: body.metadata,
     idTopic: body.metadata.topicId || null,
     room_type: body.roomType,
+    // lưu thông tin người tạo phòng để có thể hiển thị phòng private của chính họ
+    username: ctx.User && ctx.User.username ? ctx.User.username : undefined,
     createdAt: nowIso,
     updatedAt: nowIso
   };
@@ -85,7 +87,8 @@ exports.deleteRoom = async (ctx) => {
 
 exports.listRooms = async (ctx) => {
   try {
-    const rooms = await Room.listRooms()
+    const username = ctx.User && ctx.User.username ? ctx.User.username : undefined;
+    const rooms = await Room.listRooms(username);
     ctx.body = { success: true, rooms: rooms };
   } catch (error) {
     ctx.body = {success: false, rooms: []}

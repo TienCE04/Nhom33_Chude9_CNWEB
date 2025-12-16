@@ -5,6 +5,7 @@ import { GameButton } from "@/components/GameButton";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDiscord } from "@fortawesome/free-brands-svg-icons";
 import { authApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 const Register = () => {
   const [username, setUsername] = useState("");
@@ -12,7 +13,6 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [nickname, setNickname] = useState("");
-  const [regError, setRegError] = useState("");
   const [regTab, setRegTab] = useState("account");
   const [isLoading, setIsLoading] = useState(false);
   const [touched, setTouched] = useState({
@@ -21,23 +21,39 @@ const Register = () => {
     confirmPassword: false,
   });
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleRegister = async () => {
-    setRegError("");
     if (!username.trim()) {
-      setRegError("Tên đăng nhập là bắt buộc");
+      toast({
+        title: "Lỗi",
+        description: "Tên đăng nhập là bắt buộc",
+        variant: "destructive",
+      });
       return;
     }
     if (!email.trim()) {
-      setRegError("Email là bắt buộc");
+      toast({
+        title: "Lỗi",
+        description: "Email là bắt buộc",
+        variant: "destructive",
+      });
       return;
     }
     if (password.length < 4) {
-      setRegError("Mật khẩu phải có ít nhất 4 ký tự");
+      toast({
+        title: "Lỗi",
+        description: "Mật khẩu phải có ít nhất 4 ký tự",
+        variant: "destructive",
+      });
       return;
     }
     if (password !== confirmPassword) {
-      setRegError("Mật khẩu không khớp");
+      toast({
+        title: "Lỗi",
+        description: "Mật khẩu không khớp",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -46,25 +62,26 @@ const Register = () => {
       const result = await authApi.signup(username, password, email, nickname || username);
       
       if (result.success) {
-        // Nếu signup thành công, tự động login
-        const loginResult = await authApi.login(username, password);
+        toast({
+          title: "Đăng ký thành công!",
+          description: "Vui lòng đăng nhập với tài khoản của bạn",
+          variant: "success",
+        });
         
-        if (loginResult.success) {
-          localStorage.setItem("authToken", loginResult.token);
-          localStorage.setItem("user", JSON.stringify(loginResult.user));
-          localStorage.setItem("isLoggedIn", "true");
-          
-          navigate("/lobby");
-        } else {
-          setRegError("Đăng ký thành công! Vui lòng đăng nhập bằng tài khoản của bạn.");
-          // Redirect tới login page sau 2 giây
-          setTimeout(() => navigate("/login"), 2000);
-        }
+        setTimeout(() => navigate("/login"), 1500);
       } else {
-        setRegError(result.message || "Đăng ký thất bại");
+        toast({
+          title: "Đăng ký thất bại",
+          description: result.message || "Có lỗi xảy ra, vui lòng thử lại",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      setRegError("Lỗi kết nối. Vui lòng thử lại.");
+      toast({
+        title: "Lỗi kết nối",
+        description: "Vui lòng thử lại sau",
+        variant: "destructive",
+      });
       console.error("Register error:", error);
     } finally {
       setIsLoading(false);
@@ -164,7 +181,7 @@ const Register = () => {
                 {/* Email Field */}
                 <div className="mb-3">
                   <label className="block text-sm font-medium mb-1 text-left">
-                    Email
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -217,12 +234,6 @@ const Register = () => {
                     </p>
                   )}
                 </div>
-
-                {regError && (
-                  <p className="text-sm text-red-500 mb-2 text-center">
-                    {regError}
-                  </p>
-                )}
 
                 <GameButton
                   variant="primary"
@@ -296,10 +307,6 @@ const Register = () => {
                     <FontAwesomeIcon icon={faDiscord} className="w-5 h-5" />
                     <span>Đăng ký với Discord</span>
                   </GameButton>
-
-                  <p className="mt-2 text-xs text-muted-foreground text-center">
-                    Chưa kết nối backend — đây là phần giữ chỗ.
-                  </p>
                 </div>
               </div>
             </div>

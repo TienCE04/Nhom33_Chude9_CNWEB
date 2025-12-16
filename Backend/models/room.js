@@ -20,7 +20,7 @@ const roomSchema = new mongoose.Schema({
 const RoomModel = mongoose.model('Room', roomSchema)
 
 module.exports = class Room {
-    static async createRoom(atts) {
+  static async createRoom(atts) {
  
     const id = atts.id || uuidv4()
 
@@ -38,7 +38,7 @@ module.exports = class Room {
     return JSON.parse(roomData)
   }
 
-  static async listRooms(){
+  static async listRooms(username){
     const keys = await redis.smembers(ROOMS_SET_KEY);
     if (!keys || keys.length === 0) {
      return  [] ;
@@ -54,9 +54,17 @@ module.exports = class Room {
             staleKeys.push(key);
             return;
           }
-          if (data.includes('"room_type":"public"')) {
-          rooms.push(JSON.parse(data));
-        }
+
+          const room = JSON.parse(data);
+
+          // Luôn hiển thị phòng public
+          // và hiển thị phòng private nếu là của chính username hiện tại
+          if (
+            room.room_type === "public" ||
+            (username && room.room_type === "private" && room.username === username)
+          ) {
+            rooms.push(room);
+          }
         } catch (error) {
           console.error("Failed to parse room data:", error);
         }

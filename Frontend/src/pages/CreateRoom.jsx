@@ -4,7 +4,7 @@ import { ArrowLeft, Gamepad2, Plus, Loader, MoreVertical, Edit, Trash2 } from "l
 import { GameButton } from "../components/GameButton";
 import { Select, Dropdown } from "antd";
 import { topicApi, authApi, roomApi } from "@/lib/api";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
 
@@ -96,18 +96,29 @@ const CreateRoom = () => {
     try {
       const result = await topicApi.deleteTopic(topicId);
       if (result.success) {
-        toast.success("Xóa chủ đề thành công");
+        toast({
+          title: "Xóa chủ đề thành công",
+          variant: "success",
+        });
         const updatedTopics = topics.filter(t => (t._id || t.idTopic) !== topicId);
         setTopics(updatedTopics);
         if (selectedTopic && (selectedTopic._id === topicId || selectedTopic.idTopic === topicId)) {
           setSelectedTopic(null);
         }
       } else {
-        toast.error(result.message || "Xóa chủ đề thất bại");
+        toast({
+          title: "Xóa chủ đề thất bại",
+          description: result.message,
+          variant: "error",
+        });
       }
     } catch (error) {
       console.error("Error deleting topic:", error);
-      toast.error("Có lỗi xảy ra khi xóa chủ đề");
+      toast({
+        title: "Lỗi khi xóa chủ đề",
+        description: "Có lỗi xảy ra khi xóa chủ đề",
+        variant: "error",
+      });
     }
   };
 
@@ -118,7 +129,11 @@ const CreateRoom = () => {
 
   const handleCreateRoom = async () => {
     if (!selectedTopic) {
-      toast.error("Vui lòng chọn một chủ đề");
+      toast({
+        title: "Chưa chọn chủ đề",
+        description: "Vui lòng chọn một chủ đề",
+        variant: "error",
+      });
       return;
     }
 
@@ -131,13 +146,17 @@ const CreateRoom = () => {
         metadata: {
           topicId: selectedTopic._id || selectedTopic.idTopic,
           topicIcon: selectedTopic.topicIcon || "category",
+          topicName: selectedTopic.nameTopic
         },
         roomType: typeRoom,
       };
 
       const result = await roomApi.createRoom(roomData);
       if (result.success) {
-        toast.success("Tạo phòng thành công!");
+        toast({
+          title: "Tạo phòng thành công",
+          variant: "success",
+        });
         const user = getUserInfo();
         const data = {
           roomData: result.room,
@@ -145,13 +164,21 @@ const CreateRoom = () => {
         }
         socket.emit("create_room", data)
         // Navigate to lobby with the new room ID
-        navigate(`/lobby?room=${result.room.id}`);
+        navigate(`/lobby/${result.room.id}`);
       } else {
-        toast.error(result.message || "Tạo phòng thất bại");
+        toast({
+          title: "Tạo phòng thất bại",
+          description: result.message || "Không thể tạo phòng",
+          variant: "error",
+        });
       }
     } catch (error) {
       console.error("Create room error:", error);
-      toast.error("Lỗi kết nối");
+      toast({
+        title: "Lỗi kết nối",
+        description: "Không thể kết nối tới máy chủ",
+        variant: "error",
+      });
     } finally {
       setIsCreating(false);
     }

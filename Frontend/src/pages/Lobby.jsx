@@ -27,6 +27,7 @@ const Lobby = () => {
   useEffect(() => {
       const handleUpdatePlayerRoomEvent = (playersData) => {
         setPlayers(playersData)
+        if(players.length < 2) setIsGameStarted(false)
       };
       const handleUpdateChat = (data) => {
         const { username, message } = data;
@@ -45,22 +46,33 @@ const Lobby = () => {
       };
       const handleUpdateRoomData = (data) =>{
         setRoom(data)
+        const topicData = {
+          value: data.metadata.topicId||data.room.metadata.topicId,
+          label: data.metadata.topicName||data.room.metadata.topicName
+        }
+        setTopic(topicData)
+        setRoomType(data.room_type||data.room.room_type)
       };
       const handleStartGame = (data) => {
         setIsGameStarted(true);
       };
 
+      const handleGamePaused = (data) => {
+         setIsGameStarted(false);
+      };
+
+
+      socket.on("gamePaused", handleGamePaused)
       socket.on("gameStarted", handleStartGame);
       socket.on("roomData", handleUpdateRoomData);
       socket.on("playersData", handleUpdatePlayerRoomEvent);
       socket.on("updateChat", handleUpdateChat)
       return () => {
+        socket.on("gamePaused", handleGamePaused)
         socket.off("playersData", handleUpdatePlayerRoomEvent);
         socket.off("updateChat", handleUpdateChat)
         socket.off("roomData", handleUpdateRoomData);
         socket.off("gameStarted", handleStartGame);
-
-
       };
     }, []);
 
@@ -78,14 +90,14 @@ const Lobby = () => {
     const data = {
       message: message,
       user: user,
-      room_id: room.id
+      room_id: room.id||room.room.id
     }
     socket.emit("newChat", data)
   };
 
   const handleConfirmRules = () => {
     // include roomType in confirmation flow
-    const data = {room_id: room.id, topic_id: room.idTopic}
+    const data = {room_id: room.id||room.room.id, topic_id: room.idTopic||room.room.idTopic}
     socket.emit("startGame", data)
     setShowRulesPopup(false);
     console.log("Starting game with roomType:", roomType);
@@ -95,12 +107,18 @@ const Lobby = () => {
 
   const handleLeaveRoom = () =>{
     const userInfo = getUserInfo();
-    socket.emit("leave_room", { roomId: room.id, username: userInfo.username });
+    console.log(room)
+    socket.emit("leave_room", { roomId: room.id||room.room.id, username: userInfo.username });
     navigate("/rooms")
   }
 
+  const emitPauseGame = () =>{
+    console.log(room)
+    socket.emit("pauseGame",{ roomId: room.id||room.room.id})
+    setIsGameStarted(false);
+  }
   return (
-    <div className="h-screen p-2 md:p-4">
+    <div className="p-2 md:p-4">
 
       {/* RENDER POP-UP KHI STATE LÀ TRUE */}
       {showRulesPopup && (
@@ -111,7 +129,7 @@ const Lobby = () => {
           onClose={() => setShowRulesPopup(false)}
         />
       )}
-      <div className="h-full flex flex-col">
+      <div className="h-[570px] flex flex-col">
         {/* Header */}
         <div className="mb-3 flex flex-col md:flex-row items-center justify-between gap-2 px-6">
           <div className="flex items-center gap-3">
@@ -132,6 +150,7 @@ const Lobby = () => {
               <GameButton
                 variant="success"
                 size="md"
+                disabled={players.length < 2}
                 onClick={() => setShowRulesPopup(true)}
               >
                 <Play className="w-5 h-5 mr-2" />
@@ -141,7 +160,7 @@ const Lobby = () => {
               <GameButton
                 variant="pause"
                 size="md"
-                onClick={() => setIsGameStarted(false)}
+                onClick={() => emitPauseGame()}
               >
                 <Pause className="w-5 h-5 mr-2" />
                 Pause Game
@@ -170,11 +189,11 @@ const Lobby = () => {
             }}
           />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:items-stretch flex-1">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:items-stretch flex-1 min-h-0">
             {/* Main Content */}
           <div className="lg:col-span-2 flex flex-col gap-3 lg:h-full lg:min-h-0">
             {/* Players Grid */}
-            <div className="game-card overflow-auto flex-1 min-h-0">
+            <div className="game-card overflow-y-auto flex-1 min-h-0">
               <h3 className="text-xl font-bold mb-4">Players</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                 {players.map((player) => (
@@ -183,39 +202,33 @@ const Lobby = () => {
               </div>
             </div>
             {/* Game Settings */}
-            <div className="game-card flex-1 min-h-0 overflow-auto">
+            <div className="game-card shrink-0">
               <h3 className="text-xl font-bold mb-4">Game Settings</h3>
               
-              <div className="space-y-3">
-                <div className="flex items-center justify-center gap-3">
-                  <label className="block font-semibold">Topic:</label>
-                  <Select
-                    value={topic}
-                    onChange={(value) => setTopic(value)}
-                    options={[
-                      { value: "Animals", label: "Animals" },
-                      { value: "Food", label: "Food" },
-                      { value: "Objects", label: "Objects" },
-                      { value: "Random", label: "Random" },
-                    ]}
-                    className="w-full h-[40px]"
-                  />
+              <div className="space-y-5 px-2">
+                <div className="flex justify-between gap-5">
+                  <div className="flex flex-col w-1/2 justify-center gap-3">
+                    <label className="block font-semibold">Topic:</label>
+                      <input
+                        type="text"
+                        value={topic.label}
+                        readOnly
+                        className="w-full h-[40px] px-3 border rounded-md bg-gray-100 cursor-not-allowed"
+                      />
+                  </div>
+
+                  <div className="flex flex-col w-1/2 justify-center gap-3">
+                    <label className="font-semibold flex-shrink-0">Loại phòng:</label>
+                    <input
+                        type="text"
+                        value={roomType}
+                        readOnly
+                        className="w-full h-[40px] px-3 border rounded-md bg-gray-100 cursor-not-allowed"
+                      />
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-center gap-3">
-                  <label className="font-semibold flex-shrink-0">Loại phòng:</label>
-                  <Select
-                    value={roomType}
-                    onChange={(value) => setRoomType(value)}
-                    options={[
-                      { value: "Public", label: "Public" },
-                      { value: "Private", label: "Private" },
-                    ]}
-                    className="w-full h-[40px]"
-                  />
-                </div>
-
-                <div>
+                {/* <div>
                   <label className="block font-semibold mb-2">
                     Rounds: {rounds}
                   </label>
@@ -227,7 +240,7 @@ const Lobby = () => {
                     onChange={(e) => setRounds(Number(e.target.value))}
                     className="w-full accent-primary"
                   />
-                </div>
+                </div> */}
 
                 <div>
                   <label className="block font-semibold mb-2">
@@ -247,8 +260,8 @@ const Lobby = () => {
             </div>
           </div>
           {/* Chat */}
-          <div className="lg:col-span-1 overflow-auto">
-            <div className="h-full">
+          <div className="lg:col-span-1 h-full min-h-0">
+            <div className="h-full flex flex-col">
               <ChatBox
                 messages={messages}
                 onSendMessage={handleSendMessage}
