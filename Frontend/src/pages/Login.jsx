@@ -25,7 +25,7 @@ const Login = () => {
         const result = await authApi.googleLogin(tokenResponse.access_token);
 
         if (result.success) {
-          localStorage.setItem("authToken", result.token);
+          localStorage.setItem("authToken", result.accessToken);
           localStorage.setItem("user", JSON.stringify(result.user));
           localStorage.setItem("isLoggedIn", "true");
           toast({
