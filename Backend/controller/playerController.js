@@ -25,16 +25,24 @@ exports.getPlayer = async (ctx) => {
   }
 };
 
-exports.getAllRankPlayer = async (ctx) => {
+exports.getRankPlayer = async (ctx) => {
   try {
-    const rankings = await Player.getAllRankPlayer();
-    if (!rankings || rankings.length === 0)
+      if (!ctx.User) {
+      ctx.status = 401;
+      ctx.body = { success: false, message: "Unauthorized" };
+      return;
+    }
+
+    const username = ctx.User.username; 
+
+    const myRank = await Player.getRankPlayer(username);
+    if (!myRank || myRank.length === 0)
       ctx.throw(404, "rankings not found");
 
     ctx.body = {
       success: true,
       message: "get rankings successfully",
-      data: getRankings,
+      data: myRank,
     };
   } catch (err) {
     ctx.status = err.status || 500;

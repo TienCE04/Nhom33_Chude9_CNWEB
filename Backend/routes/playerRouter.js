@@ -4,6 +4,6 @@ const router = Router();
 const { authorize } = require("../middleware");
 
 router.get("/player/:username", authorize, playerController.getPlayer);
-router.get("/player/rankings", authorize, playerController.getAllRankPlayer);
+router.get("/player/rankings", authorize, playerController.getRankPlayer);
 
 module.exports = router;
