@@ -46,16 +46,29 @@ const Lobby = () => {
       };
       const handleUpdateRoomData = (data) =>{
         setRoom(data)
+        const topicData = {
+          value: data.metadata.topicId||data.room.metadata.topicId,
+          label: data.metadata.topicName||data.room.metadata.topicName
+        }
+        setTopic(topicData)
+        setRoomType(data.room_type||data.room.room_type)
       };
       const handleStartGame = (data) => {
         setIsGameStarted(true);
       };
 
+      const handleGamePaused = (data) => {
+         setIsGameStarted(false);
+      };
+
+
+      socket.on("gamePaused", handleGamePaused)
       socket.on("gameStarted", handleStartGame);
       socket.on("roomData", handleUpdateRoomData);
       socket.on("playersData", handleUpdatePlayerRoomEvent);
       socket.on("updateChat", handleUpdateChat)
       return () => {
+        socket.on("gamePaused", handleGamePaused)
         socket.off("playersData", handleUpdatePlayerRoomEvent);
         socket.off("updateChat", handleUpdateChat)
         socket.off("roomData", handleUpdateRoomData);
@@ -77,14 +90,14 @@ const Lobby = () => {
     const data = {
       message: message,
       user: user,
-      room_id: room.id
+      room_id: room.id||room.room.id
     }
     socket.emit("newChat", data)
   };
 
   const handleConfirmRules = () => {
     // include roomType in confirmation flow
-    const data = {room_id: room.id, topic_id: room.idTopic}
+    const data = {room_id: room.id||room.room.id, topic_id: room.idTopic||room.room.idTopic}
     socket.emit("startGame", data)
     setShowRulesPopup(false);
     console.log("Starting game with roomType:", roomType);
@@ -99,6 +112,11 @@ const Lobby = () => {
     navigate("/rooms")
   }
 
+  const emitPauseGame = () =>{
+    console.log(room)
+    socket.emit("pauseGame",{ roomId: room.id||room.room.id})
+    setIsGameStarted(false);
+  }
   return (
     <div className="p-2 md:p-4">
 
@@ -142,7 +160,7 @@ const Lobby = () => {
               <GameButton
                 variant="pause"
                 size="md"
-                onClick={() => setIsGameStarted(false)}
+                onClick={() => emitPauseGame()}
               >
                 <Pause className="w-5 h-5 mr-2" />
                 Pause Game
@@ -191,30 +209,22 @@ const Lobby = () => {
                 <div className="flex justify-between gap-5">
                   <div className="flex flex-col w-1/2 justify-center gap-3">
                     <label className="block font-semibold">Topic:</label>
-                    <Select
-                      value={topic}
-                      onChange={(value) => setTopic(value)}
-                      options={[
-                        { value: "Animals", label: "Animals" },
-                        { value: "Food", label: "Food" },
-                        { value: "Objects", label: "Objects" },
-                        { value: "Random", label: "Random" },
-                      ]}
-                      className="w-full h-[40px]"
-                    />
+                      <input
+                        type="text"
+                        value={topic.label}
+                        readOnly
+                        className="w-full h-[40px] px-3 border rounded-md bg-gray-100 cursor-not-allowed"
+                      />
                   </div>
 
                   <div className="flex flex-col w-1/2 justify-center gap-3">
                     <label className="font-semibold flex-shrink-0">Loại phòng:</label>
-                    <Select
-                      value={roomType}
-                      onChange={(value) => setRoomType(value)}
-                      options={[
-                        { value: "Public", label: "Public" },
-                        { value: "Private", label: "Private" },
-                      ]}
-                      className="w-full h-[40px]"
-                    />
+                    <input
+                        type="text"
+                        value={roomType}
+                        readOnly
+                        className="w-full h-[40px] px-3 border rounded-md bg-gray-100 cursor-not-allowed"
+                      />
                   </div>
                 </div>
 
