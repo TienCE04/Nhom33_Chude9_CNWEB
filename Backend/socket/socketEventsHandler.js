@@ -2,9 +2,7 @@ const room = require("../models/room");
 const players = require("../service/playerRedisService");
 const playerMongo = require("../models/player");
 const gamePlay = require("../service/gamePlayService");
-// import * as socketUser from "../socket/socketUserService.js";
-const socketUser = require('../socket/socketUserService.js');
-
+const socketUser = require("../socket/socketUserService.js");
 
 const roomIntervals = new Map();
 const countdownIntervals = new Map();
@@ -44,9 +42,9 @@ async function startRound(io, room_id, topic_type) {
   // Hàm thực hiện logic 1 vòng chơi
   async function runRoundLogic(currentRoomData) {
     // Lấy người vẽ và từ khóa
-    console.log(currentRoomData)
+    console.log(currentRoomData);
     const { drawer_username, keyword } = await gamePlay.handler(
-      room_id ,
+      room_id,
       currentRoomData.room.idTopic,
       await players.getTmpPlayers(room_id),
       await players.getTmpKeywords(room_id),
@@ -63,10 +61,10 @@ async function startRound(io, room_id, topic_type) {
     // Emit sự kiện
     io.to(room_id).emit("roomData", currentRoomData);
     // Gửi từ khóa cho người vẽ, null cho người đoán
-    io.to(room_id).emit("keyword", { drawer_username, keyword: null });
+    io.to(room_id).emit("keyword", { drawer_username, keyword: keyword });
     io.to(room_id).emit("newRound");
 
-    // Bắt đầu đếm ngược thời gian trong Round 
+    // Bắt đầu đếm ngược thời gian trong Round
     startCountdown(io, room_id);
   }
 
@@ -153,19 +151,18 @@ async function endGame(io, room_id) {
 function attachSocketEvents(io, socket) {
   // Create Room
   socket.on("create_room", async (data) => {
-    const {roomData, user} = data
+    const { roomData, user } = data;
     socket.join(roomData.id);
     if (roomData.room_type === "public") {
       io.emit("room_created", roomData);
-    }
-    else {
+    } else {
       io.to(roomData.id).emit("room_created", roomData);
     }
     await players.updatePlayerJoin(roomData.id, user);
     const playersData = await players.getRankByRoomId(roomData.id);
     io.to(roomData.id).emit("playersData", playersData);
-  })
-  // Delete Room 
+  });
+  // Delete Room
   socket.on("delete_room", async (data) => {
     io.to(data.roomId).emit("room_updated", { action: "deleted", data });
 
@@ -175,8 +172,7 @@ function attachSocketEvents(io, socket) {
     } catch (e) {
       console.error("Error while removing sockets from room:", e);
     }
-
-  })
+  });
   //Join Room
   socket.on("join_room", async (data) => {
     const { roomId, user } = data;
@@ -191,15 +187,14 @@ function attachSocketEvents(io, socket) {
 
     await players.updatePlayerJoin(roomId, user);
 
-     //gắn socketId với username
+    //gắn socketId với username
     socketUser.bindSocketToUser(socket.id, user.username);
-
 
     const playersData = await players.getRankByRoomId(roomId);
     io.to(roomId).emit("playersData", playersData);
 
     io.to(roomId).emit("roomData", roomData);
-    io.emit("joined_room", roomId, user)
+    io.to(roomId).emit("joined_room", roomId, user);
     // io.emit("rooms", await room.getAllRoom());
 
     if (roomData.status === "playing") {
@@ -226,14 +221,14 @@ function attachSocketEvents(io, socket) {
     const allPlayers = await players.getPlayersByRoomId(room_id);
     await players.setTmpPlayers(room_id, allPlayers);
     io.to(room_id).emit("gameStarted", {
-        room_id,
-        topic_id,
-        players: allPlayers,
-      });
+      room_id,
+      topic_id,
+      players: allPlayers,
+    });
     startRound(io, room_id, topic_id);
   });
 
-  // correctAnswer 
+  // correctAnswer
   socket.on("correctAnswer", async (data) => {
     const { room_id, username, drawer_username, topic_type } = data;
     if (!room_id || !username || !drawer_username) return;
@@ -280,7 +275,7 @@ function attachSocketEvents(io, socket) {
         clearInterval(roomIntervals.get(room_id));
         roomIntervals.delete(room_id);
       }
-      
+
       // Dừng interval đếm ngược UI (để nó không chạy trong 3s chờ)
       if (countdownIntervals.has(room_id)) {
         clearInterval(countdownIntervals.get(room_id));
@@ -309,20 +304,18 @@ function attachSocketEvents(io, socket) {
     const { roomId, username } = data;
     if (!roomId || !username) return;
     const result = await room.updateRoomPlayer(roomId, -1);
-    io.emit("leaved_room", roomId)
+    //rời ở phòng đó
+    io.to(roomId).emit("leaved_room", roomId);
     socket.leave(roomId);
 
     const curPlayers = await players.updatePlayerLeave(roomId, username);
-    
-    await players.removeTmpPlayer(roomId, username); 
+
+    await players.removeTmpPlayer(roomId, username);
     await checkAndStopGame(io, roomId, curPlayers);
 
     if (curPlayers >= 2) {
       io.to(roomId).emit("roomData", result?.room);
-      io.to(roomId).emit(
-        "playersData",
-        await players.getRankByRoomId(roomId)
-      );
+      io.to(roomId).emit("playersData", await players.getRankByRoomId(roomId));
       io.emit("rooms", await room.listRooms());
     }
   });
@@ -336,7 +329,7 @@ function attachSocketEvents(io, socket) {
   // ---------------- CHAT ----------------
   socket.on("newChat", async (data) => {
     const { room_id, user, message } = data;
-    const username = user.username
+    const username = user.username;
     if (!message) return;
     io.to(room_id).emit("updateChat", { username, message });
   });
@@ -381,7 +374,7 @@ function attachSocketEvents(io, socket) {
     }
 
     // Xóa user khoi socket
-     socketUser.removeSocket(socket.id);
+    socketUser.removeSocket(socket.id);
   });
 }
 
