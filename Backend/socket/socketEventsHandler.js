@@ -44,8 +44,8 @@ async function startRound(io, room_id, topic_type) {
     // Lấy người vẽ và từ khóa
     console.log(currentRoomData);
     const { drawer_username, keyword } = await gamePlay.handler(
-      room_id,
-      currentRoomData.room.idTopic,
+      room_id ,
+      currentRoomData.room?.idTopic || currentRoomData.idTopic,
       await players.getTmpPlayers(room_id),
       await players.getTmpKeywords(room_id),
       topic_type
@@ -161,8 +161,10 @@ function attachSocketEvents(io, socket) {
     await players.updatePlayerJoin(roomData.id, user);
     const playersData = await players.getRankByRoomId(roomData.id);
     io.to(roomData.id).emit("playersData", playersData);
-  });
-  // Delete Room
+    io.to(roomData.id).emit("roomData", roomData);
+  })
+
+  // Delete Room 
   socket.on("delete_room", async (data) => {
     io.to(data.roomId).emit("room_updated", { action: "deleted", data });
 
@@ -227,8 +229,15 @@ function attachSocketEvents(io, socket) {
     });
     startRound(io, room_id, topic_id);
   });
-
-  // correctAnswer
+  // pauseGame
+  socket.on("pauseGame", async (data) => {
+    const { roomId} = data;
+    await room.setStatus(roomId, "pause");
+    io.to(roomId).emit("gamePaused", {
+          roomId,
+        });
+  })
+  // correctAnswer 
   socket.on("correctAnswer", async (data) => {
     const { room_id, username, drawer_username, topic_type } = data;
     if (!room_id || !username || !drawer_username) return;
@@ -365,7 +374,9 @@ function attachSocketEvents(io, socket) {
 
       if (username) {
         const curPlayers = await players.updatePlayerLeave(room_id, username);
-
+        const result = await room.updateRoomPlayer(room_id, -1);
+        io.emit("leaved_room", room_id)
+        socket.leave(room_id);
         //Cập nhật danh sách người vẽ tạm thời khi disconnect
         await players.removeTmpPlayer(room_id, username);
 
