@@ -218,10 +218,19 @@ function attachSocketEvents(io, socket) {
 
   /* -------- START GAME -------- */
   socket.on("startGame", async ({ room_id, topic_id, timePerRound }) => {
-    const roomData = await room.getRoomById(room_id);
+    const username = socketUser.getUsernameBySocket(socket.id);
+    const roomResult = await room.getRoomById(room_id);
+    
+    if (!roomResult.success || !roomResult.room) return;
+
+    // Validate Host
+    if (roomResult.room.username !== username) {
+      return;
+    }
+
     const curPlayers = getCurrentPlayers(io, room_id);
 
-    if (!roomData || curPlayers < 2) {
+    if (curPlayers < 2) {
       socket.emit("notEnoughPlayers");
       return;
     }
@@ -373,6 +382,32 @@ function attachSocketEvents(io, socket) {
     if (!hint) return;
 
     io.to(room_id).emit("hint", hint);
+  });
+
+  /* -------- PAUSE GAME -------- */
+  socket.on("pauseGame", async ({ roomId }) => {
+    const username = socketUser.getUsernameBySocket(socket.id);
+    const roomResult = await room.getRoomById(roomId);
+
+    if (!roomResult.success || !roomResult.room) return;
+
+    // Validate Host
+    if (roomResult.room.username !== username) return;
+
+    await room.setStatus(roomId, "waiting");
+    
+    // Clear intervals
+    if (roomIntervals.has(roomId)) {
+      clearInterval(roomIntervals.get(roomId));
+      roomIntervals.delete(roomId);
+    }
+    if (countdownIntervals.has(roomId)) {
+      clearInterval(countdownIntervals.get(roomId));
+      countdownIntervals.delete(roomId);
+    }
+
+    io.to(roomId).emit("gamePaused");
+    io.to(roomId).emit("roomData", await room.getRoomById(roomId));
   });
 
   /* -------- DISCONNECT -------- */

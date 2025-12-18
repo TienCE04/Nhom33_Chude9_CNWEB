@@ -166,6 +166,10 @@ const Lobby = () => {
     socket.emit("pauseGame",{ roomId: room.id||room.room.id})
     setIsGameStarted(false);
   }
+
+  const user = getUserInfo();
+  const isHost = user?.username === (room.username || room.room?.username);
+
   return (
     <div className="p-2 md:p-4">
 
@@ -199,21 +203,24 @@ const Lobby = () => {
               <GameButton
                 variant="success"
                 size="md"
-                disabled={players.length < 2}
+                disabled={players.length < 2 || !isHost}
                 onClick={() => setShowRulesPopup(true)}
+                className={!isHost ? "opacity-50 cursor-not-allowed" : ""}
               >
                 <Play className="w-5 h-5 mr-2" />
-                Start Game
+                {isHost ? "Start Game" : "Waiting for Host"}
               </GameButton>
             ) : (
-              <GameButton
-                variant="pause"
-                size="md"
-                onClick={() => emitPauseGame()}
-              >
-                <Pause className="w-5 h-5 mr-2" />
-                Pause Game
-              </GameButton>
+              isHost && (
+                <GameButton
+                  variant="pause"
+                  size="md"
+                  onClick={() => emitPauseGame()}
+                >
+                  <Pause className="w-5 h-5 mr-2" />
+                  Pause Game
+                </GameButton>
+              )
             )}
             <GameButton
               variant="danger"
