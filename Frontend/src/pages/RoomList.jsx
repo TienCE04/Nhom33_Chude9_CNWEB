@@ -23,58 +23,24 @@ const RoomList = () => {
 
   useEffect(() => {
     fetchRooms();
-    const handleRoomUpdate = (data) => {
+
+    const handleRoomsUpdate = () => {
       fetchRooms();
     };
-    const handleJoinRoomEvent = (roomId) => {
-      console.log("room_join data:");
 
-      setRooms((prevRooms) =>
-        prevRooms.map((room) =>
-          room.id === roomId
-            ? {
-                ...room,
-                currentPlayers: room.currentPlayers + 1,
-                status:
-                  room.currentPlayers + 1 >= room.maxPlayers
-                    ? "Đã đầy"
-                    : "Sẵn sàng",
-              }
-            : room
-        )
-      );
-    };
-    const handleLeaveRoomEvent = (roomId) => {
-      setRooms((prevRooms) =>
-        prevRooms.map((room) =>
-          room.id === roomId
-            ? {
-                ...room,
-                currentPlayers: room.currentPlayers - 1,
-                status:
-                  room.currentPlayers - 1 < room.maxPlayers
-                    ? "Sẵn sàng"
-                    : "Đã đầy",
-              }
-            : room
-        )
-      );
-    };
-    socket.on("room_created", handleRoomUpdate);
-    socket.on("joined_room", handleJoinRoomEvent);
-    socket.on("leaved_room", handleLeaveRoomEvent);
+    socket.on("rooms_updated", handleRoomsUpdate);
+
     return () => {
-      socket.off("room_created", handleRoomUpdate);
-      socket.off("joined_room", handleJoinRoomEvent);
-      socket.off("leaved_room", handleLeaveRoomEvent);
-
+      socket.off("rooms_updated", handleRoomsUpdate);
     };
   }, []);
+
 
   const fetchRooms = async () => {
     setIsLoading(true);
     try {
       const result = await roomApi.getRooms();
+      console.log("Fetched rooms:", result);
       if (result.success) {
         const mappedRooms = result.rooms.map((room) => ({
           id: room.id,
@@ -84,7 +50,10 @@ const RoomList = () => {
           currentPlayers: room.currentPlayers || 0,
           maxPlayers: room.maxPlayer,
           maxPoints: room.maxScore,
-          status: (room.currentPlayers || 0) >= room.maxPlayer ? "Đã đầy" : "Sẵn sàng",
+          status:
+            (room.currentPlayers || 0) >= room.maxPlayer
+              ? "Đã đầy"
+              : "Sẵn sàng",
         }));
         setRooms(mappedRooms);
       } else {
@@ -98,14 +67,11 @@ const RoomList = () => {
   };
 
   const handleJoinRoom = () => {
-    if (selectedRoom) {
-      const userInfo = getUserInfo();
-      if(selectedRoom.currentPlayers < selectedRoom.maxPlayers){
-        socket.emit("join_room", { roomId: selectedRoom.id, user: userInfo });
-        navigate(`/lobby/${selectedRoom.id}`);
-      }
-  
-    }
+    if (!selectedRoom) return;
+
+    const userInfo = getUserInfo();
+    socket.emit("join_room", { roomId: selectedRoom.id, user: userInfo });
+    navigate(`/lobby/${selectedRoom.id}`);
   };
 
   const handleJoinByCode = async () => {

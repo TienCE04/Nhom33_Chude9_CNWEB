@@ -7,73 +7,84 @@ const socketUser = require("../socket/socketUserService.js");
 const roomIntervals = new Map();
 const countdownIntervals = new Map();
 
-// --- Hàm kiểm tra và dừng game khi không đủ người chơi ---
+/* ==================== HELPER ==================== */
+function getCurrentPlayers(io, roomId) {
+  const roomSet = io.sockets.adapter.rooms.get(roomId);
+  return roomSet ? roomSet.size : 0;
+}
+
+/* ==================== CHECK STOP GAME ==================== */
 async function checkAndStopGame(io, room_id, curPlayers) {
   if (curPlayers < 2) {
     await room.setStatus(room_id, "waiting");
 
-    // Dừng interval logic game (63s)
     if (roomIntervals.has(room_id)) {
       clearInterval(roomIntervals.get(room_id));
       roomIntervals.delete(room_id);
     }
 
-    // Dừng interval đếm ngược UI (nếu đang chạy)
     if (countdownIntervals.has(room_id)) {
       clearInterval(countdownIntervals.get(room_id));
       countdownIntervals.delete(room_id);
     }
 
+    // 🔥 UPDATE REDIS
+    await room.updateCurrentPlayers(room_id, curPlayers);
+
     io.to(room_id).emit("roomData", await room.getRoomById(room_id));
-    io.to(room_id).emit("playersData", await players.getRankByRoomId(room_id));
+    io.to(room_id).emit(
+      "playersData",
+      await players.getRankByRoomId(room_id)
+    );
+
     io.emit("rooms", await room.listRooms());
   }
 }
 
-// Hàm thực hiện logic 1 vòng chơi
-async function runRoundLogic(currentRoomData) {
-  // Lấy người vẽ và từ khóa
-  console.log(currentRoomData)
+/* ==================== ROUND LOGIC ==================== */
+async function runRoundLogic(io, room_id, topic_type, currentRoomData) {
   const { drawer_username, keyword } = await gamePlay.handler(
-    room_id ,
+    room_id,
     currentRoomData.room?.idTopic || currentRoomData.idTopic,
     await players.getTmpPlayers(room_id),
     await players.getTmpKeywords(room_id),
     topic_type
   );
 
-  //  Lưu trạng thái Round
   await players.setRoundState(room_id, {
     drawer_username,
     keyword,
     timeLeft: 62,
   });
 
-  // Emit sự kiện
-  io.to(room_id).emit("roomData", currentRoomData);
-  // Gửi từ khóa cho người vẽ, null cho người đoán
-  io.to(room_id).emit("keyword", { drawer_username, keyword: null });
+  io.to(room_id).emit("roomData", await room.getRoomById(room_id));
+
+  io.to(room_id).emit("keyword", {
+    drawer_username,
+    keyword: null,
+  });
+
   io.to(room_id).emit("newRound");
 
-  // Bắt đầu đếm ngược thời gian trong Round 
   startCountdown(io, room_id);
 }
-// -------------------- START ROUND --------------------
+
+/* ==================== START ROUND ==================== */
 async function startRound(io, room_id, topic_type) {
   const roomData = await room.getRoomById(room_id);
   if (!roomData) return;
 
   await players.initRoundState(room_id);
   await players.resetAddPoint(room_id);
-  await players.resetAnswered(room_id); // Reset danh sách người đã đoán đúng
-  // Xóa interval cũ nếu có để tránh xung đột timer khi gọi startRound sớm
+  await players.resetAnswered(room_id);
+
   if (roomIntervals.has(room_id)) {
     clearInterval(roomIntervals.get(room_id));
     roomIntervals.delete(room_id);
   }
-  await runRoundLogic(roomData); // Chạy vòng đầu tiên
 
-  // Thiết lập Interval 63s cho các vòng chơi tiếp theo
+  await runRoundLogic(io, room_id, topic_type, roomData);
+
   const intervalID = setInterval(async () => {
     const currentRoomData = await room.getRoomById(room_id);
     if (!currentRoomData || currentRoomData.status !== "playing") {
@@ -83,7 +94,6 @@ async function startRound(io, room_id, topic_type) {
     }
 
     const maxPoint = await players.findMaxScore(room_id);
-
     if (maxPoint >= currentRoomData.max_scores) {
       clearInterval(intervalID);
       roomIntervals.delete(room_id);
@@ -91,39 +101,35 @@ async function startRound(io, room_id, topic_type) {
       return;
     }
 
-    // Chuyển vòng chơi
-    await runRoundLogic(currentRoomData);
+    await runRoundLogic(io, room_id, topic_type, currentRoomData);
   }, roomData.time * 1000);
 
   roomIntervals.set(room_id, intervalID);
 }
 
-// hàm đếm ngược
+/* ==================== COUNTDOWN ==================== */
 function startCountdown(io, room_id) {
-  // Dừng interval đếm ngược cũ nếu có
   if (countdownIntervals.has(room_id)) {
     clearInterval(countdownIntervals.get(room_id));
     countdownIntervals.delete(room_id);
   }
 
   let timeLeft = 62;
-  const countdownInterval = setInterval(async () => {
+  const countdownInterval = setInterval(() => {
     timeLeft--;
     io.to(room_id).emit("countdown", { timeLeft });
 
     if (timeLeft <= 0) {
       clearInterval(countdownInterval);
-      countdownIntervals.delete(room_id); // Xóa khỏi Map khi hết giờ
+      countdownIntervals.delete(room_id);
     }
   }, 1000);
 
-  // Lưu interval mới vào Map
   countdownIntervals.set(room_id, countdownInterval);
 }
 
-// kết thúc game
+/* ==================== END GAME ==================== */
 async function endGame(io, room_id) {
-  // Dừng interval đếm ngược UI
   if (countdownIntervals.has(room_id)) {
     clearInterval(countdownIntervals.get(room_id));
     countdownIntervals.delete(room_id);
@@ -137,256 +143,138 @@ async function endGame(io, room_id) {
   }
 
   await playerMongo.updatePlayerRank(await playerMongo.getAllPlayer());
-
   await players.resetPlayerScore(room_id);
   await room.setStatus(room_id, "waiting");
 
-  io.to(room_id).emit("playersData", await players.getRankByRoomId(room_id));
+  io.to(room_id).emit(
+    "playersData",
+    await players.getRankByRoomId(room_id)
+  );
 }
 
-// gắn các sự kiện socket
+/* ==================== SOCKET EVENTS ==================== */
 function attachSocketEvents(io, socket) {
-  // Create Room
-  socket.on("create_room", async (data) => {
-    const { roomData, user } = data;
-    socket.join(roomData.id);
-    if (roomData.room_type === "public") {
-      io.emit("room_created", roomData);
-    } else {
-      io.to(roomData.id).emit("room_created", roomData);
-    }
-    await players.updatePlayerJoin(roomData.id, user);
-    const playersData = await players.getRankByRoomId(roomData.id);
-    io.to(roomData.id).emit("playersData", playersData);
-    io.to(roomData.id).emit("roomData", roomData);
-  });
-  // Delete Room
-  socket.on("delete_room", async (data) => {
-    io.to(data.roomId).emit("room_updated", { action: "deleted", data });
 
-    try {
-      const sockets = await io.in(data.roomId).fetchSockets();
-      sockets.forEach((s) => s.leave(data.roomId));
-    } catch (e) {
-      console.error("Error while removing sockets from room:", e);
-    }
+  /* -------- CREATE ROOM -------- */
+  socket.on("create_room", async ({ roomData, user }) => {
+    socket.join(roomData.id);
+
+    await players.updatePlayerJoin(roomData.id, user);
+
+    const curPlayers = getCurrentPlayers(io, roomData.id);
+    await room.updateCurrentPlayers(roomData.id, curPlayers);
+
+    io.to(roomData.id).emit("room_created", roomData);
+    io.to(roomData.id).emit(
+      "playersData",
+      await players.getRankByRoomId(roomData.id)
+    );
+
+    io.to(roomData.id).emit("roomData", await room.getRoomById(roomData.id));
+
+    io.emit("rooms_updated");
   });
-  //Join Room
-  socket.on("join_room", async (data) => {
-    const { roomId, user } = data;
+
+  /* -------- JOIN ROOM -------- */
+  socket.on("join_room", async ({ roomId, user }) => {
     if (!roomId || !user) return;
 
-    const result = await room.updateRoomPlayer(roomId, 1);
-    const success = result.success;
-    roomData = result?.room || null;
-    if (!success) return;
-
     socket.join(roomId);
+    socketUser.bindSocketToUser(socket.id, user.username);
 
     await players.updatePlayerJoin(roomId, user);
 
-    //gắn socketId với username
-    socketUser.bindSocketToUser(socket.id, user.username);
+    const curPlayers = getCurrentPlayers(io, roomId);
+    await room.updateCurrentPlayers(roomId, curPlayers);
 
-    const playersData = await players.getRankByRoomId(roomId);
-    io.to(roomId).emit("playersData", playersData);
+    io.to(roomId).emit(
+      "playersData",
+      await players.getRankByRoomId(roomId)
+    );
 
-    io.to(roomId).emit("roomData", roomData);
-    io.emit("joined_room", roomId, user);
-    // io.emit("rooms", await room.getAllRoom());
+    io.to(roomId).emit("roomData", await room.getRoomById(roomId));
 
+    const roomData = await room.getRoomById(roomId);
     if (roomData.status === "playing") {
-      const roundState = await players.getRoundState(roomId);
-      socket.emit("syncGameState", roundState);
+      socket.emit(
+        "syncGameState",
+        await players.getRoundState(roomId)
+      );
     }
+
+    io.emit("rooms_updated");
   });
 
-  //startGame
-  socket.on("startGame", async (data) => {
-    const { room_id, topic_id, timePerRound, user } = data;
+  /* -------- START GAME -------- */
+  socket.on("startGame", async ({ room_id, topic_id, timePerRound }) => {
     const roomData = await room.getRoomById(room_id);
+    const curPlayers = getCurrentPlayers(io, room_id);
 
-    if (!roomData || roomData.cur_players < 2) {
+    if (!roomData || curPlayers < 2) {
       socket.emit("notEnoughPlayers");
       return;
     }
-    await room.setTime(room_id, timePerRound)
+
+    await room.setTime(room_id, timePerRound);
     await room.setStatus(room_id, "playing");
+    await room.updateCurrentPlayers(room_id, curPlayers);
+
     await players.resetPlayerScore(room_id);
     await players.resetAddPoint(room_id);
 
-    // Cần reset lại danh sách người vẽ tạm thời
     const allPlayers = await players.getPlayersByRoomId(room_id);
     await players.setTmpPlayers(room_id, allPlayers);
+
     io.to(room_id).emit("playersData", allPlayers);
-    io.to(room_id).emit("roomData", roomData);
+    io.to(room_id).emit("roomData", await room.getRoomById(room_id));
+
     io.to(room_id).emit("gameStarted", {
       room_id,
       topic_id,
       players: allPlayers,
     });
+
     startRound(io, room_id, topic_id);
   });
-  // pauseGame
-  socket.on("pauseGame", async (data) => {
-    const { roomId } = data;
-    await room.setStatus(roomId, "pause");
-    io.to(roomId).emit("gamePaused", {
-      roomId,
-    });
-  });
 
-  // Người chơi gửi câu trả lời
-  socket.on("sendAnswer", async (data) => {
-    const { room_id, username, guess } = data;
-    if (!room_id || !username || !guess) return;
-
-    const roundState = await players.getRoundState(room_id);
-
-    // Nếu người chơi đã đoán đúng trước đó, bỏ qua
-    if (roundState.answered.includes(username)) return;
-
-    // Server kiểm tra đoán đúng
-    if (guess.toLowerCase() === roundState.keyword.toLowerCase()) {
-      let addPoint = await players.getAddPoint(room_id);
-
-      // Cập nhật điểm cho người đoán
-      await players.updatePlayerScore(room_id, username, addPoint);
-
-      // Cập nhật điểm cho người vẽ
-      await players.updatePlayerScore(room_id, roundState.drawer, 2);
-
-      // Giảm điểm cộng cho lượt đoán tiếp theo
-      if (addPoint > 2) {
-        await players.updateAddPoint(room_id, addPoint - 1);
-      }
-
-      // Thêm người chơi vào danh sách đã đoán đúng
-      await players.addAnsweredPlayer(room_id, username);
-
-      // Emit thông báo đoán đúng và cập nhật bảng xếp hạng
-      io.to(room_id).emit("correctGuess", { username, points: addPoint });
-      const playersData = await players.getRankByRoomId(room_id);
-      io.to(room_id).emit("playersData", playersData);
-
-      // Kiểm tra kết thúc vòng sớm
-      if (await players.everyoneAnswered(room_id)) {
-        console.log(
-          `All players in ${room_id} guessed correctly. Ending round early.`
-        );
-
-        // Lấy từ khóa hiển thị
-        const currentRoundState = await players.getRoundState(room_id);
-        io.to(room_id).emit("allGuessed", {
-          keyword: currentRoundState.keyword,
-        });
-
-        // Dừng interval 63s hiện tại
-        if (roomIntervals.has(room_id)) {
-          clearInterval(roomIntervals.get(room_id));
-          roomIntervals.delete(room_id);
-        }
-
-        // Dừng interval đếm ngược UI
-        if (countdownIntervals.has(room_id)) {
-          clearInterval(countdownIntervals.get(room_id));
-          countdownIntervals.delete(room_id);
-        }
-
-        // Chờ 3 giây để người chơi xem từ khóa, sau đó bắt đầu vòng mới
-        setTimeout(async () => {
-          const roomData = await room.getRoomById(room_id);
-          const current_topic_type = roomData.topic_type;
-
-          // Kiểm tra điều kiện kết thúc game
-          const maxPoint = await players.findMaxScore(room_id);
-          if (maxPoint >= roomData.max_scores) {
-            await endGame(io, room_id);
-          } else {
-            await startRound(io, room_id, current_topic_type);
-          }
-        }, 3000);
-      }
-    }
-  });
-
-  // ---------------- LEAVE ROOM ----------------
-  socket.on("leave_room", async (data) => {
-    const { roomId, username } = data;
+  /* -------- LEAVE ROOM -------- */
+  socket.on("leave_room", async ({ roomId, username }) => {
     if (!roomId || !username) return;
-    const result = await room.updateRoomPlayer(roomId, -1);
-    //rời ở phòng đó
-    io.emit("leaved_room", roomId);
+
     socket.leave(roomId);
 
-    const curPlayers = await players.updatePlayerLeave(roomId, username);
-
+    await players.updatePlayerLeave(roomId, username);
     await players.removeTmpPlayer(roomId, username);
+
+    const curPlayers = getCurrentPlayers(io, roomId);
+    await room.updateCurrentPlayers(roomId, curPlayers);
+
     await checkAndStopGame(io, roomId, curPlayers);
 
-    if (curPlayers >= 2) {
-      io.to(roomId).emit("roomData", result?.room);
-      io.to(roomId).emit("playersData", await players.getRankByRoomId(roomId));
-      io.emit("rooms", await room.listRooms());
-    }
+    io.to(roomId).emit("roomData", await room.getRoomById(roomId));
+
+    io.emit("rooms_updated");
   });
 
-  // ---------------- CANVAS SYNC ----------------
-  socket.on("canvas-data", (data) => {
-    const { room_id, snapshot } = data;
-    socket.to(room_id).emit("update-canvas", { snapshot });
-  });
-
-  // ---------------- CHAT ----------------
-  socket.on("newChat", async (data) => {
-    const { room_id, user, message } = data;
-    const username = user.username;
-    if (!message) return;
-    io.to(room_id).emit("updateChat", { username, message });
-  });
-
-  // ---------------- HINT REQUEST ----------------
-  socket.on("requestHint", async ({ room_id, hintLevel }) => {
-    const roundState = await players.getRoundState(room_id);
-    if (!roundState?.keyword) return;
-
-    const keyword = roundState.keyword;
-
-    const hint =
-      hintLevel === 1
-        ? keyword.slice(0, 1)
-        : hintLevel === 2
-        ? keyword.slice(0, 2)
-        : null;
-
-    if (!hint) return;
-
-    io.to(room_id).emit("hint", hint);
-  });
-
-  // ---------------- DISCONNECT ----------------
+  /* -------- DISCONNECT -------- */
   socket.on("disconnect", async () => {
-    const roomsOfSocket = Array.from(socket.rooms).filter(
-      (r) => r !== socket.id
-    );
+    const username = socketUser.getUsernameBySocket(socket.id);
+    if (!username) return;
 
-    for (const room_id of roomsOfSocket) {
-      //debug
-      const username = socketUser.getUsernameBySocket(socket.id);
+    for (const room_id of socket.rooms) {
+      if (room_id === socket.id) continue;
 
-      if (username) {
-        const curPlayers = await players.updatePlayerLeave(room_id, username);
-        const result = await room.updateRoomPlayer(room_id, -1);
-        io.emit("leaved_room", room_id);
-        socket.leave(room_id);
-        //Cập nhật danh sách người vẽ tạm thời khi disconnect
-        await players.removeTmpPlayer(room_id, username);
+      await players.updatePlayerLeave(room_id, username);
+      await players.removeTmpPlayer(room_id, username);
 
-        await checkAndStopGame(io, room_id, curPlayers);
-      }
+      const curPlayers = getCurrentPlayers(io, room_id);
+      await room.updateCurrentPlayers(room_id, curPlayers);
+
+      await checkAndStopGame(io, room_id, curPlayers);
+
+      io.to(room_id).emit("roomData", await room.getRoomById(room_id));
     }
 
-    // Xóa user khoi socket
     socketUser.removeSocket(socket.id);
   });
 }

@@ -158,6 +158,19 @@ module.exports = class Room {
        return { success: false};
      }
    };
+
+   static updateCurrentPlayers = async (roomId, curPlayers) => {
+     const key = roomKey(roomId);
+     const data = await redis.get(key);
+     if (!data) return;
+   
+     const room = JSON.parse(data);
+   
+     room.currentPlayers = curPlayers;
+     room.updatedAt = new Date().toISOString();
+   
+     await redis.set(key, JSON.stringify(room));
+   };
 }
 
 

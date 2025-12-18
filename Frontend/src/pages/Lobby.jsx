@@ -38,9 +38,9 @@ const Lobby = () => {
 
       // Join room thông qua socket
       const actualRoomId = roomId || room.id || room.room?.id;
-      // if (actualRoomId) {
-      //   socket.emit("join_room", { roomId: actualRoomId, user });
-      // }
+      if (actualRoomId) {
+        socket.emit("join_room", { roomId: actualRoomId, user });
+      }
     } catch (error) {
       console.error("Error loading room data:", error);
       toast.error("Không thể tải dữ liệu phòng");

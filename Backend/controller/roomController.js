@@ -46,7 +46,7 @@ exports.createRoom = async (ctx) => {
     maxPlayer: body.maxPlayer,
     maxScore: body.maxScore,
     status: "waiting",
-    currentPlayers: 1,
+    currentPlayers: 0,
     metadata: body.metadata,
     idTopic: body.metadata.topicId || null,
     room_type: body.roomType,

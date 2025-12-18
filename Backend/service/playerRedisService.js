@@ -62,6 +62,10 @@ async function updatePlayerLeave(room_id, username) {
   await redis.zrem(scoreKey, username);
   const curPlayers = await redis.llen(playerListKey);
 
+  const players = await redis.lrange(playerListKey, 0, -1);
+  console.log("Remaining players after leave:", players);
+  console.log("Current player count:", curPlayers);
+
   return parseInt(curPlayers, 10);
 }
 
@@ -237,7 +241,8 @@ async function removeTmpPlayer(room_id, username) {
   const key = `room:tmpPlayers:${room_id}`;
   // LREM 1: Xóa 1 lần xuất hiện của username
   await redis.lrem(key, 1, username);
-
+  const players = await redis.lrange(key, 0, -1);
+  console.log("Remaining tmp players after removal:", players);
 }
 
 async function getTmpKeywords(room_id) {
