@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 /**
  * Component pop-up hiển thị luật chơi.
  */
-export const PlayRulePopup = ({ topic, onConfirm, onClose }) => {
+export const PlayRulePopup = ({ topic, onConfirm, onClose, roomType }) => {
   return createPortal(
     // Lớp phủ (Overlay)
     <div 
@@ -31,7 +31,7 @@ export const PlayRulePopup = ({ topic, onConfirm, onClose }) => {
           <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
             <div>
               <h4 className="font-bold text-muted-foreground uppercase">Chủ đề</h4>
-              <p className="font-semibold text-lg text-primary">{topic}</p>
+              <p className="font-semibold text-lg text-primary">{topic.label}</p>
             </div>
             <div>
               <h4 className="font-bold text-muted-foreground uppercase">Mục tiêu</h4>
