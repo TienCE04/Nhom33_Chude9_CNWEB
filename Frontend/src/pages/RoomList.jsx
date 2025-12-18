@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, Trophy, Hash, Gamepad2, ArrowRight, Plus, Loader } from "lucide-react";
+import { ArrowLeft, Users, Trophy, Hash, Gamepad2, ArrowRight, Plus, Loader, X } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { roomApi } from "@/lib/api";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
+import { toast } from "sonner";
 
 const MaterialIcon = ({ iconName, className = "" }) => (
   <span className={`material-symbols-rounded ${className}`}>{iconName}</span>
@@ -16,6 +17,9 @@ const RoomList = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showJoinByCodeModal, setShowJoinByCodeModal] = useState(false);
+  const [roomCode, setRoomCode] = useState("");
+  const [isJoiningByCode, setIsJoiningByCode] = useState(false);
 
   useEffect(() => {
     fetchRooms();
@@ -104,6 +108,61 @@ const RoomList = () => {
     }
   };
 
+  const handleJoinByCode = async () => {
+    if (!roomCode.trim()) {
+      toast.error("Vui lòng nhập room code");
+      return;
+    }
+
+    setIsJoiningByCode(true);
+    try {
+      const userInfo = getUserInfo();
+      let targetRoom = null;
+
+      // Tìm trong mảng rooms (public rooms)
+      targetRoom = rooms.find(r => r.id.startsWith(roomCode.toLowerCase()) || r.roomCode === roomCode.toUpperCase());
+
+      // Nếu không tìm thấy trong public rooms, gọi API để lấy room (có thể là private)
+      if (!targetRoom) {
+        const roomData = await roomApi.getRoomById(roomCode);
+        if (roomData.success && roomData.room) {
+          targetRoom = {
+            id: roomData.room.id,
+            topic: roomData.room.name,
+            topicIcon: roomData.room.metadata?.topicIcon || "extension",
+            roomCode: roomData.room.id.substring(0, 8).toUpperCase(),
+            currentPlayers: roomData.room.currentPlayers || 0,
+            maxPlayers: roomData.room.maxPlayer,
+            maxPoints: roomData.room.maxScore,
+            status: (roomData.room.currentPlayers || 0) >= roomData.room.maxPlayer ? "Đã đầy" : "Sẵn sàng",
+          };
+        }
+      }
+
+      if (!targetRoom) {
+        toast.error("Không tìm thấy phòng với code này");
+        return;
+      }
+
+      if (targetRoom.currentPlayers >= targetRoom.maxPlayers) {
+        toast.error("Phòng này đã đầy");
+        return;
+      }
+
+      // Join room
+      socket.emit("join_room", { roomId: targetRoom.id, user: userInfo });
+      toast.success("Vào phòng thành công!");
+      setShowJoinByCodeModal(false);
+      setRoomCode("");
+      navigate(`/lobby/${targetRoom.id}`);
+    } catch (error) {
+      console.error("Error joining room by code:", error);
+      toast.error("Không thể vào phòng");
+    } finally {
+      setIsJoiningByCode(false);
+    }
+  };
+
   const handleCreateRoom = () => {
     navigate("/create/room");
   };
@@ -126,6 +185,15 @@ const RoomList = () => {
             <h1 className="text-3xl font-extrabold">Danh sách phòng chơi</h1>
           </div>
           <div className="flex items-center gap-3">
+            <GameButton
+              variant="primary"
+              size="md"
+              onClick={() => setShowJoinByCodeModal(true)}
+              className="flex items-center gap-2"
+            >
+              <Hash className="w-5 h-5" />
+              Vào bằng code
+            </GameButton>
             <GameButton
               variant="primary"
               size="md"
@@ -234,6 +302,63 @@ const RoomList = () => {
             <p className="text-xl text-muted-foreground">
               Hiện tại không có phòng chơi nào
             </p>
+          </div>
+        )}
+
+        {/* Join by Code Modal */}
+        {showJoinByCodeModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-background rounded-lg shadow-lg p-6 max-w-md w-full">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">Vào phòng bằng code</h2>
+                <button
+                  onClick={() => {
+                    setShowJoinByCodeModal(false);
+                    setRoomCode("");
+                  }}
+                  className="p-1 hover:bg-muted rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Room Code</label>
+                  <input
+                    type="text"
+                    value={roomCode}
+                    onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                    placeholder="Nhập room code (ví dụ: GAME-1234)"
+                    className="w-full input-rounded py-2 px-3 uppercase tracking-widest font-mono"
+                    onKeyPress={(e) => e.key === 'Enter' && handleJoinByCode()}
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <GameButton
+                    variant="danger"
+                    size="md"
+                    onClick={() => {
+                      setShowJoinByCodeModal(false);
+                      setRoomCode("");
+                    }}
+                    className="flex-1"
+                  >
+                    Hủy
+                  </GameButton>
+                  <GameButton
+                    variant="success"
+                    size="md"
+                    onClick={handleJoinByCode}
+                    disabled={isJoiningByCode || !roomCode.trim()}
+                    className="flex-1"
+                  >
+                    {isJoiningByCode ? "Đang vào..." : "Vào phòng"}
+                  </GameButton>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

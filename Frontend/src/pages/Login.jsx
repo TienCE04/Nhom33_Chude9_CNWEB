@@ -33,6 +33,7 @@ const Login = () => {
             description: `Chào mừng ${result.user.username}`,
             variant: "success",
           });
+          navigate("/rooms");
         } else {
           toast({
             title: "Đăng nhập thất bại",
