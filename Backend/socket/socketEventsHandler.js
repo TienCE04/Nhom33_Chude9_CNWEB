@@ -44,7 +44,7 @@ async function startRound(io, room_id, topic_type) {
     // Lấy người vẽ và từ khóa
     console.log(currentRoomData);
     const { drawer_username, keyword } = await gamePlay.handler(
-      room_id ,
+      room_id,
       currentRoomData.room?.idTopic || currentRoomData.idTopic,
       await players.getTmpPlayers(room_id),
       await players.getTmpKeywords(room_id),
@@ -162,8 +162,8 @@ function attachSocketEvents(io, socket) {
     const playersData = await players.getRankByRoomId(roomData.id);
     io.to(roomData.id).emit("playersData", playersData);
     io.to(roomData.id).emit("roomData", roomData);
-  })
-  // Delete Room 
+  });
+  // Delete Room
   socket.on("delete_room", async (data) => {
     io.to(data.roomId).emit("room_updated", { action: "deleted", data });
 
@@ -230,80 +230,84 @@ function attachSocketEvents(io, socket) {
   });
   // pauseGame
   socket.on("pauseGame", async (data) => {
-    const { roomId} = data;
+    const { roomId } = data;
     await room.setStatus(roomId, "pause");
     io.to(roomId).emit("gamePaused", {
-          roomId,
-        });
-  })
-  // correctAnswer 
-  socket.on("correctAnswer", async (data) => {
-    const { room_id, username, drawer_username, topic_type } = data;
-    if (!room_id || !username || !drawer_username) return;
+      roomId,
+    });
+  });
+
+  // Người chơi gửi câu trả lời
+  socket.on("sendAnswer", async (data) => {
+    const { room_id, username, guess } = data;
+    if (!room_id || !username || !guess) return;
 
     const roundState = await players.getRoundState(room_id);
-    // Kiểm tra nếu người chơi đã đoán đúng, bỏ qua
-    if (roundState.answered.includes(username)) {
-      return;
-    }
 
-    let addPoint = await players.getAddPoint(room_id);
+    // Nếu người chơi đã đoán đúng trước đó, bỏ qua
+    if (roundState.answered.includes(username)) return;
 
-    // Cập nhật điểm
-    await players.updatePlayerScore(room_id, username, addPoint);
-    await players.updatePlayerScore(room_id, drawer_username, 2);
+    // Server kiểm tra đoán đúng
+    if (guess.toLowerCase() === roundState.keyword.toLowerCase()) {
+      let addPoint = await players.getAddPoint(room_id);
 
-    // Giảm điểm cộng
-    if (addPoint > 2) {
-      await players.updateAddPoint(room_id, addPoint - 1);
-    }
+      // Cập nhật điểm cho người đoán
+      await players.updatePlayerScore(room_id, username, addPoint);
 
-    // Thêm người chơi vào danh sách đã đoán đúng
-    await players.addAnsweredPlayer(room_id, username);
+      // Cập nhật điểm cho người vẽ
+      await players.updatePlayerScore(room_id, roundState.drawer, 2);
 
-    // Emit thông báo đoán đúng và cập nhật bảng điểm
-    io.to(room_id).emit("correctGuess", { username, points: addPoint });
-    const playersData = await players.getRankByRoomId(room_id);
-    io.to(room_id).emit("playersData", playersData);
-
-    // *** LOGIC KẾT THÚC VÒNG SỚM ***
-    if (await players.everyoneAnswered(room_id)) {
-      console.log(
-        `All players in ${room_id} guessed correctly. Ending round early.`
-      );
-
-      // Lấy từ khóa để hiển thị
-      const currentRoundState = await players.getRoundState(room_id);
-
-      // Gửi sự kiện kết thúc sớm, hiển thị từ khóa
-      io.to(room_id).emit("allGuessed", { keyword: currentRoundState.keyword });
-
-      // Dừng interval 63s hiện tại
-      if (roomIntervals.has(room_id)) {
-        clearInterval(roomIntervals.get(room_id));
-        roomIntervals.delete(room_id);
+      // Giảm điểm cộng cho lượt đoán tiếp theo
+      if (addPoint > 2) {
+        await players.updateAddPoint(room_id, addPoint - 1);
       }
 
-      // Dừng interval đếm ngược UI (để nó không chạy trong 3s chờ)
-      if (countdownIntervals.has(room_id)) {
-        clearInterval(countdownIntervals.get(room_id));
-        countdownIntervals.delete(room_id);
-      }
+      // Thêm người chơi vào danh sách đã đoán đúng
+      await players.addAnsweredPlayer(room_id, username);
 
-      // Chờ 3 giây để người chơi xem từ khóa, sau đó bắt đầu vòng mới
-      setTimeout(async () => {
-        const roomData = await room.getRoomById(room_id);
-        // Đảm bảo có topic_type để truyền vào startRound
-        const current_topic_type = topic_type || roomData.topic_type;
+      // Emit thông báo đoán đúng và cập nhật bảng xếp hạng
+      io.to(room_id).emit("correctGuess", { username, points: addPoint });
+      const playersData = await players.getRankByRoomId(room_id);
+      io.to(room_id).emit("playersData", playersData);
 
-        // Kiểm tra điều kiện kết thúc game trước khi chuyển vòng
-        const maxPoint = await players.findMaxScore(room_id);
-        if (maxPoint >= roomData.max_scores) {
-          await endGame(io, room_id);
-        } else {
-          await startRound(io, room_id, current_topic_type);
+      // Kiểm tra kết thúc vòng sớm
+      if (await players.everyoneAnswered(room_id)) {
+        console.log(
+          `All players in ${room_id} guessed correctly. Ending round early.`
+        );
+
+        // Lấy từ khóa hiển thị
+        const currentRoundState = await players.getRoundState(room_id);
+        io.to(room_id).emit("allGuessed", {
+          keyword: currentRoundState.keyword,
+        });
+
+        // Dừng interval 63s hiện tại
+        if (roomIntervals.has(room_id)) {
+          clearInterval(roomIntervals.get(room_id));
+          roomIntervals.delete(room_id);
         }
-      }, 3000);
+
+        // Dừng interval đếm ngược UI
+        if (countdownIntervals.has(room_id)) {
+          clearInterval(countdownIntervals.get(room_id));
+          countdownIntervals.delete(room_id);
+        }
+
+        // Chờ 3 giây để người chơi xem từ khóa, sau đó bắt đầu vòng mới
+        setTimeout(async () => {
+          const roomData = await room.getRoomById(room_id);
+          const current_topic_type = roomData.topic_type;
+
+          // Kiểm tra điều kiện kết thúc game
+          const maxPoint = await players.findMaxScore(room_id);
+          if (maxPoint >= roomData.max_scores) {
+            await endGame(io, room_id);
+          } else {
+            await startRound(io, room_id, current_topic_type);
+          }
+        }, 3000);
+      }
     }
   });
 
@@ -374,7 +378,7 @@ function attachSocketEvents(io, socket) {
       if (username) {
         const curPlayers = await players.updatePlayerLeave(room_id, username);
         const result = await room.updateRoomPlayer(room_id, -1);
-        io.emit("leaved_room", room_id)
+        io.emit("leaved_room", room_id);
         socket.leave(room_id);
         //Cập nhật danh sách người vẽ tạm thời khi disconnect
         await players.removeTmpPlayer(room_id, username);
