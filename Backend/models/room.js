@@ -14,7 +14,8 @@ const roomSchema = new mongoose.Schema({
   add_Point: { type: Number, default: 0 },
   topic_type: { type: String },
   room_type: { type: String },
-  timeStamp: { type: Date, default: Date.now }
+  timeStamp: { type: Date, default: Date.now },
+  time: { type: Number, default: 30 }
 });
 
 const RoomModel = mongoose.model('Room', roomSchema)
@@ -112,6 +113,25 @@ module.exports = class Room {
         }
         const roomData = JSON.parse(data);
         roomData.status = status;
+        roomData.updatedAt = new Date().toISOString();
+
+        await redis.set(key, JSON.stringify(roomData));
+        return true;
+    } catch (error) {
+        console.error(`Error updating status for room ${room_id}:`, error);
+        return false;
+    }
+  };
+    static async setTime (room_id, time) {
+    const key = roomKey(room_id);
+    try {
+        const data = await redis.get(key);
+        if (!data) {
+            console.warn(`Room with key ${key} not found for status update.`);
+            return false;
+        }
+        const roomData = JSON.parse(data);
+        roomData.time = time;
         roomData.updatedAt = new Date().toISOString();
 
         await redis.set(key, JSON.stringify(roomData));

@@ -38,9 +38,9 @@ const Lobby = () => {
 
       // Join room thông qua socket
       const actualRoomId = roomId || room.id || room.room?.id;
-      if (actualRoomId) {
-        socket.emit("join_room", { roomId: actualRoomId, user });
-      }
+      // if (actualRoomId) {
+      //   socket.emit("join_room", { roomId: actualRoomId, user });
+      // }
     } catch (error) {
       console.error("Error loading room data:", error);
       toast.error("Không thể tải dữ liệu phòng");
@@ -135,7 +135,8 @@ const Lobby = () => {
 
   const handleConfirmRules = () => {
     // include roomType in confirmation flow
-    const data = {room_id: room.id||room.room.id, topic_id: room.idTopic||room.room.idTopic}
+    const user = getUserInfo()
+    const data = {room_id: room.id||room.room.id, topic_id: room.idTopic||room.room.idTopic, timePerRound: drawTime, user: user}
     socket.emit("startGame", data)
     setShowRulesPopup(false);
     console.log("Starting game with roomType:", roomType);
