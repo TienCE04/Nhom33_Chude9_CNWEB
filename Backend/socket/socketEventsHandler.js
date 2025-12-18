@@ -32,6 +32,34 @@ async function checkAndStopGame(io, room_id, curPlayers) {
   }
 }
 
+// Hàm thực hiện logic 1 vòng chơi
+async function runRoundLogic(currentRoomData) {
+  // Lấy người vẽ và từ khóa
+  console.log(currentRoomData)
+  const { drawer_username, keyword } = await gamePlay.handler(
+    room_id ,
+    currentRoomData.room?.idTopic || currentRoomData.idTopic,
+    await players.getTmpPlayers(room_id),
+    await players.getTmpKeywords(room_id),
+    topic_type
+  );
+
+  //  Lưu trạng thái Round
+  await players.setRoundState(room_id, {
+    drawer_username,
+    keyword,
+    timeLeft: 62,
+  });
+
+  // Emit sự kiện
+  io.to(room_id).emit("roomData", currentRoomData);
+  // Gửi từ khóa cho người vẽ, null cho người đoán
+  io.to(room_id).emit("keyword", { drawer_username, keyword: null });
+  io.to(room_id).emit("newRound");
+
+  // Bắt đầu đếm ngược thời gian trong Round 
+  startCountdown(io, room_id);
+}
 // -------------------- START ROUND --------------------
 async function startRound(io, room_id, topic_type) {
   const roomData = await room.getRoomById(room_id);
@@ -41,41 +69,11 @@ async function startRound(io, room_id, topic_type) {
   await players.resetAddPoint(room_id);
   await players.resetAnswered(room_id); // Reset danh sách người đã đoán đúng
 
-  // Hàm thực hiện logic 1 vòng chơi
-  async function runRoundLogic(currentRoomData) {
-    // Lấy người vẽ và từ khóa
-    console.log(currentRoomData)
-    const { drawer_username, keyword } = await gamePlay.handler(
-      room_id ,
-      currentRoomData.room?.idTopic || currentRoomData.idTopic,
-      await players.getTmpPlayers(room_id),
-      await players.getTmpKeywords(room_id),
-      topic_type
-    );
-
-    //  Lưu trạng thái Round
-    await players.setRoundState(room_id, {
-      drawer_username,
-      keyword,
-      timeLeft: 62,
-    });
-
-    // Emit sự kiện
-    io.to(room_id).emit("roomData", currentRoomData);
-    // Gửi từ khóa cho người vẽ, null cho người đoán
-    io.to(room_id).emit("keyword", { drawer_username, keyword: null });
-    io.to(room_id).emit("newRound");
-
-    // Bắt đầu đếm ngược thời gian trong Round 
-    startCountdown(io, room_id);
-  }
-
   // Xóa interval cũ nếu có để tránh xung đột timer khi gọi startRound sớm
   if (roomIntervals.has(room_id)) {
     clearInterval(roomIntervals.get(room_id));
     roomIntervals.delete(room_id);
   }
-
   await runRoundLogic(roomData); // Chạy vòng đầu tiên
 
   // Thiết lập Interval 63s cho các vòng chơi tiếp theo
@@ -98,7 +96,7 @@ async function startRound(io, room_id, topic_type) {
 
     // Chuyển vòng chơi
     await runRoundLogic(currentRoomData);
-  }, 63 * 1000);
+  }, roomData.time * 1000);
 
   roomIntervals.set(room_id, intervalID);
 }
@@ -211,14 +209,14 @@ function attachSocketEvents(io, socket) {
 
   //startGame
   socket.on("startGame", async (data) => {
-    const { room_id, topic_id } = data;
+    const { room_id, topic_id, timePerRound, user } = data;
     const roomData = await room.getRoomById(room_id);
 
     if (!roomData || roomData.cur_players < 2) {
       socket.emit("notEnoughPlayers");
       return;
     }
-
+    await room.setTime(room_id, timePerRound)
     await room.setStatus(room_id, "playing");
     await players.resetPlayerScore(room_id);
     await players.resetAddPoint(room_id);
@@ -226,6 +224,8 @@ function attachSocketEvents(io, socket) {
     // Cần reset lại danh sách người vẽ tạm thời
     const allPlayers = await players.getPlayersByRoomId(room_id);
     await players.setTmpPlayers(room_id, allPlayers);
+    io.to(room_id).emit("playersData", allPlayers);
+    io.to(room_id).emit("roomData", roomData);
     io.to(room_id).emit("gameStarted", {
         room_id,
         topic_id,

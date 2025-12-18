@@ -97,7 +97,8 @@ const Lobby = () => {
 
   const handleConfirmRules = () => {
     // include roomType in confirmation flow
-    const data = {room_id: room.id||room.room.id, topic_id: room.idTopic||room.room.idTopic}
+    const user = getUserInfo()
+    const data = {room_id: room.id||room.room.id, topic_id: room.idTopic||room.room.idTopic, timePerRound: drawTime, user: user}
     socket.emit("startGame", data)
     setShowRulesPopup(false);
     console.log("Starting game with roomType:", roomType);
