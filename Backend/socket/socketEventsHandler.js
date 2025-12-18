@@ -192,7 +192,7 @@ function attachSocketEvents(io, socket) {
     io.to(roomId).emit("playersData", playersData);
 
     io.to(roomId).emit("roomData", roomData);
-    io.to(roomId).emit("joined_room", roomId, user);
+    io.emit("joined_room", roomId, user);
     // io.emit("rooms", await room.getAllRoom());
 
     if (roomData.status === "playing") {
@@ -316,7 +316,7 @@ function attachSocketEvents(io, socket) {
     if (!roomId || !username) return;
     const result = await room.updateRoomPlayer(roomId, -1);
     //rời ở phòng đó
-    io.to(roomId).emit("leaved_room", roomId);
+    io.emit("leaved_room", roomId);
     socket.leave(roomId);
 
     const curPlayers = await players.updatePlayerLeave(roomId, username);

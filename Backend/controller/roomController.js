@@ -103,8 +103,8 @@ exports.getRoomById = async (ctx) => {
     ctx.body = { success: false, message: "Missing roomId" };
     return;
   }
-
-  const key = roomKey(roomId);
+  id = roomId.toLowerCase();
+  const key = roomKey(id);
   const data = await redis.get(key);
 
   if (!data) {
