@@ -119,6 +119,15 @@ export const roomApi = {
     }
   },
 
+  getRoomById: async (roomId) => {
+    try {
+      const response = await api.get(`/rooms/${roomId}`);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, "Không thể lấy thông tin phòng");
+    }
+  },
+
   createRoom: async (roomData) => {
     try {
       const response = await api.post("/rooms", roomData);

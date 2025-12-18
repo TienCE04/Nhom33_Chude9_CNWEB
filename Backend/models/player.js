@@ -35,8 +35,22 @@ module.exports = class Player {
     };
   }
 
-  static async getAllPlayer() {
-    return await Player.find().sort({ totalPoint: -1 });
-  }
+  static async getRankPlayer(username) {
+    const result = await Player.aggregate([
+      { $sort: { totalPoint: -1 } },
+      {
+        $setWindowFields: {
+          sortBy: { totalPoint: -1 },
+          output: {
+            rank: { $rank: {} },
+          },
+        },
+      },
+      { $match: { username } },
+      { $project: { rank: 1, _id: 0 } },
+    ]);
 
+    console.log(result[0]?.rank);
+    return result[0]?.rank || null;
+  }
 };

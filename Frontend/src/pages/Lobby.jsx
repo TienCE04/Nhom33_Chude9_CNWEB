@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Copy, LogOut, Play, Pause } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { PlayerCard } from "@/components/PlayerCard";
@@ -14,8 +14,9 @@ import "../assets/styles/gamePage.css";
 
 const Lobby = () => {
   const navigate = useNavigate();
-  const [roomCode] = useState("GAME-1234");
-  const [rounds, setRounds] = useState(3);
+  const { roomId } = useParams();
+  const dataLoadedRef = useRef(false);
+  // const [rounds, setRounds] = useState(3);
   const [drawTime, setDrawTime] = useState(60);
   const [topic, setTopic] = useState("Animals");
   const [roomType, setRoomType] = useState("Public");
@@ -23,75 +24,112 @@ const Lobby = () => {
   const [messages, setMessages] = useState([]);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [showRulesPopup, setShowRulesPopup] = useState(false);
-  const [players, setPlayers] = useState([])
+  const [players, setPlayers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  // Hàm để load dữ liệu phòng từ API
+  const loadRoomData = async () => {
+    try {
+      setIsLoading(true);
+      const user = getUserInfo();
+      if (!user || !user.username) {
+        navigate("/login");
+        return;
+      }
+
+      // Join room thông qua socket
+      const actualRoomId = roomId || room.id || room.room?.id;
+      if (actualRoomId) {
+        socket.emit("join_room", { roomId: actualRoomId, user });
+      }
+    } catch (error) {
+      console.error("Error loading room data:", error);
+      toast.error("Không thể tải dữ liệu phòng");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Hàm xử lý cập nhật dữ liệu player từ socket
+  const handleUpdatePlayerRoomEvent = (playersData) => {
+    console.log("Received players data:", playersData);
+    setPlayers(playersData);
+    if (playersData.length < 2) setIsGameStarted(false);
+  };
+
+  // Hàm xử lý chat
+  const handleUpdateChat = (data) => {
+    const { username, message } = data;
+
+    setMessages(prev => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        player: username,
+        text: message,
+      },
+    ]);
+  };
+
+  // Hàm xử lý cập nhật dữ liệu phòng
+  const handleUpdateRoomData = (data) => {
+    setRoom(data);
+    const topicData = {
+      value: data.metadata?.topicId || data.room?.metadata?.topicId,
+      label: data.metadata?.topicName || data.room?.metadata?.topicName
+    };
+    setTopic(topicData);
+    setRoomType(data.room_type || data.room?.room_type);
+  };
+
+  // Hàm xử lý khi game bắt đầu
+  const handleStartGame = (data) => {
+    setIsGameStarted(true);
+  };
+
+  // Hàm xử lý khi game tạm dừng
+  const handleGamePaused = (data) => {
+    setIsGameStarted(false);
+  };
+
+  // Setup socket listeners và load dữ liệu khi component mount
   useEffect(() => {
-      const handleUpdatePlayerRoomEvent = (playersData) => {
-        setPlayers(playersData)
-        if(players.length < 2) setIsGameStarted(false)
-      };
-      const handleUpdateChat = (data) => {
-        const { username, message } = data;
-        const user = getUserInfo();
+    // Chỉ load dữ liệu một lần khi component mount
+    if (!dataLoadedRef.current) {
+      dataLoadedRef.current = true;
+      loadRoomData();
+    }
 
-        if (user.username === username) return;
+    // Setup socket event listeners
+    socket.on("gamePaused", handleGamePaused);
+    socket.on("gameStarted", handleStartGame);
+    socket.on("roomData", handleUpdateRoomData);
+    socket.on("playersData", handleUpdatePlayerRoomEvent);
+    socket.on("updateChat", handleUpdateChat);
 
-        setMessages(prev => [
-          ...prev,
-          {
-            id: crypto.randomUUID(),
-            player: username,
-            text: message,
-          },
-        ]);
-      };
-      const handleUpdateRoomData = (data) =>{
-        setRoom(data)
-        const topicData = {
-          value: data.metadata.topicId||data.room.metadata.topicId,
-          label: data.metadata.topicName||data.room.metadata.topicName
-        }
-        setTopic(topicData)
-        setRoomType(data.room_type||data.room.room_type)
-      };
-      const handleStartGame = (data) => {
-        setIsGameStarted(true);
-      };
-
-      const handleGamePaused = (data) => {
-         setIsGameStarted(false);
-      };
-
-
-      socket.on("gamePaused", handleGamePaused)
-      socket.on("gameStarted", handleStartGame);
-      socket.on("roomData", handleUpdateRoomData);
-      socket.on("playersData", handleUpdatePlayerRoomEvent);
-      socket.on("updateChat", handleUpdateChat)
-      return () => {
-        socket.on("gamePaused", handleGamePaused)
-        socket.off("playersData", handleUpdatePlayerRoomEvent);
-        socket.off("updateChat", handleUpdateChat)
-        socket.off("roomData", handleUpdateRoomData);
-        socket.off("gameStarted", handleStartGame);
-      };
-    }, []);
+    // Cleanup listeners khi component unmount
+    return () => {
+      socket.off("gamePaused", handleGamePaused);
+      socket.off("playersData", handleUpdatePlayerRoomEvent);
+      socket.off("updateChat", handleUpdateChat);
+      socket.off("roomData", handleUpdateRoomData);
+      socket.off("gameStarted", handleStartGame);
+    };
+  }, []);
 
   const copyRoomCode = () => {
-    navigator.clipboard.writeText(roomCode);
+    const actualRoomCode = room.id || room.room?.id || "";
+    navigator.clipboard.writeText(actualRoomCode);
     toast.success("Room code copied!");
   };
 
   const handleSendMessage = (message) => {
     const user = getUserInfo();
-    setMessages([
-      ...messages,
-      { id: Date.now().toString() + user.username, player: "You", text: message },
-    ]);
     const data = {
       message: message,
       user: user,
-      room_id: room.id||room.room.id
+      room_id: room.id || room.room?.id
     }
+    // Emit event để backend broadcast cho tất cả mọi người
     socket.emit("newChat", data)
   };
 
@@ -112,6 +150,11 @@ const Lobby = () => {
     socket.emit("leave_room", { roomId: room.id||room.room.id, username: userInfo.username });
     navigate("/rooms")
   }
+  const ROOM_TYPE_MAP = {
+    public: "Công cộng",
+    private: "Riêng tư",
+  };
+
 
   const emitPauseGame = () =>{
     console.log(room)
@@ -136,7 +179,7 @@ const Lobby = () => {
           <div className="flex items-center gap-3">
             <h2 className="text-3xl font-extrabold">Room Code:</h2>
             <code className="bg-primary/20 px-4 py-2 rounded-xl font-mono font-bold text-lg">
-              {roomCode}
+              {room.id || room.room?.id || "Loading..."}
             </code>
             <button
               onClick={copyRoomCode}
@@ -197,8 +240,8 @@ const Lobby = () => {
             <div className="game-card overflow-y-auto flex-1 min-h-0">
               <h3 className="text-xl font-bold mb-4">Players</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
-                {players.map((player) => (
-                  <PlayerCard key={player.id} {...player} />
+                {players.map((player, index) => (
+                  <PlayerCard key={index} name={player.username} points={player.point} />
                 ))}
               </div>
             </div>
@@ -222,7 +265,7 @@ const Lobby = () => {
                     <label className="font-semibold flex-shrink-0">Loại phòng:</label>
                     <input
                         type="text"
-                        value={roomType}
+                        value={ROOM_TYPE_MAP[roomType] ?? ""}
                         readOnly
                         className="w-full h-[40px] px-3 border rounded-md bg-gray-100 cursor-not-allowed"
                       />

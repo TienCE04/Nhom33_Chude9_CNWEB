@@ -32,10 +32,10 @@ export const PlayerCard = ({
           )}
         </div>
         
-        <div className="flex-1">
-          <p className="font-bold text-foreground">{name}</p>
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-foreground truncate">{name}</p>
           {points !== undefined && (
-            <p className="text-sm text-muted-foreground">{points} points</p>
+            <p className="text-sm text-muted-foreground truncate">{points} points</p>
           )}
         </div>
         
