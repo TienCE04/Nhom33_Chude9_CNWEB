@@ -105,6 +105,10 @@ const Lobby = () => {
     socket.on("roomData", handleUpdateRoomData);
     socket.on("playersData", handleUpdatePlayerRoomEvent);
     socket.on("updateChat", handleUpdateChat);
+    socket.on("room_full", (data) => {
+      toast.error(data.message);
+      navigate("/rooms");
+    });
 
     // Cleanup listeners khi component unmount
     return () => {
@@ -113,6 +117,7 @@ const Lobby = () => {
       socket.off("updateChat", handleUpdateChat);
       socket.off("roomData", handleUpdateRoomData);
       socket.off("gameStarted", handleStartGame);
+      socket.off("room_full");
     };
   }, []);
 

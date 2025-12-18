@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, Trophy, Hash, Gamepad2, ArrowRight, Plus, Loader, X } from "lucide-react";
+import { ArrowLeft, Users, Trophy, Hash, Gamepad2, ArrowRight, Plus, Loader, X, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { roomApi } from "@/lib/api";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
 import { toast } from "sonner";
+import { Dropdown } from "antd";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 const MaterialIcon = ({ iconName, className = "" }) => (
   <span className={`material-symbols-rounded ${className}`}>{iconName}</span>
@@ -20,6 +22,8 @@ const RoomList = () => {
   const [showJoinByCodeModal, setShowJoinByCodeModal] = useState(false);
   const [roomCode, setRoomCode] = useState("");
   const [isJoiningByCode, setIsJoiningByCode] = useState(false);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, roomId: null });
+  const userInfo = getUserInfo();
 
   useEffect(() => {
     fetchRooms();
@@ -54,6 +58,7 @@ const RoomList = () => {
             (room.currentPlayers || 0) >= room.maxPlayer
               ? "Đã đầy"
               : "Sẵn sàng",
+          username: room.username
         }));
         setRooms(mappedRooms);
       } else {
@@ -63,6 +68,39 @@ const RoomList = () => {
       setError("Lỗi kết nối");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleEditRoom = (room, e) => {
+    e.stopPropagation();
+    navigate("/create/room", { state: { room } });
+  };
+
+  const handleDeleteRoom = (roomId, e) => {
+    e.stopPropagation();
+    setDeleteModal({ isOpen: true, roomId });
+  };
+
+  const confirmDeleteRoom = async () => {
+    const roomId = deleteModal.roomId;
+    if (!roomId) return;
+
+    try {
+      const result = await roomApi.deleteRoom(roomId);
+      if (result.success) {
+        toast.success("Xóa phòng thành công");
+        setRooms(prev => prev.filter(r => r.id !== roomId));
+        if (selectedRoom?.id === roomId) {
+          setSelectedRoom(null);
+        }
+      } else {
+        toast.error(result.message || "Xóa phòng thất bại");
+      }
+    } catch (error) {
+      console.error("Error deleting room:", error);
+      toast.error("Có lỗi xảy ra khi xóa phòng");
+    } finally {
+      setDeleteModal({ isOpen: false, roomId: null });
     }
   };
 
@@ -206,13 +244,46 @@ const RoomList = () => {
               }`}
             >
               {/* Status Badge */}
-              <div className={`absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-semibold ${
+              <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold ${
                 room.status === "Đã đầy"
                   ? "bg-red-500 text-white"
                   : "bg-primary text-primary-foreground"
               }`}>
                 {room.status}
               </div>
+
+              {/* Dropdown Menu */}
+              {userInfo?.username === room.username && (
+                <div className="absolute top-2 right-2 z-10">
+                  <Dropdown
+                    menu={{
+                      items: [
+                        {
+                          key: 'edit',
+                          label: 'Chỉnh sửa',
+                          icon: <Edit className="w-4 h-4" />,
+                          onClick: ({ domEvent }) => handleEditRoom(room, domEvent)
+                        },
+                        {
+                          key: 'delete',
+                          label: 'Xóa',
+                          icon: <Trash2 className="w-4 h-4 text-danger" />,
+                          danger: true,
+                          onClick: ({ domEvent }) => handleDeleteRoom(room.id, domEvent)
+                        }
+                      ]
+                    }}
+                    trigger={['click']}
+                  >
+                    <button 
+                      className="p-1 rounded-full hover:bg-black/10 transition-colors bg-white/50 backdrop-blur-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreVertical className="w-4 h-4 text-foreground/80" />
+                    </button>
+                  </Dropdown>
+                </div>
+              )}
               {/* Topic Avatar */}
               <div className="flex justify-center mb-4 mt-2">
                 <div className="w-24 h-24 rounded-full flex items-center justify-center border-2 border-border shadow-sm">
@@ -329,6 +400,17 @@ const RoomList = () => {
             </div>
           </div>
         )}
+
+        <ConfirmModal
+          isOpen={deleteModal.isOpen}
+          onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+          onConfirm={confirmDeleteRoom}
+          title="Xóa phòng"
+          message="Bạn có chắc chắn muốn xóa phòng này? Hành động này không thể hoàn tác."
+          confirmText="Xóa"
+          cancelText="Hủy"
+          type="danger"
+        />
       </div>
     </div>
   );

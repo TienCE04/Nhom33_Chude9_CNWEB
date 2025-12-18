@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Gamepad2, Plus, Loader, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { GameButton } from "../components/GameButton";
 import { Select, Dropdown } from "antd";
@@ -45,6 +45,7 @@ const MaterialIcon = ({ iconName, className = "" }) => (
 
 const CreateRoom = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [maxPlayers, setMaxPlayers] = useState("6");
   const [targetScore, setTargetScore] = useState("100");
   const [typeRoom, setTypeRoom] = useState("private");
@@ -53,6 +54,8 @@ const CreateRoom = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, topicId: null });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingRoomId, setEditingRoomId] = useState(null);
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -74,6 +77,35 @@ const CreateRoom = () => {
         // Map to ensure we have necessary fields and handle duplicates if any
         // For now just setting them directly
         setTopics(allTopics);
+
+        // Handle edit mode if room data is passed
+        if (location.state?.room) {
+          const room = location.state.room;
+          setIsEditing(true);
+          setEditingRoomId(room.id);
+          setMaxPlayers(room.maxPlayers.toString());
+          setTargetScore(room.maxPoints.toString());
+          // Note: room object from RoomList might not have room_type directly if it was mapped
+          // We might need to fetch full room details or ensure RoomList passes enough info
+          // Assuming RoomList passes mapped object which might miss room_type
+          // Let's try to fetch room details if needed, or rely on what's passed.
+          // The mapped object in RoomList doesn't have room_type.
+          // We should probably fetch the room details by ID to be sure, or update RoomList to pass it.
+          // For now, let's fetch the room details to be safe and get correct room_type and topicId
+          
+          const roomDetails = await roomApi.getRoomById(room.id);
+          if (roomDetails.success && roomDetails.room) {
+             const r = roomDetails.room;
+             setTypeRoom(r.room_type || "private");
+             // Find the topic in the list
+             const topicId = r.idTopic || r.metadata?.topicId;
+             const foundTopic = allTopics.find(t => (t._id === topicId || t.idTopic === topicId));
+             if (foundTopic) {
+               setSelectedTopic(foundTopic);
+             }
+          }
+        }
+
       } catch (error) {
         console.error("Error fetching topics:", error);
       } finally {
@@ -82,7 +114,7 @@ const CreateRoom = () => {
     };
 
     fetchTopics();
-  }, []);
+  }, [location.state]);
 
   const handleDeleteTopic = (topicId, e) => {
     e.stopPropagation();
@@ -151,29 +183,46 @@ const CreateRoom = () => {
         roomType: typeRoom,
       };
 
-      const result = await roomApi.createRoom(roomData);
-      if (result.success) {
-        toast({
-          title: "Tạo phòng thành công",
-          variant: "success",
-        });
-        const user = getUserInfo();
-        const data = {
-          roomData: result.room,
-          user: user
+      if (isEditing) {
+        const result = await roomApi.updateRoom(editingRoomId, roomData);
+        if (result.success) {
+          toast({
+            title: "Cập nhật phòng thành công",
+            variant: "success",
+          });
+          navigate("/rooms");
+        } else {
+          toast({
+            title: "Cập nhật phòng thất bại",
+            description: result.message || "Không thể cập nhật phòng",
+            variant: "error",
+          });
         }
-        socket.emit("create_room", data)
-        // Navigate to lobby with the new room ID
-        navigate(`/lobby/${result.room.id}`);
       } else {
-        toast({
-          title: "Tạo phòng thất bại",
-          description: result.message || "Không thể tạo phòng",
-          variant: "error",
-        });
+        const result = await roomApi.createRoom(roomData);
+        if (result.success) {
+          toast({
+            title: "Tạo phòng thành công",
+            variant: "success",
+          });
+          const user = getUserInfo();
+          const data = {
+            roomData: result.room,
+            user: user
+          }
+          socket.emit("create_room", data)
+          // Navigate to lobby with the new room ID
+          navigate(`/lobby/${result.room.id}`);
+        } else {
+          toast({
+            title: "Tạo phòng thất bại",
+            description: result.message || "Không thể tạo phòng",
+            variant: "error",
+          });
+        }
       }
     } catch (error) {
-      console.error("Create room error:", error);
+      console.error("Create/Update room error:", error);
       toast({
         title: "Lỗi kết nối",
         description: "Không thể kết nối tới máy chủ",
@@ -190,7 +239,7 @@ const CreateRoom = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3 px-6">
           <Gamepad2 className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-extrabold">Tạo phòng</h1>
+          <h1 className="text-3xl font-extrabold">{isEditing ? "Cập nhật phòng" : "Tạo phòng"}</h1>
         </div>
         <GameButton variant="secondary" size="md" onClick={() => navigate("/rooms")}>
           <ArrowLeft className="w-5 h-5 mr-2" />
@@ -411,7 +460,7 @@ const CreateRoom = () => {
               className="flex-1 flex items-center justify-center gap-2"
             >
               {isCreating && <Loader className="w-5 h-5 animate-spin" />}
-              {isCreating ? "Đang tạo..." : "Tạo phòng"}
+              {isCreating ? (isEditing ? "Đang cập nhật..." : "Đang tạo...") : (isEditing ? "Cập nhật phòng" : "Tạo phòng")}
             </GameButton>
           </div>
         </div>

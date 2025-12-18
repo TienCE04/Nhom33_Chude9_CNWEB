@@ -179,6 +179,17 @@ function attachSocketEvents(io, socket) {
   socket.on("join_room", async ({ roomId, user }) => {
     if (!roomId || !user) return;
 
+    const roomResult = await room.getRoomById(roomId);
+    if (roomResult.success && roomResult.room) {
+      const currentPlayersCount = getCurrentPlayers(io, roomId);
+      if (currentPlayersCount >= roomResult.room.maxPlayer) {
+        socket.emit("room_full", {
+          message: "Phòng chơi đã đầy, vui lòng tham gia phòng chơi khác",
+        });
+        return;
+      }
+    }
+
     socket.join(roomId);
     socketUser.bindSocketToUser(socket.id, user.username);
 

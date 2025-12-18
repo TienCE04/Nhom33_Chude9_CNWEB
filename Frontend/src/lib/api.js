@@ -136,6 +136,24 @@ export const roomApi = {
       return handleApiError(error, "Không thể tạo phòng");
     }
   },
+
+  updateRoom: async (roomId, roomData) => {
+    try {
+      const response = await api.put(`/rooms/${roomId}`, roomData);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, "Không thể cập nhật phòng");
+    }
+  },
+
+  deleteRoom: async (roomId) => {
+    try {
+      const response = await api.delete(`/rooms/${roomId}`);
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, "Không thể xóa phòng");
+    }
+  },
 };
 
 export const topicApi = {
