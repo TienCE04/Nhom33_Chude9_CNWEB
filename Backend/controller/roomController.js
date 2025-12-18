@@ -132,6 +132,12 @@ exports.deleteRoom = async (ctx) => {
   await redis.srem(ROOMS_SET_KEY, key);
 
   const io = getIO();
+  io.to(roomId).emit("room_deleted", {
+    roomId,
+    reason: "Room was deleted"
+  });
+  io.in(roomId).socketsLeave(roomId);
+  
   io.emit("rooms_updated");
 
   ctx.body = { success: true, message: "Room deleted", roomId };

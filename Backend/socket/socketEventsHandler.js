@@ -248,6 +248,81 @@ function attachSocketEvents(io, socket) {
     startRound(io, room_id, topic_id);
   });
 
+  // Người chơi gửi câu trả lời
+  socket.on("sendAnswer", async (data) => {
+    const { room_id, username, guess } = data;
+    if (!room_id || !username || !guess) return;
+
+    const roundState = await players.getRoundState(room_id);
+
+    // Nếu người chơi đã đoán đúng trước đó, bỏ qua
+    if (roundState.answered.includes(username)) return;
+
+    // Server kiểm tra đoán đúng
+    if (guess.toLowerCase() === roundState.keyword.toLowerCase()) {
+      let addPoint = await players.getAddPoint(room_id);
+
+      // Cập nhật điểm cho người đoán
+      await players.updatePlayerScore(room_id, username, addPoint);
+
+      // Cập nhật điểm cho người vẽ
+      await players.updatePlayerScore(room_id, roundState.drawer, 2);
+
+      // Giảm điểm cộng cho lượt đoán tiếp theo
+      if (addPoint > 2) {
+        await players.updateAddPoint(room_id, addPoint - 1);
+      }
+
+      // Thêm người chơi vào danh sách đã đoán đúng
+      await players.addAnsweredPlayer(room_id, username);
+
+      // Emit thông báo đoán đúng và cập nhật bảng xếp hạng
+      io.to(room_id).emit("correctGuess", { username, points: addPoint });
+      const playersData = await players.getRankByRoomId(room_id);
+      io.to(room_id).emit("playersData", playersData);
+
+      // Kiểm tra kết thúc vòng sớm
+      if (await players.everyoneAnswered(room_id)) {
+        console.log(
+          `All players in ${room_id} guessed correctly. Ending round early.`
+        );
+
+        // Lấy từ khóa hiển thị
+        const currentRoundState = await players.getRoundState(room_id);
+        io.to(room_id).emit("allGuessed", {
+          keyword: currentRoundState.keyword,
+        });
+
+        // Dừng interval 63s hiện tại
+        if (roomIntervals.has(room_id)) {
+          clearInterval(roomIntervals.get(room_id));
+          roomIntervals.delete(room_id);
+        }
+
+        // Dừng interval đếm ngược UI
+        if (countdownIntervals.has(room_id)) {
+          clearInterval(countdownIntervals.get(room_id));
+          countdownIntervals.delete(room_id);
+        }
+
+        // Chờ 3 giây để người chơi xem từ khóa, sau đó bắt đầu vòng mới
+        setTimeout(async () => {
+          const roomData = await room.getRoomById(room_id);
+          const current_topic_type = roomData.topic_type;
+
+          // Kiểm tra điều kiện kết thúc game
+          const maxPoint = await players.findMaxScore(room_id);
+          if (maxPoint >= roomData.max_scores) {
+            await endGame(io, room_id);
+          } else {
+            await startRound(io, room_id, current_topic_type);
+          }
+        }, 3000);
+      }
+    }
+    startRound(io, room_id, topic_id);
+  });
+
   /* -------- LEAVE ROOM -------- */
   socket.on("leave_room", async ({ roomId, username }) => {
     if (!roomId || !username) return;
@@ -265,6 +340,39 @@ function attachSocketEvents(io, socket) {
     io.to(roomId).emit("roomData", await room.getRoomById(roomId));
 
     io.emit("rooms_updated");
+  });
+
+  // ---------------- CANVAS SYNC ----------------
+  socket.on("canvas-data", (data) => {
+    const { room_id, snapshot } = data;
+    socket.to(room_id).emit("update-canvas", { snapshot });
+  });
+
+  // ---------------- CHAT ----------------
+  socket.on("newChat", async (data) => {
+    const { room_id, user, message } = data;
+    const username = user.username;
+    if (!message) return;
+    io.to(room_id).emit("updateChat", { username, message });
+  });
+
+  // ---------------- HINT REQUEST ----------------
+  socket.on("requestHint", async ({ room_id, hintLevel }) => {
+    const roundState = await players.getRoundState(room_id);
+    if (!roundState?.keyword) return;
+
+    const keyword = roundState.keyword;
+
+    const hint =
+      hintLevel === 1
+        ? keyword.slice(0, 1)
+        : hintLevel === 2
+        ? keyword.slice(0, 2)
+        : null;
+
+    if (!hint) return;
+
+    io.to(room_id).emit("hint", hint);
   });
 
   /* -------- DISCONNECT -------- */
