@@ -151,6 +151,8 @@ const RoomList = () => {
 
       // Join room
       socket.emit("join_room", { roomId: targetRoom.id, user: userInfo });
+      navigate(`/lobby/${targetRoom.id}`);
+
       toast.success("Vào phòng thành công!");
       setShowJoinByCodeModal(false);
       setRoomCode("");
