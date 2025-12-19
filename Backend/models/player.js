@@ -42,8 +42,45 @@ module.exports = class Player {
     };
   }
 
+  static async getLeaderboard(limit = 100) {
+    return await PlayerModel.aggregate([
+      { $sort: { totalPoint: -1 } },
+      {
+        $setWindowFields: {
+          sortBy: { totalPoint: -1 },
+          output: {
+            rank: { $rank: {} },
+          },
+        },
+      },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "profiles",
+          localField: "username",
+          foreignField: "username",
+          as: "profile"
+        }
+      },
+      {
+        $unwind: {
+          path: "$profile",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          username: 1,
+          totalPoint: 1,
+          rank: 1,
+          avatar: "$profile.avatar"
+        }
+      }
+    ]);
+  }
+
   static async getRankPlayer(username) {
-    const result = await Player.aggregate([
+    const result = await PlayerModel.aggregate([
       { $sort: { totalPoint: -1 } },
       {
         $setWindowFields: {

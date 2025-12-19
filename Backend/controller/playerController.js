@@ -53,3 +53,25 @@ exports.getRankPlayer = async (ctx) => {
     ctx.body = { success: false, message: err.message };
   }
 };
+exports.getLeaderboard = async (ctx) => {
+  try {
+    const leaderboard = await Player.getLeaderboard();
+    
+    let userRank = null;
+    if (ctx.User) {
+        userRank = await Player.getRankPlayer(ctx.User.username);
+    }
+
+    ctx.body = {
+      success: true,
+      message: "Get leaderboard successfully",
+      data: {
+        leaderboard,
+        userRank: userRank ? { username: ctx.User.username, rank: userRank } : null
+      },
+    };
+  } catch (error) {
+    ctx.status = error.status || 500;
+    ctx.body = { success: false, message: error.message };
+  }
+};
