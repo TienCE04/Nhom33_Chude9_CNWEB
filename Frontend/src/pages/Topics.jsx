@@ -163,10 +163,10 @@ const Topics = () => {
   return (
     <div className="mx-auto p-4 h-[calc(100vh-80px)] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3 px-6">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4 md:gap-0">
+        <div className="flex items-center gap-3 px-4 md:px-6">
           <Library className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-extrabold text-foreground">Thư viện chủ đề</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground">Thư viện chủ đề</h1>
         </div>
         <GameButton
           variant="success"
@@ -180,10 +180,10 @@ const Topics = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 mb-6 border-b border-border px-4">
+      <div className="flex gap-2 md:gap-4 mb-6 border-b border-border px-2 md:px-4 overflow-x-auto">
         <button
           onClick={() => setActiveTab("system")}
-          className={`px-6 py-3 font-bold text-lg transition-all relative ${
+          className={`px-4 md:px-6 py-3 font-bold text-base md:text-lg transition-all relative whitespace-nowrap ${
             activeTab === "system"
               ? "text-primary"
               : "text-muted-foreground hover:text-foreground"
@@ -196,7 +196,7 @@ const Topics = () => {
         </button>
         <button
           onClick={() => setActiveTab("custom")}
-          className={`px-6 py-3 font-bold text-lg transition-all relative ${
+          className={`px-4 md:px-6 py-3 font-bold text-base md:text-lg transition-all relative whitespace-nowrap ${
             activeTab === "custom"
               ? "text-primary"
               : "text-muted-foreground hover:text-foreground"

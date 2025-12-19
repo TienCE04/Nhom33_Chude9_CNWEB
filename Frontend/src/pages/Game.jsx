@@ -215,7 +215,7 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
             <Scoreboard players={currentPlayers} />
           </div>
 
-          <div className="flex gap-4 h-[200px] w-full">
+          <div className="flex flex-col md:flex-row gap-4 h-[400px] md:h-[200px] w-full">
             <ChatBox
               messages={chatMessages}
               onSendMessage={onSendMessage}

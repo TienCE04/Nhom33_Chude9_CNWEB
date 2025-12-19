@@ -185,12 +185,12 @@ const RoomList = () => {
     <div className="min-h-screen p-4">
       <div className="mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4 px-6">
+        <div className="flex flex-col md:flex-row items-center justify-between mb-4 px-4 md:px-6 gap-4 md:gap-0">
           <div className="flex items-center gap-3">
             <Gamepad2 className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-extrabold">Danh sách phòng chơi</h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold">Danh sách phòng chơi</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap justify-center items-center gap-3">
             <GameButton
               variant="primary"
               size="md"

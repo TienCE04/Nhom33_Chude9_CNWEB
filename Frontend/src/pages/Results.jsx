@@ -15,8 +15,8 @@ const Results = () => {
       <div className="max-w-2xl w-full">
         <div className="text-center mb-8 animate-scale-in">
           <Trophy className="w-24 h-24 text-secondary mx-auto mb-4" />
-          <h1 className="text-5xl font-extrabold mb-2">Game Over!</h1>
-          <p className="text-xl text-muted-foreground">Final Rankings</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-2">Game Over!</h1>
+          <p className="text-lg md:text-xl text-muted-foreground">Final Rankings</p>
         </div>
 
         <div className="space-y-3 mb-8 animate-fade-in">

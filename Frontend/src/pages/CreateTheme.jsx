@@ -99,10 +99,10 @@ export const CreateTheme = () => {
   return (
     <div className="p-4 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3 px-6">
+      <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 md:gap-0">
+        <div className="flex items-center gap-3 px-4 md:px-6">
           <Palette className="w-8 h-8 text-primary" />
-          <h1 className="text-3xl font-extrabold">{editingTopic ? "Chỉnh sửa chủ đề" : "Tạo chủ đề"}</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold">{editingTopic ? "Chỉnh sửa chủ đề" : "Tạo chủ đề"}</h1>
         </div>
         <GameButton variant="secondary" size="md" onClick={() => navigate("/create/room")}>
           <ArrowLeft className="w-5 h-5 mr-2" />

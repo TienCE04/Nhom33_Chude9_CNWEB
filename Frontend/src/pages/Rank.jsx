@@ -52,7 +52,7 @@ const Rank = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center p-4 pt-20">
+    <div className="flex flex-col items-center p-4">
       <div className="max-w-2xl w-full bg-card rounded-xl shadow-xl border border-border overflow-hidden flex flex-col max-h-[80vh]">
         {/* Header - Compact */}
         <div className="p-6 border-b border-border bg-muted/30 flex items-center gap-4 shrink-0">
@@ -107,7 +107,7 @@ const Rank = () => {
         )}
       </div>
 
-      <div className="mt-6 flex justify-center animate-fade-in">
+      {/* <div className="mt-6 flex justify-center animate-fade-in">
         <GameButton
           variant="secondary"
           size="lg"
@@ -117,7 +117,7 @@ const Rank = () => {
           <Home className="w-5 h-5 mr-2" />
           {t('rank.backToHome')}
         </GameButton>
-      </div>
+      </div> */}
     </div>
   );
 };

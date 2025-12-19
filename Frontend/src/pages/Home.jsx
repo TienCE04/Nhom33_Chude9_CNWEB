@@ -28,18 +28,18 @@ const Home = () => {
         <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
           <div className="inline-flex items-center justify-center p-4 bg-card/50 backdrop-blur-md rounded-3xl shadow-xl border border-white/10">
             <Palette className="w-16 h-16 text-primary mr-4" />
-            <h1 className="text-5xl md:text-7xl font-extrabold text-foreground tracking-tight drop-shadow-lg">
+            <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-foreground tracking-tight drop-shadow-lg">
               {t('home.title')}
             </h1>
           </div>
-          <p className="text-xl md:text-2xl font-bold max-w-xl leading-relaxed drop-shadow-md text-foreground whitespace-pre-line">
+          <p className="text-lg md:text-xl lg:text-2xl font-bold max-w-xl leading-relaxed drop-shadow-md text-foreground whitespace-pre-line">
             {t('home.subtitle')}
           </p>
-          <div className="flex gap-4 pt-2">
-             <GameButton variant="primary" size="lg" onClick={() => navigate(isLoggedIn ? "/rooms" : "/login")}>
+          <div className="flex flex-col sm:flex-row gap-4 pt-2 w-full sm:w-auto px-6 sm:px-0">
+             <GameButton className="w-full sm:w-auto justify-center" variant="primary" size="lg" onClick={() => navigate(isLoggedIn ? "/rooms" : "/login")}>
                 <Play className="w-5 h-5 mr-2 fill-current" /> {t('home.playNow')}
              </GameButton>
-             <GameButton variant="secondary" size="lg" onClick={() => navigate("/rooms")}>
+             <GameButton className="w-full sm:w-auto justify-center" variant="secondary" size="lg" onClick={() => navigate("/rooms")}>
                 <Users className="w-5 h-5 mr-2" /> {t('home.viewRooms')}
              </GameButton>
           </div>
@@ -50,7 +50,7 @@ const Home = () => {
       id: "features",
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-4">
-          <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-2 drop-shadow-md">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8 flex items-center gap-2 drop-shadow-md">
             <Zap className="w-8 h-8 text-yellow-400 fill-yellow-400" />
             {t('home.whyPlay')}
           </h2>
@@ -76,7 +76,7 @@ const Home = () => {
       id: "howto",
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-4">
-          <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-2 drop-shadow-md">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8 flex items-center gap-2 drop-shadow-md">
             <BookOpen className="w-8 h-8 text-orange-400" />
             {t('home.howToPlay')}
           </h2>

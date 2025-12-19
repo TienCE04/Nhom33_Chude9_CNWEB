@@ -232,11 +232,11 @@ const Profile = () => {
       <div className="w-full">
         {/* Full width horizontal block */}
         <div className="game-card mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
               <button
                 onClick={handleAvatarClick}
-                className="cursor-pointer hover:opacity-80 transition-opacity"
+                className="cursor-pointer hover:opacity-80 transition-opacity shrink-0"
               >
                 {avatar ? (
                   <div className="relative">
@@ -252,12 +252,12 @@ const Profile = () => {
                   </div>
                 )}
               </button>
-              <div>
-                <h2 className="text-2xl font-bold">{fullName}</h2>
-                <p className="text-sm text-muted-foreground">@{username}</p>
+              <div className="min-w-0">
+                <h2 className="text-2xl font-bold truncate">{fullName}</h2>
+                <p className="text-sm text-muted-foreground truncate">@{username}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <div className="text-right mr-4">
                 <p className="text-sm text-muted-foreground">Xếp hạng</p>
                 <p className="text-xl font-bold text-primary">#{ranking}</p>

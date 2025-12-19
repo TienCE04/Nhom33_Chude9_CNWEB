@@ -184,10 +184,10 @@ const Lobby = () => {
       )}
       <div className="h-[570px] flex flex-col">
         {/* Header */}
-        <div className="mb-3 flex flex-col md:flex-row items-center justify-between gap-2 px-6">
-          <div className="flex items-center gap-3">
-            <h2 className="text-3xl font-extrabold">Room Code:</h2>
-            <code className="bg-primary/20 px-4 py-2 rounded-xl font-mono font-bold text-lg">
+        <div className="mb-3 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2 px-4 md:px-6">
+          <div className="flex flex-wrap justify-center items-center gap-3">
+            <h2 className="text-2xl md:text-3xl font-extrabold">Room Code:</h2>
+            <code className="bg-primary/20 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-mono font-bold text-base md:text-lg">
               {room.id || room.room?.id || "Loading..."}
             </code>
             <button
@@ -198,7 +198,7 @@ const Lobby = () => {
             </button>
           </div>
           
-          <div className="flex gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             {!isGameStarted ? (
               <GameButton
                 variant="success"
