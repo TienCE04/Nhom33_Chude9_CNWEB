@@ -61,11 +61,9 @@ const CreateRoom = () => {
     const fetchTopics = async () => {
       setIsLoading(true);
       try {
-        // Fetch default topics
         const defaultTopicsRes = await topicApi.getDefaultTopics();
         let allTopics = defaultTopicsRes.success ? defaultTopicsRes.data : []
 
-        // Fetch user topics if logged in
         const user = authApi.getUser();
         if (user && user.username) {
           const userTopicsRes = await topicApi.getUserTopics(user.username);
@@ -74,24 +72,14 @@ const CreateRoom = () => {
           }
         }
         
-        // Map to ensure we have necessary fields and handle duplicates if any
-        // For now just setting them directly
         setTopics(allTopics);
 
-        // Handle edit mode if room data is passed
         if (location.state?.room) {
           const room = location.state.room;
           setIsEditing(true);
           setEditingRoomId(room.id);
           setMaxPlayers(room.maxPlayers.toString());
           setTargetScore(room.maxPoints.toString());
-          // Note: room object from RoomList might not have room_type directly if it was mapped
-          // We might need to fetch full room details or ensure RoomList passes enough info
-          // Assuming RoomList passes mapped object which might miss room_type
-          // Let's try to fetch room details if needed, or rely on what's passed.
-          // The mapped object in RoomList doesn't have room_type.
-          // We should probably fetch the room details by ID to be sure, or update RoomList to pass it.
-          // For now, let's fetch the room details to be safe and get correct room_type and topicId
           
           const roomDetails = await roomApi.getRoomById(room.id);
           if (roomDetails.success && roomDetails.room) {
@@ -286,6 +274,7 @@ const CreateRoom = () => {
                 value={targetScore}
                 onChange={(value) => setTargetScore(value)}
                 options={[
+                    { value: "20", label: "20 điểm" },
                     { value: "70", label: "70 điểm" },
                     { value: "100", label: "100 điểm" },
                     { value: "150", label: "150 điểm" },

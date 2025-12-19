@@ -16,6 +16,7 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
   const [answers, setAnswers] = useState([]);
   const [chatMessages, setChatMessages] = useState(messages || []);
   const [currentPlayers, setCurrentPlayers] = useState(players || []);
+  const currentPlayersRef = useRef(players || []);
   const [roundResult, setRoundResult] = useState(null); // { keyword: "..." }
   const [endTime, setEndTime] = useState(0);
   const [roundKey, setRoundKey] = useState(0);
@@ -23,6 +24,7 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
 
   useEffect(() => {
     setCurrentPlayers(players);
+    currentPlayersRef.current = players || [];
   }, [players]);
 
   useEffect(() => {
@@ -81,6 +83,12 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
     const handlePlayersData = (data) => {
       console.log("Received players data:", data);
       setCurrentPlayers(data);
+      currentPlayersRef.current = data;
+    };
+
+    const handleEndGame = () => {
+      const roomId = window.location.pathname.split("/").pop();
+      navigate(`/results/${roomId}`, { state: { players: currentPlayersRef.current, roomId } });
     };
 
     const handleUpdateChat = (data) => {
@@ -125,6 +133,7 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
     socket.on("keyword", handleKeyword);
     socket.on("newRound", handleNewRound);
     socket.on("playersData", handlePlayersData);
+    socket.on("endGame", handleEndGame);
     socket.on("updateChat", handleUpdateChat);
     socket.on("wrongGuess", handleWrongGuess);
     socket.on("correctGuess", handleCorrectGuess);
@@ -137,6 +146,7 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
       socket.off("keyword", handleKeyword);
       socket.off("newRound", handleNewRound);
       socket.off("playersData", handlePlayersData);
+      socket.off("endGame", handleEndGame);
       socket.off("updateChat", handleUpdateChat);
       socket.off("wrongGuess", handleWrongGuess);
       socket.off("correctGuess", handleCorrectGuess);

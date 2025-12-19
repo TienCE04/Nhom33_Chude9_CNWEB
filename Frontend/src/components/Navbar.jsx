@@ -49,7 +49,7 @@ const Navbar = ({ onLogout }) => {
         <div className="flex items-center gap-2 sm:gap-4">
           <NavLink to="/" className={navLinkClass} title="Trang chủ">
             <Home className="w-5 h-5" />
-            <span className="hidden md:block">Home</span>
+            <span className="hidden lg:block">Home</span>
           </NavLink>
 
           <NavLink
@@ -64,7 +64,7 @@ const Navbar = ({ onLogout }) => {
             title="Danh sách phòng"
           >
             <Gamepad2 className="w-5 h-5" />
-            <span className="hidden md:block">Rooms</span>
+            <span className="hidden lg:block">Rooms</span>
           </NavLink>
 
           <NavLink
@@ -79,17 +79,17 @@ const Navbar = ({ onLogout }) => {
             title="Thư viện chủ đề"
           >
             <Library className="w-5 h-5" />
-            <span className="hidden md:block">Topics</span>
+            <span className="hidden lg:block">Topics</span>
           </NavLink>
 
           <NavLink to="/profile" className={navLinkClass} title="Hồ sơ">
             <User className="w-5 h-5" />
-            <span className="hidden md:block">Profile</span>
+            <span className="hidden lg:block">Profile</span>
           </NavLink>
 
           <NavLink to="/settings" className={navLinkClass} title="Cài đặt">
             <Settings className="w-5 h-5" />
-            <span className="hidden md:block">Settings</span>
+            <span className="hidden lg:block">Settings</span>
           </NavLink>
         </div>
 

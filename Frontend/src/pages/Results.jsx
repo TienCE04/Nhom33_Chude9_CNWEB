@@ -1,17 +1,14 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { Trophy, RotateCcw, Home } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { PlayerCard } from "@/components/PlayerCard";
 
-const FINAL_RANKINGS = [
-  { id: "1", name: "Player 1", points: 2450, rank: 1 },
-  { id: "2", name: "Player 2", points: 2100, rank: 2 },
-  { id: "3", name: "Player 3", points: 1850, rank: 3 },
-  { id: "4", name: "Player 4", points: 1420, rank: 4 },
-];
-
 const Results = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { roomId: paramRoomId } = useParams();
+  const players = location.state?.players || [];
+  const roomId = location.state?.roomId || paramRoomId;
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -23,22 +20,31 @@ const Results = () => {
         </div>
 
         <div className="space-y-3 mb-8 animate-fade-in">
-          {FINAL_RANKINGS.map((player, index) => (
-            <div
-              key={player.id}
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <PlayerCard {...player} />
-            </div>
-          ))}
+          {players.length > 0 ? (
+            players.map((player, index) => (
+              <div
+                key={player.username || index}
+                className="animate-fade-in"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <PlayerCard 
+                  name={player.username} 
+                  points={player.point} 
+                  rank={index + 1}
+                  avatar={player.avatar}
+                />
+              </div>
+            ))
+          ) : (
+            <p className="text-center text-muted-foreground">No result data available.</p>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
           <GameButton
             variant="success"
             size="lg"
-            onClick={() => navigate("/lobby")}
+            onClick={() => navigate(roomId ? `/lobby/${roomId}` : "/lobby")}
             className="min-w-[200px]"
           >
             <RotateCcw className="w-5 h-5 mr-2" />

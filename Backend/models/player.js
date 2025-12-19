@@ -13,6 +13,9 @@ const playerSchema = new mongoose.Schema({
 const PlayerModel = mongoose.model("Player", playerSchema);
 
 module.exports = class Player {
+  static async getAllPlayer() {
+    return await PlayerModel.find({}).lean();
+  }
   static async getPlayerByUsername(username) {
     const player = await PlayerModel.findOne({ username }).lean();
 
@@ -52,5 +55,35 @@ module.exports = class Player {
 
     console.log(result[0]?.rank);
     return result[0]?.rank || null;
+  }
+  static async updateAchievement(username, rank) {
+    const updateData = {};
+    // Tích lũy số lần đạt top
+    if (rank === 1) updateData.first = 1;
+    if (rank === 2) updateData.second = 1;
+    if (rank === 3) updateData.third = 1;
+
+    // Cộng thêm điểm vào tổng điểm tích lũy (Ví dụ: nhất +30, nhì +20, ba +10)
+    const bonusPoint = rank === 1 ? 30 : rank === 2 ? 20 : rank === 3 ? 10 : 0;
+
+    // QUAN TRỌNG: Phải dùng PlayerModel.updateOne
+    return await PlayerModel.updateOne(
+      { username: username },
+      { 
+        $inc: { 
+          ...updateData, 
+          totalPoint: bonusPoint 
+        } 
+      }
+    );
+  }
+  static async updatePlayerRank() {
+    const players = await PlayerModel.find().sort({ totalPoint: -1 });
+    for (let i = 0; i < players.length; i++) {
+      await PlayerModel.updateOne(
+        { _id: players[i]._id },
+        { $set: { rank: i + 1 } }
+      );
+    }
   }
 };

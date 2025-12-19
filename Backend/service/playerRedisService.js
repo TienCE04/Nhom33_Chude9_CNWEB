@@ -26,6 +26,7 @@ async function getRankByRoomId(room_id) {
     const key = `room:broadScore:${room_id}`;
 
     const raw = await redis.zrange(key, 0, -1, "WITHSCORES");
+    console.log("Raw rank data: ", raw);
 
     const formatted = [];
 
@@ -34,6 +35,7 @@ async function getRankByRoomId(room_id) {
       const point = parseInt(raw[i + 1] ?? "0", 10);
       formatted.push({ username, point });
     }
+    console.log("getRankByRoomId: ", formatted); 
     return formatted;
   } catch (err) {
     console.error("Error in getRankByRoomId:", err);

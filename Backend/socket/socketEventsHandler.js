@@ -193,18 +193,58 @@ async function endGame(io, room_id) {
   io.to(room_id).emit("top3", top3);
 
   for (let i = 0; i < top3.length; i++) {
-    await playerMongo.updateAchievement(top3[i], i + 1);
+    if (top3[i] && top3[i].username) {
+      console.log(`Cập nhật thành tích cho: ${top3[i].username} - Hạng: ${i + 1}`);
+      await playerMongo.updateAchievement(top3[i].username, i + 1);
+    }
   }
 
   await playerMongo.updatePlayerRank(await playerMongo.getAllPlayer());
-  await players.resetPlayerScore(room_id);
-  await room.setStatus(room_id, "waiting");
 
   io.to(room_id).emit(
     "playersData",
     await players.getRankByRoomId(room_id)
   );
+  io.to(room_id).emit("endGame");
+
+  await players.resetPlayerScore(room_id);
+  await room.setStatus(room_id, "waiting");
 }
+// async function endGame(io, room_id) {
+//   if (countdownIntervals.has(room_id)) {
+//     clearTimeout(countdownIntervals.get(room_id));
+//     countdownIntervals.delete(room_id);
+//   }
+
+//   // 1. Lấy dữ liệu bảng điểm cuối cùng TRƯỚC khi reset
+//   const finalRank = await players.getRankByRoomId(room_id);
+//   const top3 = await players.getTop3(room_id);
+
+//   // 2. Gửi dữ liệu điểm số cuối cùng cho FE thấy
+//   io.to(room_id).emit("top3", top3);
+//   io.to(room_id).emit("playersData", finalRank); // Gửi điểm số thật lúc này
+
+//   // 3. Cập nhật thành tích vào MongoDB
+//   for (let i = 0; i < top3.length; i++) {
+//     if (top3[i]?.username) {
+//       await playerMongo.updateAchievement(top3[i].username, i + 1);
+//     }
+//   }
+//   await playerMongo.updatePlayerRank();
+
+//   // 4. Đặt trạng thái phòng về waiting
+//   await room.setStatus(room_id, "waiting");
+//   io.to(room_id).emit("roomData", await room.getRoomById(room_id));
+
+//   // 5. CHỜ một khoảng thời gian (ví dụ 5s) để người chơi xem bảng điểm rồi mới reset về 0
+//   setTimeout(async () => {
+//     await players.resetPlayerScore(room_id);
+//     // Sau khi reset mới gửi bảng điểm 0 về để chuẩn bị ván mới
+//     const resetRank = await players.getRankByRoomId(room_id);
+//     io.to(room_id).emit("playersData", resetRank);
+//     console.log(`Scores reset for room ${room_id} after delay.`);
+//   }, 5000); 
+// }
 
 /* ==================== SOCKET EVENTS ==================== */
 function attachSocketEvents(io, socket) {
@@ -377,13 +417,15 @@ function attachSocketEvents(io, socket) {
         // Chờ 3 giây để người chơi xem từ khóa, sau đó bắt đầu vòng mới
         setTimeout(async () => {
           const roomData = await room.getRoomById(room_id);
+          console.log("Room data before starting new round:", roomData);
           if (!roomData.success || !roomData.room) return;
           
           const current_topic_type = roomData.room.topic_type;
 
           // Kiểm tra điều kiện kết thúc game
           const maxPoint = await players.findMaxScore(room_id);
-          if (maxPoint >= roomData.room.max_scores) {
+          console.log(`Max point in room ${room_id} is ${maxPoint}`);
+          if (maxPoint >= roomData.room.maxScore) {
             await endGame(io, room_id);
           } else {
             await startRound(io, room_id, current_topic_type);
