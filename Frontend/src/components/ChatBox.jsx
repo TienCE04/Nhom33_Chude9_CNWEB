@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { Send, AlertTriangle } from "lucide-react";
 import { GameButton } from "./GameButton";
 
 export const ChatBox = ({
@@ -28,18 +28,28 @@ export const ChatBox = ({
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`p-2 rounded-lg ${
+            className={`p-2 rounded-lg flex items-center justify-between gap-2 ${
               msg.isSystem
-                ? "bg-muted/50 text-muted-foreground text-sm text-center"
+                ? "bg-muted/50 text-muted-foreground text-sm justify-center"
                 : msg.isCorrect
                 ? "bg-success text-white font-bold"
+                : msg.isClose
+                ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
                 : "bg-muted/30"
             }`}
           >
-            {!msg.isSystem && (
-              <span className="font-bold">{msg.player}: </span>
+            <div className="min-w-0 break-words">
+              {!msg.isSystem && (
+                <span className="font-bold">{msg.player}: </span>
+              )}
+              <span>{msg.text}</span>
+            </div>
+            {msg.isClose && (
+              <span className="inline-flex items-center gap-1 text-xs font-bold uppercase text-yellow-700 shrink-0">
+                <AlertTriangle className="w-3 h-3" />
+                Gần đúng!
+              </span>
             )}
-            <span>{msg.text}</span>
           </div>
         ))}
       </div>

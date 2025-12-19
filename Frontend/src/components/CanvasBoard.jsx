@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useLayoutEffect } from "react";
-import { Brush, Eraser, Trash2 } from "lucide-react";
+import { Brush, Eraser, Trash2, Lightbulb } from "lucide-react";
 import { GameButton } from "./GameButton";
 import { socket } from "@/lib/socket";
 
@@ -22,6 +22,20 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
   const [brushSize, setBrushSize] = useState(8);
   const [tool, setTool] = useState("brush");
   const [showSizePicker, setShowSizePicker] = useState(false);
+  const [hintLevel, setHintLevel] = useState(0);
+
+  useEffect(() => {
+    setHintLevel(0);
+  }, [keyword]);
+
+  const handleRequestHint = () => {
+    if (hintLevel >= 3) return;
+    const newLevel = hintLevel + 1;
+    setHintLevel(newLevel);
+    
+    const roomId = window.location.pathname.split("/").pop();
+    socket.emit("requestHint", { room_id: roomId, hintLevel: newLevel });
+  };
 
   const containerRef = useRef(null); // Ref để đo kích thước phần tử cha
 
@@ -296,8 +310,60 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
       {/* Canvas */}
       <div className={`game-card p-0 flex-1 relative`} style={{maxHeight: "500px", minHeight: "450px"}} ref={containerRef}>
         {keyword && 
-        <div className="absolute left-1/2 -translate-x-1/2 -top-6 bg-primary text-primary-foreground font-bold text-xl px-8 py-2 rounded-full shadow-lg border-4 border-white z-10">
-          {keyword?.toUpperCase()}
+        <div className="absolute left-1/2 -translate-x-1/2 -top-6 flex items-center gap-2 z-10">
+          <div className="bg-primary text-primary-foreground font-bold text-xl px-8 py-2 rounded-full shadow-lg border-4 border-white min-w-[150px] flex justify-center">
+            {canDraw ? (
+              <div className="flex gap-1">
+                {keyword.split("").map((char, index) => {
+                  if (char === " ") return <span key={index} className="w-4"></span>;
+                  
+                  // Logic xác định vị trí gợi ý thứ 2 (giống backend)
+                  let midIndex = Math.floor(keyword.length / 2);
+                  if (keyword[midIndex] === " " || midIndex === 0) {
+                    let found = false;
+                    for (let i = midIndex + 1; i < keyword.length; i++) {
+                      if (keyword[i] !== " ") { midIndex = i; found = true; break; }
+                    }
+                    if (!found) {
+                      for (let i = midIndex - 1; i > 0; i--) {
+                        if (keyword[i] !== " ") { midIndex = i; found = true; break; }
+                      }
+                    }
+                  }
+
+                  const isRevealed = (hintLevel >= 2 && index === 0) || 
+                                   (hintLevel >= 3 && index === midIndex);
+                  
+                  return (
+                    <span 
+                      key={index} 
+                      className={`
+                        px-0.5 transition-all duration-300
+                        ${hintLevel >= 1 ? "border-b-2 border-white/70" : ""}
+                        ${isRevealed ? "text-yellow-300 scale-125 font-extrabold" : ""}
+                      `}
+                    >
+                      {char.toUpperCase()}
+                    </span>
+                  );
+                })}
+              </div>
+            ) : (
+              <span className="whitespace-pre-wrap">{keyword?.toUpperCase()}</span>
+            )}
+          </div>
+          {canDraw && (
+            <GameButton 
+              variant="secondary" 
+              size="sm" 
+              onClick={handleRequestHint}
+              disabled={hintLevel >= 3}
+              className="rounded-full w-10 h-10 p-0 border-4 border-white shadow-lg"
+              title="Gợi ý"
+            >
+              <Lightbulb className={`w-5 h-5 ${hintLevel >= 3 ? 'text-gray-400' : 'text-yellow-500'}`} />
+            </GameButton>
+          )}
         </div>}
         <canvas
           ref={canvasRef}

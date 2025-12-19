@@ -13,6 +13,49 @@ function getCurrentPlayers(io, roomId) {
   return roomSet ? roomSet.size : 0;
 }
 
+function levenshteinDistance(a, b) {
+  if (a.length === 0) return b.length;
+  if (b.length === 0) return a.length;
+
+  const matrix = [];
+
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
+        );
+      }
+    }
+  }
+
+  return matrix[b.length][a.length];
+}
+
+function isCloseAnswer(guess, keyword) {
+  if (!guess || !keyword) return false;
+  const cleanGuess = guess.trim().toLowerCase();
+  const cleanKeyword = keyword.trim().toLowerCase();
+  
+  if (cleanGuess === cleanKeyword) return false;
+
+  const distance = levenshteinDistance(cleanGuess, cleanKeyword);
+  const threshold = cleanKeyword.length <= 5 ? 1 : 2;
+  
+  return distance <= threshold;
+}
+
 /* ==================== CHECK STOP GAME ==================== */
 async function checkAndStopGame(io, room_id, curPlayers) {
   if (curPlayers < 2) {
@@ -348,7 +391,8 @@ function attachSocketEvents(io, socket) {
         }, 3000);
       }
     } else {
-      io.to(room_id).emit("wrongGuess", { username, guess });
+      const isClose = isCloseAnswer(guess, roundState.keyword);
+      io.to(room_id).emit("wrongGuess", { username, guess, isClose });
     }
     // startRound(io, room_id, topic_id);
   });
@@ -388,21 +432,72 @@ function attachSocketEvents(io, socket) {
 
   // ---------------- HINT REQUEST ----------------
   socket.on("requestHint", async ({ room_id, hintLevel }) => {
+    const username = socketUser.getUsernameBySocket(socket.id);
+    
+    // 1. Lấy từ khóa từ trạng thái vòng chơi hiện tại
     const roundState = await players.getRoundState(room_id);
     if (!roundState?.keyword) return;
 
+    // Validate: Chỉ người vẽ mới được yêu cầu gợi ý
+    if (roundState.drawer_username !== username) return;
+
     const keyword = roundState.keyword;
+    const chars = keyword.split("");
 
-    const hint =
-      hintLevel === 1
-        ? keyword.slice(0, 1)
-        : hintLevel === 2
-        ? keyword.slice(0, 2)
-        : null;
+    let hint = "";
 
-    if (!hint) return;
+    // Gợi ý cấp 1: Hiển thị dạng gạch dưới "_", giữ nguyên dấu cách
+    if (hintLevel === 1) {
+      hint = chars.map(char => (char === " " ? " " : "_")).join(" ");
+    } 
+    
+    // Gợi ý cấp 2: Hiển thị chữ cái đầu tiên (của mỗi từ hoặc toàn bộ từ khóa)
+    else if (hintLevel === 2) {
+      hint = chars.map((char, index) => {
+        if (char === " ") return " ";
+        // Hiện chữ cái đầu tiên của từ khóa
+        return index === 0 ? char : "_";
+      }).join(" ");
+    } 
+    
+    // Gợi ý cấp 3: Hiển thị thêm 1 chữ cái bất kỳ (ở đây lấy vị trí giữa)
+    else if (hintLevel === 3) {
+      let midIndex = Math.floor(chars.length / 2);
+      
+      // Nếu vị trí giữa là khoảng trắng hoặc là vị trí đầu tiên, tìm vị trí hợp lệ khác
+      if (chars[midIndex] === " " || midIndex === 0) {
+        let found = false;
+        // Tìm sang phải
+        for (let i = midIndex + 1; i < chars.length; i++) {
+          if (chars[i] !== " ") {
+            midIndex = i;
+            found = true;
+            break;
+          }
+        }
+        // Nếu không thấy bên phải, tìm sang trái (tránh index 0)
+        if (!found) {
+          for (let i = midIndex - 1; i > 0; i--) {
+            if (chars[i] !== " ") {
+              midIndex = i;
+              found = true;
+              break;
+            }
+          }
+        }
+      }
 
-    io.to(room_id).emit("hint", hint);
+      hint = chars.map((char, index) => {
+        if (char === " ") return " ";
+        // Hiện chữ đầu và một chữ ở giữa
+        return (index === 0 || index === midIndex) ? char : "_";
+      }).join(" ");
+    }
+
+    if (hint) {
+      io.to(room_id).emit("hint", hint); // Gửi gợi ý cho cả phòng
+    }
+    console.log(`Hint level ${hintLevel} for room ${room_id}: ${hint}`);
   });
 
   /* -------- PAUSE GAME -------- */

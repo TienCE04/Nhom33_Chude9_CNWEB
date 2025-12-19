@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { CanvasBoard } from "@/components/CanvasBoard";
 import { TimerBar } from "@/components/TimerBar";
@@ -12,6 +12,7 @@ import { getUserInfo } from "@/lib/utils";
 const Game = ({ players, messages, onSendMessage, drawTime }) => {
   const [keyword, setKeyword] = useState(null);
   const [isDrawer, setIsDrawer] = useState(false);
+  const drawerUsernameRef = useRef(null);
   const [answers, setAnswers] = useState([]);
   const [chatMessages, setChatMessages] = useState(messages || []);
   const [currentPlayers, setCurrentPlayers] = useState(players || []);
@@ -34,7 +35,9 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
     const handleKeyword = (data) => {
       console.log("Received keyword data:", data.keyword);
       setKeyword(data.keyword);
-      setIsDrawer(data.drawer_username === user?.username);
+      const isUserDrawer = data.drawer_username === user?.username;
+      setIsDrawer(isUserDrawer);
+      drawerUsernameRef.current = data.drawer_username;
     };
 
     const handleNewRound = (data) => {
@@ -43,10 +46,10 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
 
       setRoundResult(null);
       setAnswers([]);
-      // setKeyword(null);
       setRoundKey(prev => prev + 1);
       setEndTime(data.endTime); // Cập nhật mốc thời gian kết thúc
-      setIsDrawer(data.drawer_username === user?.username);
+      setIsDrawer(isUserDrawer);
+      drawerUsernameRef.current = data.drawer_username;
 
       if (!isUserDrawer) {
         setKeyword(null);
@@ -61,8 +64,18 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
 
     const handleSyncGameState = (data) => {
       if (data.endTime) setEndTime(data.endTime);
-      if (data.drawer_username) setIsDrawer(data.drawer_username === user?.username);
+      if (data.drawer_username) {
+        const isUserDrawer = data.drawer_username === user?.username;
+        setIsDrawer(isUserDrawer);
+        drawerUsernameRef.current = data.drawer_username;
+      }
       if (data.keyword) setKeyword(data.keyword);
+    };
+
+    const handleHint = (hint) => {
+      // Nếu là người vẽ thì không cập nhật hint (vì đã thấy từ khóa gốc)
+      if (user?.username === drawerUsernameRef.current) return;
+      setKeyword(hint);
     };
 
     const handlePlayersData = (data) => {
@@ -83,14 +96,15 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
     };
 
     const handleWrongGuess = (data) => {
-      const { username, guess } = data;
+      const { username, guess, isClose } = data;
       setAnswers(prev => [
         ...prev,
         {
           id: crypto.randomUUID(),
           player: username,
           text: guess,
-          isCorrect: false
+          isCorrect: false,
+          isClose: isClose
         },
       ]);
     };
@@ -117,6 +131,7 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
     socket.on("allGuessed", handleRoundEnd);
     socket.on("roundEndedTimeout", handleRoundEnd);
     socket.on("syncGameState", handleSyncGameState);
+    socket.on("hint", handleHint);
 
     return () => {
       socket.off("keyword", handleKeyword);
@@ -128,6 +143,7 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
       socket.off("allGuessed", handleRoundEnd);
       socket.off("roundEndedTimeout", handleRoundEnd);
       socket.off("syncGameState", handleSyncGameState);
+      socket.off("hint", handleHint);
     };
   }, []);
 
