@@ -10,7 +10,8 @@ async function getPlayersByRoomId(room_id) {
   try {
     const key = `room:player:${room_id}`;
 
-    const listPlayers = await redis.lrange(key, 0, -1);
+    const listPlayers = await redis.smembers(key);
+    console.log("listPlayers: ", listPlayers);
 
     return Array.isArray(listPlayers) ? listPlayers : [];
   } catch (err) {
@@ -45,9 +46,9 @@ async function getRankByRoomId(room_id) {
 async function updatePlayerJoin(room_id, user) {
   const playerListKey = `room:player:${room_id}`;
   const scoreKey = `room:broadScore:${room_id}`;
-  await redis.rpush(playerListKey, user.username);
+  await redis.sadd(playerListKey, user.username);
   await redis.zadd(scoreKey, "NX", 0, user.username);
-  const curPlayers = await redis.llen(playerListKey);
+  const curPlayers = await redis.scard(playerListKey);
 
   return parseInt(curPlayers, 10);
 }
@@ -57,12 +58,12 @@ async function updatePlayerLeave(room_id, username) {
   const playerListKey = `room:player:${room_id}`;
   const scoreKey = `room:broadScore:${room_id}`;
 
-  await redis.lrem(playerListKey, 0, username);
+  await redis.srem(playerListKey, username);
 
   await redis.zrem(scoreKey, username);
-  const curPlayers = await redis.llen(playerListKey);
+  const curPlayers = await redis.scard(playerListKey);
 
-  const players = await redis.lrange(playerListKey, 0, -1);
+  const players = await redis.smembers(playerListKey);
   console.log("Remaining players after leave:", players);
   console.log("Current player count:", curPlayers);
 

@@ -3,6 +3,7 @@ const playerRedisService = require("./playerRedisService");
 const Topic = require("../models/topic");
 
 exports.handler = async (room_id, topic_id, tmpPlayers, tmpKeywords, topic_type) =>{
+    console.log("check data:", room_id, topic_id, tmpPlayers, tmpKeywords, topic_type);
     // người vẽ
     let drawer_username = tmpPlayers.length > 0 ? tmpPlayers[0] : null;
 
@@ -16,7 +17,7 @@ exports.handler = async (room_id, topic_id, tmpPlayers, tmpKeywords, topic_type)
     // Chọn từ khóa
     // Lấy danh sách tất cả từ khóa từ MongoDB
     const topicData = await Topic.findById(topic_id); 
-    console.log(topic_id)
+    console.log("check topic data:", topicData);
     let availableKeywords = topicData.keyWord?.filter(kw => !tmpKeywords.includes(kw));
 
     // Nếu hết từ khóa tạm thời, reset danh sách từ khóa đã dùng

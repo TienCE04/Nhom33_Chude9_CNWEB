@@ -50,6 +50,7 @@ async function runRoundLogic(io, room_id, topic_type, currentRoomData) {
     await players.getTmpKeywords(room_id),
     topic_type
   );
+  console.log(`New round in room ${room_id}: Drawer - ${drawer_username}, Keyword - ${keyword}`);
 
   await players.setRoundState(room_id, {
     drawer_username,
@@ -63,6 +64,14 @@ async function runRoundLogic(io, room_id, topic_type, currentRoomData) {
     drawer_username,
     keyword: null,
   });
+
+  const drawerSocketId = socketUser.getSocketIdByUsername(drawer_username);
+  if (drawerSocketId) {
+    io.to(drawerSocketId).emit("keyword", {
+      drawer_username,
+      keyword: keyword, // Chỉ người vẽ mới nhận được từ khóa này
+    });
+  }
 
   io.to(room_id).emit("newRound");
 
