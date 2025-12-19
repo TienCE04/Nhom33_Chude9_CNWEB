@@ -1,7 +1,8 @@
 import { Trophy } from "lucide-react";
 
 export const Scoreboard = ({ players, title = "Scoreboard" }) => {
-  const sortedPlayers = [...players].sort((a, b) => b.points - a.points);
+  const sortedPlayers = [...players].sort((a, b) => b.point - a.point);
+  console.log("Rendering Scoreboard with players:", players, sortedPlayers);
 
   return (
     <div className="game-card h-full overflow-auto">
@@ -13,7 +14,7 @@ export const Scoreboard = ({ players, title = "Scoreboard" }) => {
       <div className="space-y-2">
         {sortedPlayers.map((player, index) => (
           <div
-            key={player.id}
+            key={player.username || index}
             className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${
               index < 3 ? "bg-secondary/20" : "bg-muted/30"
             }`}
@@ -29,11 +30,11 @@ export const Scoreboard = ({ players, title = "Scoreboard" }) => {
             </div>
             
             <div className="flex-1">
-              <p className="font-semibold">{player.name}</p>
+              <p className="font-semibold">{player.username}</p>
             </div>
             
             <div className="font-bold text-primary">
-              {player.points} pts
+              {player.point} pts
             </div>
           </div>
         ))}

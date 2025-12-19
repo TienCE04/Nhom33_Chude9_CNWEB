@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useLayoutEffect } from "react";
 import { Brush, Eraser, Trash2 } from "lucide-react";
 import { GameButton } from "./GameButton";
+import { socket } from "@/lib/socket";
 
 // Dời các hằng số ra ngoài để dễ quản lý
 const COLORS = [
@@ -14,7 +15,7 @@ const BRUSH_SIZES = [
   { size: 16, label: "Lớn" },
 ];
 
-export const CanvasBoard = () => {
+export const CanvasBoard = ({ canDraw = true, keyword }) => {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState("#000000");
@@ -37,6 +38,23 @@ export const CanvasBoard = () => {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
       }
     }
+
+    const handleUpdateCanvas = (data) => {
+      const image = new Image();
+      image.onload = () => {
+        const ctx = canvasRef.current?.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(image, 0, 0);
+        }
+      };
+      image.src = data.snapshot;
+    };
+
+    socket.on("update-canvas", handleUpdateCanvas);
+
+    return () => {
+      socket.off("update-canvas", handleUpdateCanvas);
+    };
   }, []);
 
   // Lấy tọa độ (hỗ trợ cả chuột và cảm ứng)
@@ -57,6 +75,7 @@ export const CanvasBoard = () => {
   }
 
   const startDrawing = (e) => {
+    if (!canDraw) return;
     const coords = getEventCoordinates(e);
     if (!coords) return;
 
@@ -73,6 +92,14 @@ export const CanvasBoard = () => {
   };
 
   const stopDrawing = () => {
+    if (isDrawing) {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const snapshot = canvas.toDataURL();
+        const roomId = window.location.pathname.split("/").pop();
+        socket.emit("canvas-data", { room_id: roomId, snapshot });
+      }
+    }
     setIsDrawing(false);
     const ctx = canvasRef.current?.getContext("2d");
     if (ctx) {
@@ -180,102 +207,104 @@ export const CanvasBoard = () => {
 
   return (
     <div className="flex gap-4 w-full">
-      <div className="relative">
-        {/* Thanh công cụ (Toolbar) */}
-        <div className="game-card flex flex-col gap-3 p-3 items-center justify-center">
-            <GameButton
-              variant={tool === "brush" ? "primary" : "secondary"}
-              size="sm"
-              onClick={() => handleToolClick("brush")}
-              className="w-12 h-12 p-0"
-              title="Bút vẽ"
-            >
-              <Brush className="w-5 h-5" />
-            </GameButton>
+      {canDraw &&
+        <div className="relative">
+          {/* Thanh công cụ (Toolbar) */}
+          <div className="game-card flex flex-col gap-3 p-3 items-center justify-center">
+              <GameButton
+                variant={tool === "brush" ? "primary" : "secondary"}
+                size="sm"
+                onClick={() => handleToolClick("brush")}
+                className="w-12 h-12 p-0"
+                title="Bút vẽ"
+              >
+                <Brush className="w-5 h-5" />
+              </GameButton>
+              
+              <GameButton
+                variant={tool === "eraser" ? "primary" : "secondary"}
+                size="sm"
+                onClick={() => handleToolClick("eraser")}
+                className="w-12 h-12 p-0"
+                title="Tẩy"
+              >
+                <Eraser className="w-5 h-5" />
+              </GameButton>
+            
+            {/* Màu sắc */}
+            <div className="grid grid-cols-2 gap-2 items-center justify-center sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 border-t-2 border-b-2 pt-6 pb-6 flex-1">
+              {COLORS.map((c) => (
+                <button
+                  key={c}
+                  title={c}
+                  onClick={() => {
+                    setColor(c);
+                    setTool("brush");
+                    setShowSizePicker(false); 
+                  }}
+                  className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
+                    color === c && tool === "brush" ? "border-foreground scale-110 ring-2 ring-offset-2 ring-primary" : "border-border"
+                  }`}
+                  style={{ backgroundColor: c }}
+                />
+              ))}
+            </div>
             
             <GameButton
-              variant={tool === "eraser" ? "primary" : "secondary"}
+              variant="secondary"
               size="sm"
-              onClick={() => handleToolClick("eraser")}
+              onClick={clearCanvas}
               className="w-12 h-12 p-0"
-              title="Tẩy"
+              title="Xóa bảng"
             >
-              <Eraser className="w-5 h-5" />
+              <Trash2 className="w-5 h-5" />
             </GameButton>
-          
-          {/* Màu sắc */}
-          <div className="grid grid-cols-2 gap-2 items-center justify-center sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 border-t-2 border-b-2 pt-6 pb-6 flex-1">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                title={c}
-                onClick={() => {
-                  setColor(c);
-                  setTool("brush");
-                  setShowSizePicker(false); 
-                }}
-                className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
-                  color === c && tool === "brush" ? "border-foreground scale-110 ring-2 ring-offset-2 ring-primary" : "border-border"
-                }`}
-                style={{ backgroundColor: c }}
-              />
-            ))}
           </div>
-          
-          <GameButton
-            variant="secondary"
-            size="sm"
-            onClick={clearCanvas}
-            className="w-12 h-12 p-0"
-            title="Xóa bảng"
-          >
-            <Trash2 className="w-5 h-5" />
-          </GameButton>
-        </div>
 
-        {/* Popover chọn kích thước */}
-        {showSizePicker && (
-          // *** THAY ĐỔI Ở ĐÂY: Thêm "bg-muted" ***
-          <div className="game-card bg-muted absolute left-full top-0 ml-2 z-10 p-3 flex flex-col gap-2 animate-fade-in">
-            {BRUSH_SIZES.map((brush) => (
-              <button
-                key={brush.label}
-                title={brush.label}
-                onClick={() => {
-                  setBrushSize(brush.size);
-                  setShowSizePicker(false); 
-                }}
-                className={`
-                  w-12 h-12 p-0 flex items-center justify-center rounded-lg transition-colors
-                  ${brushSize === brush.size ? 'bg-primary/30 ring-2 ring-primary' : 'hover:bg-card/50'}
-                `}
-              >
-                <div
-                  className="rounded-full bg-foreground"
-                  style={{
-                    width: `${Math.min(brush.size + 4, 24)}px`,
-                    height: `${Math.min(brush.size + 4, 24)}px`,
+          {/* Popover chọn kích thước */}
+          {showSizePicker && (
+            // *** THAY ĐỔI Ở ĐÂY: Thêm "bg-muted" ***
+            <div className="game-card bg-muted absolute left-full top-0 ml-2 z-10 p-3 flex flex-col gap-2 animate-fade-in">
+              {BRUSH_SIZES.map((brush) => (
+                <button
+                  key={brush.label}
+                  title={brush.label}
+                  onClick={() => {
+                    setBrushSize(brush.size);
+                    setShowSizePicker(false); 
                   }}
-                />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+                  className={`
+                    w-12 h-12 p-0 flex items-center justify-center rounded-lg transition-colors
+                    ${brushSize === brush.size ? 'bg-primary/30 ring-2 ring-primary' : 'hover:bg-card/50'}
+                  `}
+                >
+                  <div
+                    className="rounded-full bg-foreground"
+                    style={{
+                      width: `${Math.min(brush.size + 4, 24)}px`,
+                      height: `${Math.min(brush.size + 4, 24)}px`,
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      }
 
       {/* Canvas */}
-      <div className="game-card p-0 flex-1 relative" style={{maxHeight: "500px"}} ref={containerRef}>
+      <div className={`game-card p-0 flex-1 relative`} style={{maxHeight: "500px", minHeight: "450px"}} ref={containerRef}>
+        {keyword && 
         <div className="absolute left-1/2 -translate-x-1/2 -top-6 bg-primary text-primary-foreground font-bold text-xl px-8 py-2 rounded-full shadow-lg border-4 border-white z-10">
-          ANSWER_ _ _
-        </div>
+          {keyword?.toUpperCase()}
+        </div>}
         <canvas
           ref={canvasRef}
           // width={800}
           // height={600}
-          // className="cursor-crosshair bg-white flex-1 rounded-lg"
           width={canvasWidth}
           height={canvasHeight}
-          className="cursor-crosshair w-full h-full block"
+          className={`${canDraw && "cursor-crosshair"} w-full h-full block`}
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={stopDrawing}

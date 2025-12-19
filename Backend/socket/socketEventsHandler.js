@@ -58,12 +58,14 @@ async function runRoundLogic(io, room_id, topic_type, currentRoomData) {
     timeLeft: 62,
   });
 
-  io.to(room_id).emit("roomData", await room.getRoomById(room_id));
+  // io.to(room_id).emit("roomData", await room.getRoomById(room_id));
 
-  io.to(room_id).emit("keyword", {
-    drawer_username,
-    keyword: null,
-  });
+  // io.to(room_id).emit("keyword", {
+  //   drawer_username,
+  //   keyword: null,
+  // });
+
+  io.to(room_id).emit("newRound", drawer_username);
 
   const drawerSocketId = socketUser.getSocketIdByUsername(drawer_username);
   if (drawerSocketId) {
@@ -72,8 +74,6 @@ async function runRoundLogic(io, room_id, topic_type, currentRoomData) {
       keyword: keyword, // Chỉ người vẽ mới nhận được từ khóa này
     });
   }
-
-  io.to(room_id).emit("newRound");
 
   startCountdown(io, room_id);
 }
@@ -254,7 +254,7 @@ function attachSocketEvents(io, socket) {
     const allPlayers = await players.getPlayersByRoomId(room_id);
     await players.setTmpPlayers(room_id, allPlayers);
 
-    io.to(room_id).emit("playersData", allPlayers);
+    io.to(room_id).emit("playersData", await players.getRankByRoomId(room_id));
     io.to(room_id).emit("roomData", await room.getRoomById(room_id));
 
     io.to(room_id).emit("gameStarted", {
@@ -270,21 +270,27 @@ function attachSocketEvents(io, socket) {
   socket.on("sendAnswer", async (data) => {
     const { room_id, username, guess } = data;
     if (!room_id || !username || !guess) return;
+    console.log(`Received answer in room ${room_id} from ${username}: ${guess}`);
 
     const roundState = await players.getRoundState(room_id);
+    console.log("Current round state:", roundState);
+
+    // Nếu người chơi là người vẽ, không được đoán
+    if (roundState.drawer_username === username) return;
 
     // Nếu người chơi đã đoán đúng trước đó, bỏ qua
     if (roundState.answered.includes(username)) return;
 
     // Server kiểm tra đoán đúng
-    if (guess.toLowerCase() === roundState.keyword.toLowerCase()) {
+    if (guess.toLowerCase() === roundState.keyword?.toLowerCase()) {
+      console.log(`Player ${username} guessed correctly in room ${room_id}`);
       let addPoint = await players.getAddPoint(room_id);
 
       // Cập nhật điểm cho người đoán
       await players.updatePlayerScore(room_id, username, addPoint);
 
       // Cập nhật điểm cho người vẽ
-      await players.updatePlayerScore(room_id, roundState.drawer, 2);
+      await players.updatePlayerScore(room_id, roundState.drawer_username, 2);
 
       // Giảm điểm cộng cho lượt đoán tiếp theo
       if (addPoint > 2) {
@@ -337,8 +343,10 @@ function attachSocketEvents(io, socket) {
           }
         }, 3000);
       }
+    } else {
+      io.to(room_id).emit("wrongGuess", { username, guess });
     }
-    startRound(io, room_id, topic_id);
+    // startRound(io, room_id, topic_id);
   });
 
   /* -------- LEAVE ROOM -------- */

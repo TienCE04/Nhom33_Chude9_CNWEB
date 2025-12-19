@@ -6,12 +6,14 @@ export const ChatBox = ({
   messages,
   onSendMessage,
   placeholder = "Type your guess...",
-  typeBox
+  typeBox,
+  disabled = false
 }) => {
   const [input, setInput] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (disabled) return;
     if (input.trim() && onSendMessage) {
       onSendMessage(input.trim());
       setInput("");
@@ -30,7 +32,7 @@ export const ChatBox = ({
               msg.isSystem
                 ? "bg-muted/50 text-muted-foreground text-sm text-center"
                 : msg.isCorrect
-                ? "bg-success/20 text-success-foreground"
+                ? "bg-success text-white font-bold"
                 : "bg-muted/30"
             }`}
           >
@@ -47,10 +49,11 @@ export const ChatBox = ({
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={placeholder}
+          placeholder={disabled ? "Bạn đang vẽ, không thể đoán!" : placeholder}
           className="input-rounded flex-1 py-2"
+          disabled={disabled}
         />
-        <GameButton type="submit" variant="primary" size="sm">
+        <GameButton type="submit" variant="primary" size="sm" disabled={disabled}>
           <Send className="w-4 h-4" />
         </GameButton>
       </form>

@@ -92,42 +92,29 @@ async function resetPlayerScore(room_id) {
 //cập nhật điểm cho người chơi
 async function updatePlayerScore(room_id, username, points) {
   const scoreKey = `room:broadScore:${room_id}`;
-  // ZINCRBY: Tăng điểm của người chơi
-  await sendCommand(["ZINCRBY", scoreKey, points.toString(), username]);
+  // Sử dụng zincrby thay vì sendCommand
+  await redis.zincrby(scoreKey, points, username);
 }
 
 //tìm điểm cao nhất trong phòng
 async function findMaxScore(room_id) {
   const scoreKey = `room:broadScore:${room_id}`;
-  // ZRANGE key -1 -1 WITHSCORES: Lấy phần tử cuối cùng (điểm cao nhất)
-  const result = await sendCommand([
-    "ZRANGE",
-    scoreKey,
-    "-1",
-    "-1",
-    "WITHSCORES",
-  ]);
-  // result = [username, point]
+  // Lấy phần tử cuối cùng của ZSET (điểm cao nhất)
+  const result = await redis.zrange(scoreKey, -1, -1, "WITHSCORES");
   return result.length === 2 ? parseInt(result[1], 10) : 0;
 }
 
 //lấy top 3 người chơi
 async function getTop3(room_id) {
   const scoreKey = `room:broadScore:${room_id}`;
-  // ZREVRANGE: Lấy từ điểm cao nhất xuống
-  const raw = await sendCommand([
-    "ZREVRANGE",
-    scoreKey,
-    "0",
-    "2",
-    "WITHSCORES",
-  ]);
-
+  // ZREVRANGE lấy từ cao xuống thấp
+  const raw = await redis.zrevrange(scoreKey, 0, 2, "WITHSCORES");
   const formatted = [];
   for (let i = 0; i < raw.length; i += 2) {
-    const username = raw[i];
-    const point = parseInt(raw[i + 1] ?? "0", 10);
-    formatted.push({ username, point });
+    formatted.push({
+      username: raw[i],
+      point: parseInt(raw[i + 1] ?? "0", 10),
+    });
   }
   return formatted;
 }
@@ -136,13 +123,16 @@ async function getTop3(room_id) {
 
 async function getAddPoint(room_id) {
   const key = `room:addPoint:${room_id}`;
-  const point = await sendCommand(["GET", key]);
+  // const point = await sendCommand(["GET", key]);
+  const point = await redis.get(key);
   return parseInt(point || "10", 10); // Mặc định là 10 (theo logic game phổ biến)
 }
 
 async function updateAddPoint(room_id, point) {
   const key = `room:addPoint:${room_id}`;
-  await sendCommand(["SET", key, point.toString()]);
+  const pointValue = (point !== undefined && point !== null) ? point.toString() : "10";
+
+  await redis.set(key, pointValue);
 }
 
 async function resetAddPoint(room_id) {
@@ -165,6 +155,7 @@ async function initRoundState(room_id) {
 
 async function setRoundState(room_id, state) {
   const key = `room:${room_id}:${ROUND_STATE_KEY}`;
+  console.log("Setting round state:", state, "for room:", room_id);
 
   const args = [key];
   if (state.drawer_username)
@@ -179,17 +170,17 @@ async function setRoundState(room_id, state) {
 
 async function getRoundState(room_id) {
   const key = `room:${room_id}:${ROUND_STATE_KEY}`;
+  console.log("Getting round state for room:", room_id);
 
-  const raw = await redis.hgetall(key);
-  const state = {};
-  for (let i = 0; i < raw.length; i += 2) {
-    state[raw[i]] = raw[i + 1];
+  const state = await redis.hgetall(key);
+  if (!state || Object.keys(state).length === 0) {
+    return { answered: [] };
   }
-  // Chuyển lại danh sách answered từ JSON string
   if (state.answered) {
     try {
       state.answered = JSON.parse(state.answered);
-    } catch {
+    } catch (e) {
+      console.error("Lỗi parse JSON answered:", e);
       state.answered = [];
     }
   } else {
@@ -201,6 +192,7 @@ async function getRoundState(room_id) {
 async function addAnsweredPlayer(room_id, username) {
   const key = `room:${room_id}:${ROUND_STATE_KEY}`;
   const state = await getRoundState(room_id);
+  console.log("Current round state before adding answered player:", state);
 
   // Nếu người chơi chưa có trong danh sách, thêm vào
   if (!state.answered.includes(username)) {

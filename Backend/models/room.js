@@ -147,6 +147,7 @@ module.exports = class Room {
      }
      const key = roomKey(roomId);
      const data = await redis.get(key);
+     console.log("Fetched room data:", data);
      if (!data) {
        return { success: false};
      }

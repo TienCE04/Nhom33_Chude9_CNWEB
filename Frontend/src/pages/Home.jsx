@@ -35,7 +35,7 @@ const Home = () => {
             Kết nối bạn bè qua những nét vẽ nguệch ngoạc ngay hôm nay.
           </p>
           <div className="flex gap-4 pt-2">
-             <GameButton variant="primary" size="lg" onClick={() => navigate("/login")}>
+             <GameButton variant="primary" size="lg" onClick={() => navigate(isLoggedIn ? "/rooms" : "/login")}>
                 <Play className="w-5 h-5 mr-2 fill-current" /> Chơi Ngay
              </GameButton>
              <GameButton variant="secondary" size="lg" onClick={() => navigate("/rooms")}>

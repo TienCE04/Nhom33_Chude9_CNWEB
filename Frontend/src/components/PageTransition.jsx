@@ -6,7 +6,7 @@ const PageTransition = ({ children }) => {
   return (
     <div
       key={location.pathname}
-      className="animate-slide-in w-full h-full overflow-x-hidden"
+      className="animate-slide-in w-full h-full"
     >
       {children}
     </div>
