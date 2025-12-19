@@ -8,11 +8,13 @@ export const PlayerCard = ({
   points,
   rank,
   isDrawing,
+  className,
 }) => {
   return (
     <div className={cn(
       "game-card hover:shadow-[0_8px_24px_hsl(210_60%_70%_/_0.2)]",
-      isDrawing && "ring-4 ring-secondary"
+      isDrawing && "ring-4 ring-secondary",
+      className
     )}>
       <div className="flex items-center gap-3">
         <div className="relative">

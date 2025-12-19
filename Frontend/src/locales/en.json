@@ -1,0 +1,55 @@
+{
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your game experience",
+    "sound": "Sound Effects",
+    "soundDesc": "Enable game sound",
+    "language": "Language",
+    "languageDesc": "Choose your language",
+    "darkMode": "Dark Mode",
+    "darkModeDesc": "Toggle dark theme",
+    "back": "Back"
+  },
+  "home": {
+    "title": "Gartic",
+    "subtitle": "Draw, guess and laugh out loud! \n Connect with friends through doodles today.",
+    "playNow": "Play Now",
+    "viewRooms": "View Rooms",
+    "whyPlay": "Why Play?",
+    "drawCreative": "Creative Drawing",
+    "drawCreativeDesc": "Unleash your art",
+    "guessFast": "Guess Fast",
+    "guessFastDesc": "Speed challenge",
+    "climbRank": "Climb Rank",
+    "climbRankDesc": "Compete for top",
+    "howToPlay": "Simple How to Play",
+    "step1Title": "Join Room",
+    "step1Desc": "Create or join",
+    "step2Title": "Draw & Guess",
+    "step2Desc": "Take turns showing off",
+    "step3Title": "Win",
+    "step3Desc": "Score the highest"
+  },
+  "navbar": {
+    "home": "Home",
+    "rooms": "Rooms",
+    "topics": "Topics",
+    "rank": "Rank",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "login": "Login"
+  },
+  "rank": {
+    "title": "Leaderboard",
+    "subtitle": "Top Players",
+    "yourRank": "Your Rank",
+    "backToHome": "Back to Home",
+    "noData": "No ranking data available."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  }
+}

@@ -214,6 +214,15 @@ export const playerApi = {
       return handleApiError(error, "Failed to fetch player data");
     }
   },
+
+  getLeaderboard: async () => {
+    try {
+      const response = await api.get("/player/leaderboard");
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, "Failed to fetch leaderboard");
+    }
+  },
 };
 
 export default authApi;

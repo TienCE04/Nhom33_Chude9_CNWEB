@@ -1,10 +1,12 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Home, User, Settings, LogOut, Gamepad2, Palette, Library } from "lucide-react";
+import { Home, User, Settings, LogOut, Gamepad2, Palette, Library, Trophy } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
+import { useTranslation } from "react-i18next";
 
 const Navbar = ({ onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   // Hàm tạo class cho link, tự động highlight khi active
   const navLinkClass = ({ isActive }) =>
@@ -47,9 +49,9 @@ const Navbar = ({ onLogout }) => {
 
         {/* Navigation Links */}
         <div className="flex items-center gap-2 sm:gap-4">
-          <NavLink to="/" className={navLinkClass} title="Trang chủ">
+          <NavLink to="/" className={navLinkClass} title={t('navbar.home')}>
             <Home className="w-5 h-5" />
-            <span className="hidden lg:block">Home</span>
+            <span className="hidden lg:block">{t('navbar.home')}</span>
           </NavLink>
 
           <NavLink
@@ -61,10 +63,10 @@ const Navbar = ({ onLogout }) => {
                   location.pathname.startsWith("/create/room"),
               })
             }
-            title="Danh sách phòng"
+            title={t('navbar.rooms')}
           >
             <Gamepad2 className="w-5 h-5" />
-            <span className="hidden lg:block">Rooms</span>
+            <span className="hidden lg:block">{t('navbar.rooms')}</span>
           </NavLink>
 
           <NavLink
@@ -76,20 +78,25 @@ const Navbar = ({ onLogout }) => {
                   location.pathname.startsWith("/create/theme"),
               })
             }
-            title="Thư viện chủ đề"
+            title={t('navbar.topics')}
           >
             <Library className="w-5 h-5" />
-            <span className="hidden lg:block">Topics</span>
+            <span className="hidden lg:block">{t('navbar.topics')}</span>
           </NavLink>
 
-          <NavLink to="/profile" className={navLinkClass} title="Hồ sơ">
+          <NavLink to="/rank" className={navLinkClass} title={t('navbar.rank')}>
+            <Trophy className="w-5 h-5" />
+            <span className="hidden lg:block">{t('navbar.rank')}</span>
+          </NavLink>
+
+          <NavLink to="/profile" className={navLinkClass} title={t('navbar.profile')}>
             <User className="w-5 h-5" />
-            <span className="hidden lg:block">Profile</span>
+            <span className="hidden lg:block">{t('navbar.profile')}</span>
           </NavLink>
 
-          <NavLink to="/settings" className={navLinkClass} title="Cài đặt">
+          <NavLink to="/settings" className={navLinkClass} title={t('navbar.settings')}>
             <Settings className="w-5 h-5" />
-            <span className="hidden lg:block">Settings</span>
+            <span className="hidden lg:block">{t('navbar.settings')}</span>
           </NavLink>
         </div>
 
@@ -101,7 +108,7 @@ const Navbar = ({ onLogout }) => {
           className="hidden sm:flex"
         >
           <LogOut className="w-4 h-4 sm:mr-2" />
-          <span className="hidden sm:block">Exit</span>
+          <span className="hidden sm:block">{t('navbar.logout')}</span>
         </GameButton>
       </div>
     </nav>

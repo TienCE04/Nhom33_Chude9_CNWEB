@@ -7,9 +7,11 @@ import {
 } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import PageTransition from "@/components/PageTransition";
+import { useTranslation } from "react-i18next";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -27,19 +29,18 @@ const Home = () => {
           <div className="inline-flex items-center justify-center p-4 bg-card/50 backdrop-blur-md rounded-3xl shadow-xl border border-white/10">
             <Palette className="w-16 h-16 text-primary mr-4" />
             <h1 className="text-5xl md:text-7xl font-extrabold text-foreground tracking-tight drop-shadow-lg">
-              Gartic
+              {t('home.title')}
             </h1>
           </div>
-          <p className="text-xl md:text-2xl font-bold max-w-xl leading-relaxed drop-shadow-md text-foreground">
-            Vẽ, đoán và cười thả ga! <br />
-            Kết nối bạn bè qua những nét vẽ nguệch ngoạc ngay hôm nay.
+          <p className="text-xl md:text-2xl font-bold max-w-xl leading-relaxed drop-shadow-md text-foreground whitespace-pre-line">
+            {t('home.subtitle')}
           </p>
           <div className="flex gap-4 pt-2">
              <GameButton variant="primary" size="lg" onClick={() => navigate(isLoggedIn ? "/rooms" : "/login")}>
-                <Play className="w-5 h-5 mr-2 fill-current" /> Chơi Ngay
+                <Play className="w-5 h-5 mr-2 fill-current" /> {t('home.playNow')}
              </GameButton>
              <GameButton variant="secondary" size="lg" onClick={() => navigate("/rooms")}>
-                <Users className="w-5 h-5 mr-2" /> Xem Phòng
+                <Users className="w-5 h-5 mr-2" /> {t('home.viewRooms')}
              </GameButton>
           </div>
         </div>
@@ -51,13 +52,13 @@ const Home = () => {
         <div className="flex flex-col items-center justify-center h-full text-center px-4">
           <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-2 drop-shadow-md">
             <Zap className="w-8 h-8 text-yellow-400 fill-yellow-400" />
-            Tại sao nên chơi?
+            {t('home.whyPlay')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
             {[
-              { icon: <Brush className="w-8 h-8 text-primary" />, title: "Vẽ sáng tạo", desc: "Thỏa sức hội họa" },
-              { icon: <MessageSquare className="w-8 h-8 text-success" />, title: "Đoán từ nhanh", desc: "Thử thách tốc độ" },
-              { icon: <Trophy className="w-8 h-8 text-yellow-500" />, title: "Leo Rank", desc: "Tranh tài cao thấp" }
+              { icon: <Brush className="w-8 h-8 text-primary" />, title: t('home.drawCreative'), desc: t('home.drawCreativeDesc') },
+              { icon: <MessageSquare className="w-8 h-8 text-success" />, title: t('home.guessFast'), desc: t('home.guessFastDesc') },
+              { icon: <Trophy className="w-8 h-8 text-yellow-500" />, title: t('home.climbRank'), desc: t('home.climbRankDesc') }
             ].map((item, idx) => (
               <div key={idx} className="bg-black/20 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
                 <div className="w-12 h-12 mx-auto bg-white/10 rounded-full flex items-center justify-center mb-3">
@@ -77,13 +78,13 @@ const Home = () => {
         <div className="flex flex-col items-center justify-center h-full text-center px-4">
           <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-2 drop-shadow-md">
             <BookOpen className="w-8 h-8 text-orange-400" />
-            Cách chơi đơn giản
+            {t('home.howToPlay')}
           </h2>
           <div className="flex flex-col md:flex-row gap-4 w-full justify-center items-stretch">
             {[
-              { num: "01", title: "Vào phòng", desc: "Tạo hoặc tham gia" },
-              { num: "02", title: "Vẽ & Đoán", desc: "Luân phiên trổ tài" },
-              { num: "03", title: "Chiến thắng", desc: "Ghi điểm cao nhất" }
+              { num: "01", title: t('home.step1Title'), desc: t('home.step1Desc') },
+              { num: "02", title: t('home.step2Title'), desc: t('home.step2Desc') },
+              { num: "03", title: t('home.step3Title'), desc: t('home.step3Desc') }
             ].map((step, idx) => (
               <div key={idx} className="relative group flex-1 bg-black/20 p-4 rounded-2xl border border-white/10 backdrop-blur-sm text-left">
                 <div className="text-4xl font-black text-white/10 absolute top-2 right-4 group-hover:text-primary/20 transition-colors">

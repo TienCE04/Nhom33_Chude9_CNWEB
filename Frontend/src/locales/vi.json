@@ -1,0 +1,55 @@
+{
+  "settings": {
+    "title": "Cài đặt",
+    "subtitle": "Tùy chỉnh trải nghiệm trò chơi của bạn",
+    "sound": "Hiệu ứng âm thanh",
+    "soundDesc": "Bật âm thanh trò chơi",
+    "language": "Ngôn ngữ",
+    "languageDesc": "Chọn ngôn ngữ của bạn",
+    "darkMode": "Chế độ tối",
+    "darkModeDesc": "Chuyển đổi giao diện tối",
+    "back": "Quay lại"
+  },
+  "home": {
+    "title": "Gartic",
+    "subtitle": "Vẽ, đoán và cười thả ga! \n Kết nối bạn bè qua những nét vẽ nguệch ngoạc ngay hôm nay.",
+    "playNow": "Chơi Ngay",
+    "viewRooms": "Xem Phòng",
+    "whyPlay": "Tại sao nên chơi?",
+    "drawCreative": "Vẽ sáng tạo",
+    "drawCreativeDesc": "Thỏa sức hội họa",
+    "guessFast": "Đoán từ nhanh",
+    "guessFastDesc": "Thử thách tốc độ",
+    "climbRank": "Leo Rank",
+    "climbRankDesc": "Tranh tài cao thấp",
+    "howToPlay": "Cách chơi đơn giản",
+    "step1Title": "Vào phòng",
+    "step1Desc": "Tạo hoặc tham gia",
+    "step2Title": "Vẽ & Đoán",
+    "step2Desc": "Luân phiên trổ tài",
+    "step3Title": "Chiến thắng",
+    "step3Desc": "Ghi điểm cao nhất"
+  },
+  "navbar": {
+    "home": "Trang chủ",
+    "rooms": "Phòng chơi",
+    "topics": "Chủ đề",
+    "rank": "Xếp hạng",
+    "profile": "Hồ sơ",
+    "settings": "Cài đặt",
+    "logout": "Đăng xuất",
+    "login": "Đăng nhập"
+  },
+  "rank": {
+    "title": "Bảng xếp hạng",
+    "subtitle": "Người chơi hàng đầu",
+    "yourRank": "Thứ hạng của bạn",
+    "backToHome": "Về trang chủ",
+    "noData": "Không có dữ liệu xếp hạng."
+  },
+  "common": {
+    "loading": "Đang tải...",
+    "error": "Lỗi",
+    "success": "Thành công"
+  }
+}

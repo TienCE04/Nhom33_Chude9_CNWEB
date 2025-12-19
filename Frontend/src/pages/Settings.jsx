@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Volume2, VolumeX, Globe, Moon, Sun, LogIn, Gamepad2 } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { Select } from "antd";
+import { useTranslation } from "react-i18next";
 
 const Settings = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const [soundEnabled, setSoundEnabled] = useState(true);
-  const [language, setLanguage] = useState("vi");
   
   // Khởi tạo state dark mode từ localStorage hoặc mặc định false
   const [darkMode, setDarkMode] = useState(() => {
@@ -28,6 +29,11 @@ const Settings = () => {
     }
   }, [darkMode]);
 
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+    localStorage.setItem("language", lng);
+  };
+
   const handleBack = () => {
     if (isLoggedIn) {
       navigate("/lobby");
@@ -39,11 +45,11 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex items-center w-full justify-center p-4 bg-background transition-colors duration-300 min-h-screen">
+    <div className="flex items-center w-full justify-center p-4 bg-background transition-colors duration-300 mt-20">
       <div className="max-w-lg w-full">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold mb-2 text-foreground">Cài đặt</h1>
-          <p className="text-muted-foreground">Tùy chỉnh trải nghiệm trò chơi của bạn</p>
+          <h1 className="text-4xl font-extrabold mb-2 text-foreground">{t('settings.title')}</h1>
+          <p className="text-muted-foreground">{t('settings.subtitle')}</p>
         </div>
         
         <div className="game-card space-y-6">
@@ -52,8 +58,8 @@ const Settings = () => {
                 <div className="flex items-center gap-3">
                   {soundEnabled ? <Volume2 className="w-6 h-6 text-primary" /> : <VolumeX className="w-6 h-6 text-muted-foreground" />}
                   <div>
-                    <h3 className="font-bold text-foreground">Hiệu ứng âm thanh</h3>
-                    <p className="text-sm text-muted-foreground">Bật âm thanh trò chơi</p>
+                    <h3 className="font-bold text-foreground">{t('settings.sound')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('settings.soundDesc')}</p>
                   </div>
                 </div>
                 <button onClick={() => setSoundEnabled(!soundEnabled)} className={`w-14 h-8 rounded-full transition-colors relative ${soundEnabled ? "bg-success" : "bg-muted"}`}>
@@ -66,13 +72,13 @@ const Settings = () => {
                 <div className="flex items-center gap-3">
                   <Globe className="w-6 h-6 text-primary" />
                   <div>
-                    <h3 className="font-bold text-foreground">Ngôn ngữ</h3>
-                    <p className="text-sm text-muted-foreground">Chọn ngôn ngữ của bạn</p>
+                    <h3 className="font-bold text-foreground">{t('settings.language')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('settings.languageDesc')}</p>
                   </div>
                 </div>
                 <Select
-                  value={language}
-                  onChange={(value) => setLanguage(value)}
+                  value={i18n.language}
+                  onChange={changeLanguage}
                   className="w-32 h-[40px]"
                   options={[
                     { value: "en", label: "English" },
@@ -90,9 +96,9 @@ const Settings = () => {
                     <Sun className="w-6 h-6 text-primary" />
                 )}
                 <div>
-                    <h3 className="font-bold text-foreground">Chế độ tối</h3>
+                    <h3 className="font-bold text-foreground">{t('settings.darkMode')}</h3>
                     <p className="text-sm text-muted-foreground">
-                    Chuyển đổi giao diện tối
+                    {t('settings.darkModeDesc')}
                     </p>
                 </div>
                 </div>
@@ -114,7 +120,7 @@ const Settings = () => {
         </div>
 
         {/* Nút điều hướng Back có điều kiện - ĐÃ ĐƯỢC THÊM LẠI */}
-        <div className="mt-8 text-center">
+        {/* <div className="mt-8 text-center">
           <GameButton
             variant="secondary"
             size="lg"
@@ -132,7 +138,7 @@ const Settings = () => {
                 </>
             )}
           </GameButton>
-        </div>
+        </div> */}
 
       </div>
     </div>
