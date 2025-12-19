@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { GameButton } from "./GameButton";
 
@@ -14,8 +15,8 @@ export const ConfirmModal = ({
 }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-card border-2 border-border rounded-xl shadow-2xl w-full max-w-md mx-4 transform transition-all scale-100 animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
@@ -58,6 +59,7 @@ export const ConfirmModal = ({
           </GameButton>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

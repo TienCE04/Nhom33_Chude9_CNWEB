@@ -4,6 +4,7 @@ import { CanvasBoard } from "@/components/CanvasBoard";
 import { TimerBar } from "@/components/TimerBar";
 import { ChatBox } from "@/components/ChatBox"; 
 import { Scoreboard } from "@/components/Scoreboard"; 
+import { RoundResultPopup } from "@/components/RoundResultPopup";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "@/lib/utils";
 
@@ -14,6 +15,9 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
   const [answers, setAnswers] = useState([]);
   const [chatMessages, setChatMessages] = useState(messages || []);
   const [currentPlayers, setCurrentPlayers] = useState(players || []);
+  const [roundResult, setRoundResult] = useState(null); // { keyword: "..." }
+  const [endTime, setEndTime] = useState(0);
+  const [roundKey, setRoundKey] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,12 +32,37 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
     const user = getUserInfo();
     
     const handleKeyword = (data) => {
+      console.log("Received keyword data:", data.keyword);
       setKeyword(data.keyword);
       setIsDrawer(data.drawer_username === user?.username);
     };
 
-    const handleNewRound = () => {
-      // Reset trạng thái nếu cần
+    const handleNewRound = (data) => {
+      console.log("Starting new round with data:", data);
+      const isUserDrawer = data.drawer_username === user?.username;
+
+      setRoundResult(null);
+      setAnswers([]);
+      // setKeyword(null);
+      setRoundKey(prev => prev + 1);
+      setEndTime(data.endTime); // Cập nhật mốc thời gian kết thúc
+      setIsDrawer(data.drawer_username === user?.username);
+
+      if (!isUserDrawer) {
+        setKeyword(null);
+      }
+      // Reset canvas logic handled in CanvasBoard via socket
+    };
+
+    const handleRoundEnd = (data) => {
+      setRoundResult({ keyword: data.keyword });
+      setEndTime(0); // Dừng đồng hồ
+    };
+
+    const handleSyncGameState = (data) => {
+      if (data.endTime) setEndTime(data.endTime);
+      if (data.drawer_username) setIsDrawer(data.drawer_username === user?.username);
+      if (data.keyword) setKeyword(data.keyword);
     };
 
     const handlePlayersData = (data) => {
@@ -85,6 +114,9 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
     socket.on("updateChat", handleUpdateChat);
     socket.on("wrongGuess", handleWrongGuess);
     socket.on("correctGuess", handleCorrectGuess);
+    socket.on("allGuessed", handleRoundEnd);
+    socket.on("roundEndedTimeout", handleRoundEnd);
+    socket.on("syncGameState", handleSyncGameState);
 
     return () => {
       socket.off("keyword", handleKeyword);
@@ -93,6 +125,9 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
       socket.off("updateChat", handleUpdateChat);
       socket.off("wrongGuess", handleWrongGuess);
       socket.off("correctGuess", handleCorrectGuess);
+      socket.off("allGuessed", handleRoundEnd);
+      socket.off("roundEndedTimeout", handleRoundEnd);
+      socket.off("syncGameState", handleSyncGameState);
     };
   }, []);
 
@@ -112,13 +147,18 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
 
   return (
     // THAY ĐỔI: Căn chỉnh lại layout để lấp đầy không gian
-    <div className="flex flex-col flex-1 h-full min-h-0">
+    <div className="flex flex-col flex-1 h-full min-h-0 relative">
+      {roundResult && (
+        <RoundResultPopup 
+          keyword={roundResult.keyword} 
+        />
+      )}
       <div className="max-w-[1600px] mx-auto space-y-4 flex flex-col flex-1 w-full">
         {/* Header with Timer */}
         <div className="flex items-center gap-4">
           <div className="flex-1">
             {/* THAY ĐỔI: Sử dụng prop drawTime */}
-            <TimerBar totalSeconds={drawTime} 
+            <TimerBar key={roundKey} endTime={endTime} duration={drawTime}
             // onComplete={handleTimerComplete} 
             />
           </div>

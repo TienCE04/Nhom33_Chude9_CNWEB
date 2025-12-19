@@ -28,6 +28,7 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
   const [canvasWidth, setCanvasWidth] = useState(0);
   const [canvasHeight, setCanvasHeight] = useState(0);
 
+  console.log("CanvasBoard render - canDraw:", canDraw, "keyword:", keyword);
 
   useEffect(() => {
     const canvas = canvasRef.current;

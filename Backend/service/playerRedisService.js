@@ -140,9 +140,7 @@ async function resetAddPoint(room_id) {
   await redis.set(key, "10"); // Đặt giá trị key = "10"
 }
 
-// Quanl lý trạng thái Round
-
-const ROUND_STATE_KEY = "roundState"; // Tên trường chung trong Hash
+const ROUND_STATE_KEY = "roundState";
 
 async function initRoundState(room_id) {
   const key = `room:${room_id}:${ROUND_STATE_KEY}`;
@@ -157,15 +155,21 @@ async function setRoundState(room_id, state) {
   const key = `room:${room_id}:${ROUND_STATE_KEY}`;
   console.log("Setting round state:", state, "for room:", room_id);
 
-  const args = [key];
-  if (state.drawer_username)
-    args.push("drawer_username", state.drawer_username);
-  if (state.keyword) args.push("keyword", state.keyword);
-  if (state.timeLeft !== undefined)
-    args.push("timeLeft", state.timeLeft.toString());
+  // Khởi tạo object dữ liệu để lưu vào Redis
+  const dataToSet = {};
+  
+  if (state.drawer_username) dataToSet.drawer_username = state.drawer_username;
+  if (state.keyword) dataToSet.keyword = state.keyword;
+  
+  // Lưu mốc thời gian kết thúc (quan trọng cho người vào sau)
+  if (state.endTime) dataToSet.endTime = state.endTime.toString();
+  
+  // Lưu tổng thời gian của vòng (để FE vẽ thanh progress bar)
+  if (state.duration) dataToSet.duration = state.duration.toString();
 
-  await redis.hmset(...args);
-
+  if (Object.keys(dataToSet).length > 0) {
+    await redis.hmset(key, dataToSet);
+  }
 }
 
 async function getRoundState(room_id) {
@@ -173,9 +177,13 @@ async function getRoundState(room_id) {
   console.log("Getting round state for room:", room_id);
 
   const state = await redis.hgetall(key);
+  
+  // Nếu không có dữ liệu, trả về object mặc định an toàn
   if (!state || Object.keys(state).length === 0) {
-    return { answered: [] };
+    return { answered: [], endTime: 0, duration: 0 };
   }
+
+  // Xử lý trường 'answered' (chuyển từ JSON String sang Array)
   if (state.answered) {
     try {
       state.answered = JSON.parse(state.answered);
@@ -186,6 +194,11 @@ async function getRoundState(room_id) {
   } else {
     state.answered = [];
   }
+
+  // Đảm bảo endTime và duration trả về là kiểu Number (để FE không bị lỗi tính toán)
+  if (state.endTime) state.endTime = Number(state.endTime);
+  if (state.duration) state.duration = Number(state.duration);
+
   return state;
 }
 

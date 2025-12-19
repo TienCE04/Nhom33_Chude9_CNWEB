@@ -24,7 +24,7 @@ async function checkAndStopGame(io, room_id, curPlayers) {
     }
 
     if (countdownIntervals.has(room_id)) {
-      clearInterval(countdownIntervals.get(room_id));
+      clearTimeout(countdownIntervals.get(room_id));
       countdownIntervals.delete(room_id);
     }
 
@@ -45,37 +45,55 @@ async function checkAndStopGame(io, room_id, curPlayers) {
 async function runRoundLogic(io, room_id, topic_type, currentRoomData) {
   const { drawer_username, keyword } = await gamePlay.handler(
     room_id,
-    currentRoomData.room?.idTopic || currentRoomData.idTopic,
+    currentRoomData.idTopic,
     await players.getTmpPlayers(room_id),
     await players.getTmpKeywords(room_id),
     topic_type
   );
   console.log(`New round in room ${room_id}: Drawer - ${drawer_username}, Keyword - ${keyword}`);
+  console.log("Current room data:", currentRoomData);
+
+  const duration = currentRoomData.time;
+  const endTime = Date.now() + (duration + 1) * 1000;
 
   await players.setRoundState(room_id, {
     drawer_username,
     keyword,
-    timeLeft: 62,
+    endTime,
+    duration,
   });
 
-  // io.to(room_id).emit("roomData", await room.getRoomById(room_id));
-
-  // io.to(room_id).emit("keyword", {
-  //   drawer_username,
-  //   keyword: null,
-  // });
-
-  io.to(room_id).emit("newRound", drawer_username);
-
+  // 1. Gửi keyword RIÊNG cho người vẽ
   const drawerSocketId = socketUser.getSocketIdByUsername(drawer_username);
   if (drawerSocketId) {
-    io.to(drawerSocketId).emit("keyword", {
-      drawer_username,
-      keyword: keyword, // Chỉ người vẽ mới nhận được từ khóa này
-    });
+    io.to(drawerSocketId).emit("keyword", { drawer_username, keyword });
   }
 
-  startCountdown(io, room_id);
+  // 2. Gửi thông báo vòng mới cho CẢ PHÒNG (Không kèm keyword)
+  // Gửi dạng Object để FE dễ bóc tách
+  io.to(room_id).emit("newRound", { drawer_username, endTime, duration });
+
+  // 3. Quản lý Timeout để tránh lặp luồng
+  if (countdownIntervals.has(room_id)) {
+    clearTimeout(countdownIntervals.get(room_id));
+  }
+
+  const timeoutId = setTimeout(async () => {
+    const roundState = await players.getRoundState(room_id);
+    io.to(room_id).emit("roundEndedTimeout", { keyword: roundState.keyword });
+    
+    // Đợi 5s hiển thị kết quả rồi mới sang vòng tiếp theo
+    const nextRoundId = setTimeout(async () => {
+       const freshRoom = await room.getRoomById(room_id);
+       if (freshRoom?.room?.status === "playing") {
+          await runRoundLogic(io, room_id, topic_type, freshRoom.room);
+       }
+    }, 5000);
+
+    countdownIntervals.set(room_id, nextRoundId); // LƯU ID VÒNG KẾ TIẾP
+  }, (duration + 1) * 1000);
+
+  countdownIntervals.set(room_id, timeoutId); // LƯU ID VÒNG HIỆN TẠI [QUAN TRỌNG]
 }
 
 /* ==================== START ROUND ==================== */
@@ -92,45 +110,29 @@ async function startRound(io, room_id, topic_type) {
     roomIntervals.delete(room_id);
   }
 
-  await runRoundLogic(io, room_id, topic_type, roomData);
-
-  const intervalID = setInterval(async () => {
-    const currentRoomData = await room.getRoomById(room_id);
-    if (!currentRoomData || currentRoomData.status !== "playing") {
-      clearInterval(intervalID);
-      roomIntervals.delete(room_id);
-      return;
-    }
-
-    const maxPoint = await players.findMaxScore(room_id);
-    if (maxPoint >= currentRoomData.max_scores) {
-      clearInterval(intervalID);
-      roomIntervals.delete(room_id);
-      await endGame(io, room_id);
-      return;
-    }
-
-    await runRoundLogic(io, room_id, topic_type, currentRoomData);
-  }, roomData.time * 1000);
-
-  roomIntervals.set(room_id, intervalID);
+  await runRoundLogic(io, room_id, topic_type, roomData.room);
 }
 
 /* ==================== COUNTDOWN ==================== */
-function startCountdown(io, room_id) {
+function startCountdown(io, room_id, duration = 62) {
   if (countdownIntervals.has(room_id)) {
     clearInterval(countdownIntervals.get(room_id));
     countdownIntervals.delete(room_id);
   }
 
-  let timeLeft = 62;
-  const countdownInterval = setInterval(() => {
+  let timeLeft = duration;
+  const countdownInterval = setInterval(async () => {
     timeLeft--;
     io.to(room_id).emit("countdown", { timeLeft });
 
     if (timeLeft <= 0) {
       clearInterval(countdownInterval);
       countdownIntervals.delete(room_id);
+
+      const currentRoundState = await players.getRoundState(room_id);
+      io.to(room_id).emit("roundEndedTimeout", { 
+        keyword: currentRoundState.keyword 
+      });
     }
   }, 1000);
 
@@ -140,7 +142,7 @@ function startCountdown(io, room_id) {
 /* ==================== END GAME ==================== */
 async function endGame(io, room_id) {
   if (countdownIntervals.has(room_id)) {
-    clearInterval(countdownIntervals.get(room_id));
+    clearTimeout(countdownIntervals.get(room_id));
     countdownIntervals.delete(room_id);
   }
 
@@ -325,18 +327,20 @@ function attachSocketEvents(io, socket) {
 
         // Dừng interval đếm ngược UI
         if (countdownIntervals.has(room_id)) {
-          clearInterval(countdownIntervals.get(room_id));
+          clearTimeout(countdownIntervals.get(room_id));
           countdownIntervals.delete(room_id);
         }
 
         // Chờ 3 giây để người chơi xem từ khóa, sau đó bắt đầu vòng mới
         setTimeout(async () => {
           const roomData = await room.getRoomById(room_id);
-          const current_topic_type = roomData.topic_type;
+          if (!roomData.success || !roomData.room) return;
+          
+          const current_topic_type = roomData.room.topic_type;
 
           // Kiểm tra điều kiện kết thúc game
           const maxPoint = await players.findMaxScore(room_id);
-          if (maxPoint >= roomData.max_scores) {
+          if (maxPoint >= roomData.room.max_scores) {
             await endGame(io, room_id);
           } else {
             await startRound(io, room_id, current_topic_type);
@@ -419,7 +423,7 @@ function attachSocketEvents(io, socket) {
       roomIntervals.delete(roomId);
     }
     if (countdownIntervals.has(roomId)) {
-      clearInterval(countdownIntervals.get(roomId));
+      clearTimeout(countdownIntervals.get(roomId));
       countdownIntervals.delete(roomId);
     }
 

@@ -15,7 +15,7 @@ const roomSchema = new mongoose.Schema({
   topic_type: { type: String },
   room_type: { type: String },
   timeStamp: { type: Date, default: Date.now },
-  time: { type: Number, default: 30 }
+  time: { type: Number, default: 60 }
 });
 
 const RoomModel = mongoose.model('Room', roomSchema)
