@@ -10,7 +10,7 @@ const Navbar = ({ onLogout }) => {
 
   // Hàm tạo class cho link, tự động highlight khi active
   const navLinkClass = ({ isActive }) =>
-    `flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 font-bold ${
+    `flex items-center gap-2 px-2 md:px-4 py-2 rounded-xl transition-all duration-200 font-bold ${
       isActive
         ? "bg-primary text-primary-foreground shadow-md"
         : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -32,23 +32,23 @@ const Navbar = ({ onLogout }) => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full p-4">
-      <div className="game-card flex items-center justify-between px-6 py-3 shadow-lg bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+    <nav className="sticky top-0 z-50 w-full p-2 md:p-4">
+      <div className="game-card flex items-center justify-between px-2 md:px-6 py-2 md:py-3 shadow-lg bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
         {/* Logo / Brand */}
         <div 
-          className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform"
+          className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform shrink-0"
           onClick={() => navigate("/")}
         >
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-primary-foreground">
-            <Palette className="w-6 h-6" />
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-xl flex items-center justify-center text-primary-foreground">
+            <Palette className="w-5 h-5 md:w-6 md:h-6" />
           </div>
-          <span className="text-2xl font-extrabold text-foreground hidden sm:block">
+          <span className="text-xl md:text-2xl font-extrabold text-foreground hidden sm:block">
             Gartic
           </span>
         </div>
 
         {/* Navigation Links */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-1 sm:gap-4 overflow-x-auto no-scrollbar">
           <NavLink to="/" className={navLinkClass} title={t('navbar.home')}>
             <Home className="w-5 h-5" />
             <span className="hidden lg:block">{t('navbar.home')}</span>
