@@ -96,6 +96,11 @@ async function runRoundLogic(io, room_id, topic_type, currentRoomData) {
   console.log(`New round in room ${room_id}: Drawer - ${drawer_username}, Keyword - ${keyword}`);
   console.log("Current room data:", currentRoomData);
 
+  // Cập nhật số từ đã vẽ cho người vẽ
+  if (drawer_username) {
+    await playerMongo.incrementWordsDrawn(drawer_username);
+  }
+
   const duration = currentRoomData.time;
   const endTime = Date.now() + (duration + 1) * 1000;
 
@@ -366,6 +371,9 @@ function attachSocketEvents(io, socket) {
     // Nếu người chơi đã đoán đúng trước đó, bỏ qua
     if (roundState.answered.includes(username)) return;
 
+    // Tăng tổng số lần đoán (bất kể đúng sai)
+    await playerMongo.incrementTotalGuesses(username);
+
     // Server kiểm tra đoán đúng
     if (guess.toLowerCase() === roundState.keyword?.toLowerCase()) {
       console.log(`Player ${username} guessed correctly in room ${room_id}`);
@@ -384,6 +392,9 @@ function attachSocketEvents(io, socket) {
 
       // Thêm người chơi vào danh sách đã đoán đúng
       await players.addAnsweredPlayer(room_id, username);
+
+      // Cập nhật số từ đã đoán đúng cho người chơi
+      await playerMongo.incrementWordsGuessed(username);
 
       // Emit thông báo đoán đúng và cập nhật bảng xếp hạng
       io.to(room_id).emit("correctGuess", { username, points: addPoint });

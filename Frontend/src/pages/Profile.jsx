@@ -14,6 +14,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       const user = authApi.getUser();
+      console.log("fetchProfile - current user:", user);
       if (!user || !user.username) {
         navigate("/login");
         return;
@@ -41,11 +42,15 @@ const Profile = () => {
           setSilverMedals(data.second || 0);
           setBronzeMedals(data.third || 0);
           
-          // Update Game Statistics (Mocking missing data for now or using available)
-          setTotalGames(0); // Not available in backend
-          setWordsDrawn(0); // Not available in backend
-          setWordsGuessed(0); // Not available in backend
-          setGuessAccuracy(0); // Not available in backend
+          // Update Game Statistics
+          setTotalGames(data.totalGames || 0);
+          setWordsDrawn(data.wordsDrawn || 0);
+          setWordsGuessed(data.wordsGuessed || 0);
+          
+          const accuracy = data.totalGuesses > 0 
+            ? ((data.totalGuesses / data.wordsGuessed) * 100).toFixed(1) 
+            : 0;
+          setGuessAccuracy(accuracy);
         } else {
           toast.error(result.message || "Failed to load profile");
         }

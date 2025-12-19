@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const Player = require("../models/player.js");
+const Profile = require("../models/profile.js");
 
 //lấy xếp hạng 1,2,3 rank của player
 exports.getPlayer = async (ctx) => {
@@ -7,17 +8,21 @@ exports.getPlayer = async (ctx) => {
     const schema = Joi.object({
       username: Joi.string().required(),
     });
-    const { error, value } = schema.validate(ctx.query);
+    const { error, value } = schema.validate(ctx.params);
     if (error) ctx.throw(400, error.message);
 
     const player = await Player.getPlayerByUsername(value.username);
+    const profile = await Profile.getProfileByUsername(value.username);
 
     if (!player) ctx.throw(404, "Player not found");
 
     ctx.body = {
       success: true,
       message: "get player successfully",
-      data: player,
+      data: {
+        ...player,
+        profile: profile || {}
+      },
     };
   } catch (error) {
     ctx.status = error.status || 500;

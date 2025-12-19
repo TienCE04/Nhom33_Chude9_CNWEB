@@ -8,6 +8,10 @@ const playerSchema = new mongoose.Schema({
   third: { type: Number, default: 0 },
   rank: { type: Number, default: 0 },
   totalPoint: { type: Number, default: 0 },
+  totalGames: { type: Number, default: 0 },
+  wordsDrawn: { type: Number, default: 0 },
+  wordsGuessed: { type: Number, default: 0 },
+  totalGuesses: { type: Number, default: 0 },
 });
 
 const PlayerModel = mongoose.model("Player", playerSchema);
@@ -72,11 +76,34 @@ module.exports = class Player {
       { 
         $inc: { 
           ...updateData, 
-          totalPoint: bonusPoint 
+          totalPoint: bonusPoint,
+          totalGames: 1 // Tăng tổng số trận đã chơi
         } 
       }
     );
   }
+
+  static async incrementWordsDrawn(username) {
+    return await PlayerModel.updateOne(
+      { username: username },
+      { $inc: { wordsDrawn: 1 } }
+    );
+  }
+
+  static async incrementWordsGuessed(username) {
+    return await PlayerModel.updateOne(
+      { username: username },
+      { $inc: { wordsGuessed: 1 } }
+    );
+  }
+
+  static async incrementTotalGuesses(username) {
+    return await PlayerModel.updateOne(
+      { username: username },
+      { $inc: { totalGuesses: 1 } }
+    );
+  }
+
   static async updatePlayerRank() {
     const players = await PlayerModel.find().sort({ totalPoint: -1 });
     for (let i = 0; i < players.length; i++) {
