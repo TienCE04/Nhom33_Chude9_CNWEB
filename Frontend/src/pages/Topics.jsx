@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Library, Plus, Loader, Calendar, Hash } from "lucide-react";
+import { Library, Plus, Loader, Calendar, Hash, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { GameButton } from "../components/GameButton";
 import { topicApi } from "@/lib/api";
 import { useAuth } from "../hooks/useAuth";
 import { format } from "date-fns";
+import { Dropdown } from "antd";
+import { ConfirmModal } from "../components/ConfirmModal";
+import { toast } from "@/hooks/use-toast";
 
 const MaterialIcon = ({ iconName, className = "" }) => (
   <span className={`material-symbols-rounded ${className}`}>
@@ -19,6 +22,7 @@ const Topics = () => {
   const [systemTopics, setSystemTopics] = useState([]);
   const [userTopics, setUserTopics] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, topicId: null });
 
   useEffect(() => {
     const fetchTopics = async () => {
@@ -47,8 +51,45 @@ const Topics = () => {
     fetchTopics();
   }, [user]);
 
-  const handleEditTopic = (topic) => {
+  const handleEditTopic = (topic, e) => {
+    if (e) e.stopPropagation();
     navigate("/create/theme", { state: { topic } });
+  };
+
+  const handleDeleteTopic = (topicId, e) => {
+    if (e) e.stopPropagation();
+    setDeleteModal({ isOpen: true, topicId });
+  };
+
+  const confirmDeleteTopic = async () => {
+    const topicId = deleteModal.topicId;
+    if (!topicId) return;
+
+    try {
+      const result = await topicApi.deleteTopic(topicId);
+      if (result.success) {
+        toast({
+          title: "Xóa chủ đề thành công",
+          variant: "success",
+        });
+        const updatedTopics = userTopics.filter(t => (t._id || t.idTopic) !== topicId);
+        setUserTopics(updatedTopics);
+        setDeleteModal({ isOpen: false, topicId: null });
+      } else {
+        toast({
+          title: "Xóa chủ đề thất bại",
+          description: result.message,
+          variant: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting topic:", error);
+      toast({
+        title: "Lỗi khi xóa chủ đề",
+        description: "Có lỗi xảy ra khi xóa chủ đề",
+        variant: "error",
+      });
+    }
   };
 
   const TopicCard = ({ topic, isCustom }) => (
@@ -86,15 +127,34 @@ const Topics = () => {
       )}
       
       {isCustom && topic.createdBy === user?.username && (
-         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <GameButton 
-                variant="secondary" 
-                size="sm" 
-                onClick={() => handleEditTopic(topic)}
-                className="px-3 py-1 text-xs"
+         <div className="absolute top-2 right-2 z-10">
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'edit',
+                    label: 'Chỉnh sửa',
+                    icon: <Edit className="w-4 h-4" />,
+                    onClick: ({ domEvent }) => handleEditTopic(topic, domEvent)
+                  },
+                  {
+                    key: 'delete',
+                    label: 'Xóa',
+                    icon: <Trash2 className="w-4 h-4 text-danger" />,
+                    danger: true,
+                    onClick: ({ domEvent }) => handleDeleteTopic(topic._id || topic.idTopic, domEvent)
+                  }
+                ]
+              }}
+              trigger={['click']}
             >
-                Sửa
-            </GameButton>
+              <button 
+                className="p-1 rounded-full hover:bg-black/10 transition-colors bg-white/50 backdrop-blur-sm"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="w-4 h-4 text-foreground/80" />
+              </button>
+            </Dropdown>
          </div>
       )}
     </div>
@@ -184,6 +244,17 @@ const Topics = () => {
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, topicId: null })}
+        onConfirm={confirmDeleteTopic}
+        title="Xóa chủ đề"
+        message="Bạn có chắc chắn muốn xóa chủ đề này không? Hành động này không thể hoàn tác."
+        confirmText="Xóa"
+        cancelText="Hủy"
+        variant="danger"
+      />
     </div>
   );
 };
