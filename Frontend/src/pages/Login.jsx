@@ -268,7 +268,11 @@ const Login = () => {
                   type="password"
                   placeholder="Mật khẩu"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                      const value = e.target.value;
+                      const noSpaceValue = value.replace(/\s/g, ""); 
+                      setPassword(noSpaceValue);
+                    }}
                   onKeyPress={(e) => e.key === "Enter" && handleLogin()}
                   className="input-rounded w-full text-center text-lg mb-3"
                   autoComplete="current-password"
