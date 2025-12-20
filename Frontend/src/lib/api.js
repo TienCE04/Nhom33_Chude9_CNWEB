@@ -106,6 +106,15 @@ export const authApi = {
       return handleApiError(error, "Đổi mật khẩu thất bại");
     }
   },
+
+  guestLogin: async (nickname) => {
+    try {
+      const response = await api.post("/guest-login", { nickname });
+      return response.data;
+    } catch (error) {
+      return handleApiError(error, "Đăng nhập khách thất bại");
+    }
+  },
 };
 
 export const roomApi = {

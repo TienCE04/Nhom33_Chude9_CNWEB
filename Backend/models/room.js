@@ -7,13 +7,14 @@ const roomSchema = new mongoose.Schema({
   idRoom: { type: mongoose.Schema.Types.ObjectId, auto: true },
   username: { type: String, ref: "Account" },
   idTopic: { type: mongoose.Schema.Types.ObjectId, ref: "Topic" },
+  roomName: { type: String },
   maxPlayer: { type: Number, default: 2 },
   maxScore: { type: Number, default: 10 },
   status: { type: String, default: "waiting" },
   cur_player: { type: Number, default: 0 },
   add_Point: { type: Number, default: 0 },
   topic_type: { type: String },
-  room_type: { type: String },
+  room_type: { type: String, default: "public" },
   timeStamp: { type: Date, default: Date.now },
   time: { type: Number, default: 60 }
 });
@@ -21,29 +22,43 @@ const roomSchema = new mongoose.Schema({
 const RoomModel = mongoose.model('Room', roomSchema)
 
 module.exports = class Room {
+
+  static async findOne(query) {
+    return await RoomModel.findOne(query);
+  }
+
+  static async create(data) {
+    const room = new RoomModel(data);
+    await room.save();
+    return room;
+  }
+
   static async createRoom(atts) {
  
     const id = atts.id || uuidv4()
 
-    const key = `topic:${id}`
+    const key = `room:${id}`
 
-    await redis.set(key, JSON.stringify({
+    const roomData = {
       ...atts,
       id,
+      currentPlayers: atts.currentPlayers || 0, // Đảm bảo thống nhất tên biến
+      status: atts.status || "WAITING",
       created_at: new Date().toISOString()
-    }))
+    };
 
-    await redis.sadd('topics', key)  // lưu key vào redis trong một set tên là topics 
-
-    const roomData = await redis.get(key)
-    return JSON.parse(roomData)
+    await redis.set(key, JSON.stringify(roomData))
+    await redis.sadd('rooms', key) // Lưu vào set rooms thay vì topics
+    
+    return { success: true, room: roomData };
   }
 
-  static async listRooms(username){
+  static async listRooms(username) {
     const keys = await redis.smembers(ROOMS_SET_KEY);
     if (!keys || keys.length === 0) {
-     return  [] ;
+      return [];
     }
+
     const rooms = [];
     const staleKeys = [];
 
@@ -58,14 +73,20 @@ module.exports = class Room {
 
           const room = JSON.parse(data);
 
-          // Luôn hiển thị phòng public
-          // và hiển thị phòng private nếu là của chính username hiện tại
+          // --- SỬA ĐOẠN NÀY (QUAN TRỌNG) ---
+          // 1. Lấy loại phòng bất kể lưu là 'room_type' hay 'roomType'
+          // 2. Chuyển về chữ thường để so sánh (tránh lỗi Public != public)
+          const rawType = room.room_type || room.roomType || "public";
+          const type = rawType.toLowerCase();
+          
           if (
-            room.room_type === "public" ||
-            (username && room.room_type === "private" && room.username === username)
+            type === "public" ||
+            (username && type === "private" && room.username === username)
           ) {
             rooms.push(room);
           }
+          // ---------------------------------
+          
         } catch (error) {
           console.error("Failed to parse room data:", error);
         }
@@ -75,8 +96,8 @@ module.exports = class Room {
     if (staleKeys.length > 0) {
       await redis.srem(ROOMS_SET_KEY, ...staleKeys);
     }
-    return  rooms ;
-    };
+    return rooms;
+  };
 
   static async updateRoomPlayer(roomId, index){
     if (!roomId) {

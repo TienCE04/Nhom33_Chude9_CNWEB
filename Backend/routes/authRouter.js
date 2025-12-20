@@ -1,5 +1,5 @@
 const Router = require("koa-router");
-const { login, forgetPassword, resetPassword, signup, changePassword,googleLogin, logout,refreshToken } = require("../controller/authController");
+const { login, forgetPassword, resetPassword, signup, changePassword,googleLogin, logout,refreshToken, guestLogin } = require("../controller/authController");
 const { authorize } = require("../middleware");
 
 
@@ -13,4 +13,6 @@ router.post("/change-password", authorize, changePassword);
 router.post("/auth/google-login", googleLogin);
 router.post("/logout",logout)
 router.post("/auth/refresh-token", refreshToken);
+router.post("/guest-login", guestLogin);
+
 module.exports = router;

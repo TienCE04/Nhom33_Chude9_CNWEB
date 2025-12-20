@@ -7,6 +7,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useToast } from "@/hooks/use-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDiscord } from "@fortawesome/free-brands-svg-icons";
+import { roomApi } from "@/lib/api";
 
 const Login = () => {
   const [nicknameLogin, setNicknameLogin] = useState("");
@@ -62,11 +63,44 @@ const Login = () => {
     },
   });
 
-  const handlePlayNow = () => {
-    if (nicknameLogin.trim()) {
-      localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem('user', nicknameLogin)
-      navigate("/lobby");
+  const handlePlayNow = async () => {
+    if (!nicknameLogin.trim()) return;
+    setIsLoading(true);
+
+    try {
+      // BƯỚC 1: Xin Token từ Server (Thay cho việc tự fake localStorage)
+      const loginResult = await authApi.guestLogin(nicknameLogin);
+
+      if (loginResult.success) {
+        // Lưu Token thật vào storage -> ProtectedRoute sẽ tự động cho qua
+        localStorage.setItem("authToken", loginResult.accessToken);
+        localStorage.setItem("user", JSON.stringify(loginResult.user));
+        localStorage.setItem("isLoggedIn", "true");
+
+        // BƯỚC 2: Tìm phòng (Lúc này API /rooms sẽ không chặn nữa vì đã có Token)
+        const response = await roomApi.getRooms();
+        
+        // ... Logic tìm phòng giữ nguyên như cũ ...
+        if (response.success && response.rooms.length > 0) {
+            // Tìm phòng Sảnh Chung
+            let targetRoom = response.rooms.find(r => r.roomName === "Sảnh Chung" && r.currentPlayers < r.maxPlayer);
+            // ...
+            if (targetRoom) {
+                navigate(`/lobby/${targetRoom.id}`);
+            } else {
+                navigate("/rooms");
+            }
+        } else {
+             navigate("/rooms");
+        }
+      } else {
+        toast({ title: "Lỗi", description: "Không thể tạo tài khoản khách", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error("Lỗi:", error);
+      toast({ title: "Lỗi kết nối", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -111,21 +145,21 @@ const Login = () => {
     setIsLoading(true);
     try {
       const result = await authApi.login(username, password);
-      
+
       if (result.success) {
         // Lưu token và user info
         localStorage.setItem("authToken", result.accessToken);
         localStorage.setItem("refreshToken", result.refreshToken);
-        
+
         localStorage.setItem("user", JSON.stringify(result.user));
         localStorage.setItem("isLoggedIn", "true");
-        
+
         toast({
           title: "Đăng nhập thành công!",
           description: `Chào mừng ${result.user.username}`,
           variant: "success",
         });
-        
+
         // Redirect tới lobby sau 1.5s
         setTimeout(() => navigate("/rooms"), 1500);
       } else {
@@ -250,9 +284,8 @@ const Login = () => {
 
             <div className="relative">
               <div
-                className={`transition-all duration-100 ${
-                  regTab === "account" ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 pointer-events-none absolute inset-0"
-                }`}
+                className={`transition-all duration-100 ${regTab === "account" ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 pointer-events-none absolute inset-0"
+                  }`}
               >
                 <input
                   type="text"
@@ -269,10 +302,10 @@ const Login = () => {
                   placeholder="Mật khẩu"
                   value={password}
                   onChange={(e) => {
-                      const value = e.target.value;
-                      const noSpaceValue = value.replace(/\s/g, ""); 
-                      setPassword(noSpaceValue);
-                    }}
+                    const value = e.target.value;
+                    const noSpaceValue = value.replace(/\s/g, "");
+                    setPassword(noSpaceValue);
+                  }}
                   onKeyPress={(e) => e.key === "Enter" && handleLogin()}
                   className="input-rounded w-full text-center text-lg mb-3"
                   autoComplete="current-password"
@@ -301,9 +334,8 @@ const Login = () => {
               </div>
 
               <div
-                className={`transition-all duration-100 ${
-                  regTab === "social" ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none absolute inset-0"
-                }`}
+                className={`transition-all duration-100 ${regTab === "social" ? "opacity-100 translate-x-0" : "opacity-0 translate-x-2 pointer-events-none absolute inset-0"
+                  }`}
               >
                 <div className="space-y-3">
                   <GameButton
@@ -312,8 +344,8 @@ const Login = () => {
                     disabled={isLoading}
                     aria-label="Đăng nhập với Google"
                   >
-                    {/* Google SVG */}           
-                    <svg className="w-5 h-5" viewBox="-3 0 262 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4"/><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853"/><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05"/><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335"/></svg>
+                    {/* Google SVG */}
+                    <svg className="w-5 h-5" viewBox="-3 0 262 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid"><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4" /><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853" /><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05" /><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335" /></svg>
                     <span>Đăng nhập với Google</span>
                   </GameButton>
 

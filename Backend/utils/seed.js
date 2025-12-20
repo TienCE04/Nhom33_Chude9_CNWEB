@@ -1,4 +1,5 @@
 const Topic = require("../models/topic");
+const Room = require("../models/room");
 
 /* ==================== TOPICS ==================== */
 const DEFAULT_TOPICS = [
@@ -155,4 +156,72 @@ const seedDefaultTopics = async () => {
   }
 };
 
-module.exports = seedDefaultTopics;
+/* ==================== SEED ROOM ==================== */
+const seedDefaultRoom = async () => {
+  try {
+    const ROOM_NAME = "Sảnh Chung";
+    
+    // 1. Tìm Topic
+    const topic = await Topic.findOne({ nameTopic: "Động vật" });
+    if (!topic) {
+        console.log("⚠️ Chưa có topic 'Động vật', bỏ qua tạo phòng.");
+        return;
+    }
+
+    // 2. Kiểm tra/Tạo trong MongoDB (Dùng biến persistentRoom xuyên suốt)
+    let persistentRoom = await Room.findOne({ roomName: ROOM_NAME });
+    
+    if (!persistentRoom) {
+      console.log("🌱 Creating persistent room in Mongo...");
+      // Lưu kết quả tạo mới vào biến persistentRoom
+      persistentRoom = await Room.create({
+        roomName: ROOM_NAME,
+        hostUser: "system",
+        maxPlayer: 20,
+        maxScore: 100,
+        topicId: topic._id, // Lưu ID topic
+        roomPass: "",
+        status: "WAITING",
+        room_type: "Public",
+        isPlaying: false,
+        currentPlayers: 0,
+        round: 1,
+        timePerRound: 60
+      });
+      console.log("✅ Created Mongo Room: Sảnh Chung");
+    }
+
+    // 3. Kiểm tra/Tái tạo trong Redis
+    if (persistentRoom) {
+        const roomId = persistentRoom._id.toString(); // Bây giờ biến này đã tồn tại an toàn
+        const redisCheck = await Room.getRoomById(roomId);
+
+        if (!redisCheck.success) {
+            console.log("🔄 Syncing 'Sảnh Chung' to Redis...");
+            await Room.createRoom({
+                id: roomId, // Quan trọng: Dùng ID của Mongo
+                roomName: ROOM_NAME,
+                username: "system",
+                hostUser: "system",
+                idTopic: topic._id,
+                nameTopic: topic.nameTopic,
+                topicIcon: topic.topicIcon,
+                maxPlayer: 20,
+                maxScore: 100,
+                currentPlayers: 0,
+                roomPass: "",
+                status: "WAITING",
+                roomType: "Public",
+                isPlaying: false
+            });
+            console.log("✅ 'Sảnh Chung' is ready in Redis!");
+        } else {
+            console.log("✅ 'Sảnh Chung' already exists in Redis.");
+        }
+    }
+  } catch (error) {
+    console.error("❌ Error seeding default room:", error);
+  }
+};
+
+module.exports = { seedDefaultTopics, seedDefaultRoom };

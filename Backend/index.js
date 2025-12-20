@@ -9,7 +9,7 @@ const config = require("./config");
 const { log } = require("./middleware/index");
 const { createServer } = require("http");
 const { initSocket } = require("./socket/socketHandler.js"); 
-const seedDefaultTopics = require("./utils/seed");
+const { seedDefaultTopics, seedDefaultRoom } = require("./utils/seed");
 const app = new Koa();
 
 app.use(bodyParser());
@@ -46,5 +46,6 @@ if (!module.parent) {
     
     // Run seed
     await seedDefaultTopics();
+    await seedDefaultRoom();
   });
 }

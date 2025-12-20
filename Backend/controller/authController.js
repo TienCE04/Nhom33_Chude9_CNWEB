@@ -1,5 +1,6 @@
 const Joi = require("joi");
 const jwt = require("jsonwebtoken");
+const config = require("../config");
 const axios = require("axios");
 const {
   getAccountByUsername,
@@ -319,3 +320,40 @@ exports.googleLogin = async (ctx) => {
   }
 };
 
+exports.guestLogin = async (ctx) => {
+  try {
+    const { nickname } = ctx.request.body;
+    
+    // Tạo ID giả lập hoặc Random ObjectId
+    // Lưu ý: Nếu hệ thống Socket của bạn query DB để tìm User, bạn có thể cần tạo 1 bản ghi User tạm vào DB tại đây (với flag isGuest: true).
+    // Nếu Socket chỉ đọc thông tin từ Token, thì chỉ cần object này là đủ.
+    const guestUser = {
+      _id: "guest_" + Date.now(), // ID dạng chuỗi để phân biệt
+      username: nickname || `Guest_${Math.floor(Math.random() * 1000)}`,
+      role: "guest",
+      isGuest: true
+    };
+
+    // Tạo Token (Payload chứa thông tin guest)
+    const token = jwt.sign(
+      { 
+        id: guestUser._id, 
+        username: guestUser.username,
+        role: guestUser.role 
+      },
+      config.jwtSecret || process.env.JWT_SECRET, // Dùng JWT secret key trong localenv
+      { expiresIn: "2h" } // Token khách chỉ sống 2 tiếng
+    );
+
+    ctx.status = 200;
+    ctx.body = {
+      success: true,
+      accessToken: token,
+      user: guestUser
+    };
+  } catch (error) {
+    console.error("Guest login error:", error);
+    ctx.status = 500;
+    ctx.body = { success: false, message: "Lỗi tạo tài khoản khách" };
+  }
+};
