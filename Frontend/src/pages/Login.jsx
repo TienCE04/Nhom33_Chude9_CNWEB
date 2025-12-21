@@ -69,23 +69,17 @@ const Login = () => {
     setIsPlayNowLoading(true);
 
     try {
-      // BƯỚC 1: Xin Token từ Server (Thay cho việc tự fake localStorage)
       const loginResult = await authApi.guestLogin(nicknameLogin);
 
       if (loginResult.success) {
-        // Lưu Token thật vào storage -> ProtectedRoute sẽ tự động cho qua
         localStorage.setItem("authToken", loginResult.accessToken);
         localStorage.setItem("user", JSON.stringify(loginResult.user));
         localStorage.setItem("isLoggedIn", "true");
 
-        // BƯỚC 2: Tìm phòng (Lúc này API /rooms sẽ không chặn nữa vì đã có Token)
         const response = await roomApi.getRooms();
         
-        // ... Logic tìm phòng giữ nguyên như cũ ...
         if (response.success && response.rooms.length > 0) {
-            // Tìm phòng Sảnh Chung
             let targetRoom = response.rooms.find(r => r.roomName === "Sảnh Chung" && r.currentPlayers < r.maxPlayer);
-            // ...
             if (targetRoom) {
                 navigate(`/lobby/${targetRoom.id}`);
             } else {

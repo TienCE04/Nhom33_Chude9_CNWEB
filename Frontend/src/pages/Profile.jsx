@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit2, Save, X, User, Mail, Lock, Calendar, Trophy, Award, Medal, Camera, Gamepad2, Brush, MessageSquare, Target, Loader } from "lucide-react";
+import { Edit2, Save, X, User, Mail, Lock, Calendar, Trophy, Award, Medal, Camera, Gamepad2, Brush, MessageSquare, Target, Loader } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import { playerApi, authApi } from "@/lib/api";
@@ -36,13 +36,12 @@ const Profile = () => {
           // Update Personal Info
           setFullName(profile.nickname || user.username);
           setAvatar(profile.avatar || "");
-          // dateOfBirth is not in backend
           
           // Update Account Info
           setUsername(user.username);
           setEmail(profile.email || "");
           
-          // Update Achievements (Player stats)
+          // Update Achievements
           setRanking(data.rank || 0);
           setGoldMedals(data.first || 0);
           setSilverMedals(data.second || 0);
@@ -71,14 +70,14 @@ const Profile = () => {
     fetchProfile();
   }, [navigate]);
   
-  // Editing states - separate for each block
+  // Editing states
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [isEditingAccount, setIsEditingAccount] = useState(false);
   
   // Avatar modal state
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
-  const [tempAvatar, setTempAvatar] = useState(""); // Temporary avatar for modal editing
+  const [tempAvatar, setTempAvatar] = useState("");
   
   // Change Password Modal state
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
@@ -93,13 +92,13 @@ const Profile = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   
-  // Achievement Information (read-only)
+  // Achievement Information
   const [ranking, setRanking] = useState(0);
   const [goldMedals, setGoldMedals] = useState(0);
   const [silverMedals, setSilverMedals] = useState(0);
   const [bronzeMedals, setBronzeMedals] = useState(0);
 
-  // Game Statistics (read-only)
+  // Game Statistics
   const [totalGames, setTotalGames] = useState(0);
   const [wordsDrawn, setWordsDrawn] = useState(0);
   const [wordsGuessed, setWordsGuessed] = useState(0);
@@ -129,7 +128,6 @@ const Profile = () => {
   };
 
   const handleSavePersonal = () => {
-    // Here you would typically save to backend
     setIsEditingPersonal(false);
     setOriginalPersonalValues({
       fullName,
@@ -139,7 +137,6 @@ const Profile = () => {
   };
 
   const handleCancelPersonal = () => {
-    // Restore original values
     setFullName(originalPersonalValues.fullName);
     setDateOfBirth(originalPersonalValues.dateOfBirth);
     setAvatar(originalPersonalValues.avatar);
@@ -157,7 +154,6 @@ const Profile = () => {
   };
 
   const handleSaveAccount = () => {
-    // Here you would typically save to backend
     setIsEditingAccount(false);
     setOriginalAccountValues({
       username,
@@ -167,7 +163,6 @@ const Profile = () => {
   };
 
   const handleCancelAccount = () => {
-    // Restore original values
     setUsername(originalAccountValues.username);
     setEmail(originalAccountValues.email);
     setPassword(originalAccountValues.password);
@@ -251,7 +246,6 @@ const Profile = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full">
-        {/* Full width horizontal block */}
         <div className="game-card mb-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3 w-full sm:w-auto">

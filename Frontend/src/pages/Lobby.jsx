@@ -4,7 +4,6 @@ import { Copy, LogOut, Play, Pause } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { PlayerCard } from "@/components/PlayerCard";
 import { useToast } from "@/hooks/use-toast";
-import { Select } from "antd";
 import { ChatBox } from "../components/ChatBox";
 import Game from "./Game";
 import { PlayRulePopup } from "../components/PlayRulePopup";
@@ -140,7 +139,6 @@ const Lobby = () => {
   };
 
   const handleConfirmRules = () => {
-    // include roomType in confirmation flow
     const user = getUserInfo()
     const data = {room_id: room.id||room.room.id, topic_id: room.idTopic||room.room.idTopic, timePerRound: drawTime, user: user}
     socket.emit("startGame", data)

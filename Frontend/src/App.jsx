@@ -25,7 +25,7 @@ import Register from "./pages/Register";
 const queryClient = new QueryClient();
 
 const App = () => {
-  // 2. Thêm useEffect để thiết lập theme khi ứng dụng khởi động
+  // Thiết lập theme khi ứng dụng khởi động
   useEffect(() => {
     const theme = localStorage.getItem("theme");
     if (theme === "dark") {

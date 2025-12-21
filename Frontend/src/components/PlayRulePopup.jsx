@@ -2,9 +2,6 @@ import { GameButton } from "@/components/GameButton";
 import { Ban, Check } from "lucide-react";
 import { createPortal } from "react-dom";
 
-/**
- * Component pop-up hiển thị luật chơi.
- */
 export const PlayRulePopup = ({ topic, onConfirm, onClose, roomType }) => {
   return createPortal(
     // Lớp phủ (Overlay)

@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Trophy, Home, Medal } from "lucide-react";
-import { GameButton } from "@/components/GameButton";
+import { Trophy, Medal } from "lucide-react";
 import { PlayerCard } from "@/components/PlayerCard";
 import { playerApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
 const Rank = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useTranslation();
   const [leaderboard, setLeaderboard] = useState([]);
@@ -55,7 +52,7 @@ const Rank = () => {
     <div className="flex flex-col items-center p-4">
       <div className="max-w-2xl w-full bg-card rounded-xl shadow-xl border border-border overflow-hidden flex flex-col max-h-[80vh]">
         {/* Header - Compact */}
-        <div className="p-6 border-b border-border bg-muted/30 flex items-center gap-4 shrink-0">
+        <div className="px-6 py-4 border-b border-border bg-muted/30 flex items-center gap-4 shrink-0">
           <div className="p-3 bg-yellow-500/10 rounded-full">
             <Trophy className="w-8 h-8 text-yellow-500" />
           </div>
@@ -106,18 +103,6 @@ const Rank = () => {
           </div>
         )}
       </div>
-
-      {/* <div className="mt-6 flex justify-center animate-fade-in">
-        <GameButton
-          variant="secondary"
-          size="lg"
-          onClick={() => navigate("/")}
-          className="min-w-[200px]"
-        >
-          <Home className="w-5 h-5 mr-2" />
-          {t('rank.backToHome')}
-        </GameButton>
-      </div> */}
     </div>
   );
 };

@@ -164,7 +164,6 @@ const Home = () => {
           </div>
 
           {/* --- NÚT ĐIỀU HƯỚNG (ARROWS) --- */}
-          {/* Thay đổi: Dùng max-w-[85%] hoặc 7xl để đẩy 2 mũi tên ra xa thẻ giữa */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[95%] md:max-w-[85%] lg:max-w-7xl flex justify-between items-center pointer-events-none z-30">
             <button 
               onClick={handlePrev}
@@ -218,7 +217,7 @@ const Home = () => {
 
         {/* Footer */}
         <footer className="py-6 text-center text-sm text-muted-foreground relative z-10">
-          © 2025 Gartic Clone - Nhom33_Chude9_CNWEB. All rights reserved.
+          © 2025 Draw and Guess - Nhom33_Chude9_CNWEB
         </footer>
       </div>
     </PageTransition>

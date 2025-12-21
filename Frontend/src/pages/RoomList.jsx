@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Users, Trophy, Hash, Gamepad2, ArrowRight, Plus, Loader, X, MoreVertical, Edit, Trash2 } from "lucide-react";
+import { Users, Trophy, Hash, Gamepad2, Plus, Loader, X, MoreVertical, Edit, Trash2 } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { roomApi } from "@/lib/api";
 import { socket } from "@/lib/socket";
@@ -127,7 +127,7 @@ const RoomList = () => {
       // Tìm trong mảng rooms (public rooms)
       targetRoom = rooms.find(r => r.id.startsWith(roomCode.toLowerCase()) || r.roomCode === roomCode.toUpperCase());
 
-      // Nếu không tìm thấy trong public rooms, gọi API để lấy room (có thể là private)
+      // Nếu không tìm thấy trong public rooms, gọi API để lấy room
       if (!targetRoom) {
         const roomData = await roomApi.getRoomById(roomCode);
         if (roomData.success && roomData.room) {

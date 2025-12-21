@@ -4,15 +4,11 @@
     justify-content: center;
 }
 
-/* .game-card {
-    scrollbar-width: none;
-} */
-
 /* Hide scrollbar buttons */
 ::-webkit-scrollbar-button {
     display: none;
 }
-/* Optional: Make scrollbar thinner and more modern */
+/* Make scrollbar thinner and more modern */
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;

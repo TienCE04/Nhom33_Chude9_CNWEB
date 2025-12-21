@@ -34,16 +34,6 @@ const Settings = () => {
     localStorage.setItem("language", lng);
   };
 
-  const handleBack = () => {
-    if (isLoggedIn) {
-      navigate("/lobby");
-    } else {
-      // Nếu quay về login, xóa sạch trạng thái đăng nhập
-      localStorage.removeItem("isLoggedIn");
-      navigate("/login");
-    }
-  };
-
   return (
     <div className="flex items-center w-full justify-center p-4 bg-background transition-colors duration-300 mt-20">
       <div className="max-w-lg w-full">
@@ -118,28 +108,6 @@ const Settings = () => {
                 </button>
             </div>
         </div>
-
-        {/* Nút điều hướng Back có điều kiện - ĐÃ ĐƯỢC THÊM LẠI */}
-        {/* <div className="mt-8 text-center">
-          <GameButton
-            variant="secondary"
-            size="lg"
-            onClick={handleBack}
-          >
-            {isLoggedIn ? (
-                <>
-                    <Gamepad2 className="w-5 h-5 mr-2" />
-                    Back to Lobby
-                </>
-            ) : (
-                <>
-                    <LogIn className="w-5 h-5 mr-2" />
-                    Back to Login
-                </>
-            )}
-          </GameButton>
-        </div> */}
-
       </div>
     </div>
   );

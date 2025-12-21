@@ -8,7 +8,6 @@ const Navbar = ({ onLogout }) => {
   const location = useLocation();
   const { t } = useTranslation();
 
-  // Hàm tạo class cho link, tự động highlight khi active
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-2 px-2 md:px-4 py-2 rounded-xl transition-all duration-200 font-bold ${
       isActive
@@ -16,14 +15,12 @@ const Navbar = ({ onLogout }) => {
         : "text-muted-foreground hover:bg-muted hover:text-foreground"
     }`;
 
-  // THÊM HÀM XỬ LÝ LOGOUT
   const handleLogout = () => {
     // Xóa trạng thái đăng nhập
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("authToken")
     localStorage.removeItem("user")
 
-    // Gọi callback nếu có (để cập nhật state ở component cha)
     if (onLogout) {
       onLogout();
     }

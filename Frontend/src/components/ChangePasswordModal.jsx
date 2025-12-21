@@ -81,7 +81,6 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
   return createPortal(
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      // Removed onClick={onClose} to prevent closing when clicking outside
     >
       <div 
         className="bg-card rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300"
