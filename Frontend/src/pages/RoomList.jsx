@@ -8,6 +8,7 @@ import { getUserInfo } from "../lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Dropdown } from "antd";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { JoinRoomModal } from "@/components/JoinRoomModal";
 
 const MaterialIcon = ({ iconName, className = "" }) => (
   <span className={`material-symbols-rounded ${className}`}>{iconName}</span>
@@ -351,61 +352,17 @@ const RoomList = () => {
         )}
 
         {/* Join by Code Modal */}
-        {showJoinByCodeModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-background rounded-lg shadow-lg p-6 max-w-md w-full">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold">Vào phòng bằng code</h2>
-                <button
-                  onClick={() => {
-                    setShowJoinByCodeModal(false);
-                    setRoomCode("");
-                  }}
-                  className="p-1 hover:bg-muted rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Room Code</label>
-                  <input
-                    type="text"
-                    value={roomCode}
-                    onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-                    placeholder="Nhập room code (ví dụ: GAME-1234)"
-                    className="w-full input-rounded py-2 px-3 uppercase tracking-widest font-mono"
-                    onKeyPress={(e) => e.key === 'Enter' && handleJoinByCode()}
-                  />
-                </div>
-
-                <div className="flex gap-3">
-                  <GameButton
-                    variant="danger"
-                    size="md"
-                    onClick={() => {
-                      setShowJoinByCodeModal(false);
-                      setRoomCode("");
-                    }}
-                    className="flex-1"
-                  >
-                    Hủy
-                  </GameButton>
-                  <GameButton
-                    variant="success"
-                    size="md"
-                    onClick={handleJoinByCode}
-                    disabled={isJoiningByCode || !roomCode.trim()}
-                    className="flex-1"
-                  >
-                    {isJoiningByCode ? "Đang vào..." : "Vào phòng"}
-                  </GameButton>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        <JoinRoomModal
+          isOpen={showJoinByCodeModal}
+          onClose={() => {
+            setShowJoinByCodeModal(false);
+            setRoomCode("");
+          }}
+          roomCode={roomCode}
+          setRoomCode={setRoomCode}
+          onJoin={handleJoinByCode}
+          isJoining={isJoiningByCode}
+        />
 
         <ConfirmModal
           isOpen={deleteModal.isOpen}
