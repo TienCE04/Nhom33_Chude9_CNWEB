@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Copy, LogOut, Play, Pause } from "lucide-react";
 import { GameButton } from "@/components/GameButton";
 import { PlayerCard } from "@/components/PlayerCard";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { Select } from "antd";
 import { ChatBox } from "../components/ChatBox";
 import Game from "./Game";
@@ -26,6 +26,7 @@ const Lobby = () => {
   const [showRulesPopup, setShowRulesPopup] = useState(false);
   const [players, setPlayers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   // Hàm để load dữ liệu phòng từ API
   const loadRoomData = async () => {
     try {
@@ -43,7 +44,7 @@ const Lobby = () => {
       }
     } catch (error) {
       console.error("Error loading room data:", error);
-      toast.error("Không thể tải dữ liệu phòng");
+      toast({ title: "Không thể tải dữ liệu phòng", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -106,7 +107,7 @@ const Lobby = () => {
     socket.on("playersData", handleUpdatePlayerRoomEvent);
     socket.on("updateChat", handleUpdateChat);
     socket.on("room_full", (data) => {
-      toast.error(data.message);
+      toast({ title: data.message, variant: "destructive" });
       navigate("/rooms");
     });
 
@@ -124,7 +125,7 @@ const Lobby = () => {
   const copyRoomCode = () => {
     const actualRoomCode = room.id || room.room?.id || "";
     navigator.clipboard.writeText(actualRoomCode);
-    toast.success("Room code copied!");
+    toast({ title: "Room code copied!", variant: "success" });
   };
 
   const handleSendMessage = (message) => {
@@ -145,7 +146,7 @@ const Lobby = () => {
     socket.emit("startGame", data)
     setShowRulesPopup(false);
     console.log("Starting game with roomType:", roomType);
-    toast.success(`Bắt đầu phòng ${roomType}`);
+    toast({ title: `Bắt đầu phòng ${roomType}`, variant: "success" });
     setIsGameStarted(true);
   };
 

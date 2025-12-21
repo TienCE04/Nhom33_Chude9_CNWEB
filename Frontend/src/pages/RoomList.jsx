@@ -5,7 +5,7 @@ import { GameButton } from "@/components/GameButton";
 import { roomApi } from "@/lib/api";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { Dropdown } from "antd";
 import { ConfirmModal } from "@/components/ConfirmModal";
 
@@ -24,6 +24,7 @@ const RoomList = () => {
   const [isJoiningByCode, setIsJoiningByCode] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, roomId: null });
   const userInfo = getUserInfo();
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchRooms();
@@ -88,17 +89,17 @@ const RoomList = () => {
     try {
       const result = await roomApi.deleteRoom(roomId);
       if (result.success) {
-        toast.success("Xóa phòng thành công");
+        toast({ title: "Xóa phòng thành công", variant: "success" });
         setRooms(prev => prev.filter(r => r.id !== roomId));
         if (selectedRoom?.id === roomId) {
           setSelectedRoom(null);
         }
       } else {
-        toast.error(result.message || "Xóa phòng thất bại");
+        toast({ title: "Xóa phòng thất bại", description: result.message, variant: "destructive" });
       }
     } catch (error) {
       console.error("Error deleting room:", error);
-      toast.error("Có lỗi xảy ra khi xóa phòng");
+      toast({ title: "Có lỗi xảy ra khi xóa phòng", variant: "destructive" });
     } finally {
       setDeleteModal({ isOpen: false, roomId: null });
     }
@@ -114,7 +115,7 @@ const RoomList = () => {
 
   const handleJoinByCode = async () => {
     if (!roomCode.trim()) {
-      toast.error("Vui lòng nhập room code");
+      toast({ title: "Vui lòng nhập room code", variant: "destructive" });
       return;
     }
 
@@ -144,12 +145,12 @@ const RoomList = () => {
       }
 
       if (!targetRoom) {
-        toast.error("Không tìm thấy phòng với code này");
+        toast({ title: "Không tìm thấy phòng với code này", variant: "destructive" });
         return;
       }
 
       if (targetRoom.currentPlayers >= targetRoom.maxPlayers) {
-        toast.error("Phòng này đã đầy");
+        toast({ title: "Phòng này đã đầy", variant: "destructive" });
         return;
       }
 
@@ -157,19 +158,24 @@ const RoomList = () => {
       socket.emit("join_room", { roomId: targetRoom.id, user: userInfo });
       navigate(`/lobby/${targetRoom.id}`);
 
-      toast.success("Vào phòng thành công!");
+      toast({ title: "Vào phòng thành công!", variant: "success" });
       setShowJoinByCodeModal(false);
       setRoomCode("");
       navigate(`/lobby/${targetRoom.id}`);
     } catch (error) {
       console.error("Error joining room by code:", error);
-      toast.error("Không thể vào phòng");
+      toast({ title: "Không thể vào phòng", variant: "destructive" });
     } finally {
       setIsJoiningByCode(false);
     }
   };
 
   const handleCreateRoom = () => {
+    const userInfo = getUserInfo();
+    if (userInfo && (userInfo.role === 'guest' || userInfo.isGuest)) {
+        toast({ title: "Vui lòng đăng nhập để tạo phòng", variant: "destructive" });
+        return;
+    }
     navigate("/create/room");
   };
 

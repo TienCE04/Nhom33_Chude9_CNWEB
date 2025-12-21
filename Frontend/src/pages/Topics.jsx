@@ -172,7 +172,17 @@ const Topics = () => {
           variant="success"
           size="md"
           className="flex items-center gap-2"
-          onClick={() => navigate("/create/theme")}
+          onClick={() => {
+             if (user && (user.role === 'guest' || user.isGuest)) {
+                 toast({
+                    title: "Yêu cầu đăng nhập",
+                    description: "Vui lòng đăng nhập để tạo chủ đề của riêng bạn",
+                    variant: "destructive",
+                 });
+                 return;
+             }
+             navigate("/create/theme");
+          }}
         >
           <Plus className="w-5 h-5" />
           Tạo chủ đề mới
@@ -228,17 +238,26 @@ const Topics = () => {
                 </div>
               )
             ) : (
-              userTopics.length > 0 ? (
-                userTopics.map((topic) => (
-                  <TopicCard key={topic._id || topic.idTopic} topic={topic} isCustom={true} />
-                ))
-              ) : (
+              user && (user.role === 'guest' || user.isGuest) ? (
                 <div className="col-span-full flex flex-col items-center justify-center py-10 gap-4">
-                  <p className="text-muted-foreground text-lg">Bạn chưa tạo chủ đề nào.</p>
-                  <GameButton variant="primary" onClick={() => navigate("/create/theme")}>
-                    Tạo ngay
+                  <p className="text-muted-foreground text-lg">Vui lòng đăng nhập để tạo chủ đề của riêng bạn.</p>
+                  <GameButton variant="primary" onClick={() => navigate("/login")}>
+                    Đăng nhập ngay
                   </GameButton>
                 </div>
+              ) : (
+                userTopics.length > 0 ? (
+                  userTopics.map((topic) => (
+                    <TopicCard key={topic._id || topic.idTopic} topic={topic} isCustom={true} />
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-10 gap-4">
+                    <p className="text-muted-foreground text-lg">Bạn chưa tạo chủ đề nào.</p>
+                    <GameButton variant="primary" onClick={() => navigate("/create/theme")}>
+                      Tạo ngay
+                    </GameButton>
+                  </div>
+                )
               )
             )}
           </div>

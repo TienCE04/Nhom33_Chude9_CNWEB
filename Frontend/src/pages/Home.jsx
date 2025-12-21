@@ -50,7 +50,7 @@ const Home = () => {
       id: "features",
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8 flex items-center gap-2 drop-shadow-md">
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 flex items-center gap-2 drop-shadow-md">
             <Zap className="w-8 h-8 text-yellow-400 fill-yellow-400" />
             {t('home.whyPlay')}
           </h2>
@@ -60,12 +60,12 @@ const Home = () => {
               { icon: <MessageSquare className="w-8 h-8 text-success" />, title: t('home.guessFast'), desc: t('home.guessFastDesc') },
               { icon: <Trophy className="w-8 h-8 text-yellow-500" />, title: t('home.climbRank'), desc: t('home.climbRankDesc') }
             ].map((item, idx) => (
-              <div key={idx} className="bg-black/20 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
-                <div className="w-12 h-12 mx-auto bg-white/10 rounded-full flex items-center justify-center mb-3">
+              <div key={idx} className="bg-white/50 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
+                <div className="w-16 h-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-3">
                   {item.icon}
                 </div>
-                <h3 className="font-bold text-white mb-1">{item.title}</h3>
-                <p className="text-sm text-white/70">{item.desc}</p>
+                <h3 className="font-bold mb-1">{item.title}</h3>
+                <p className="text-sm">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -76,7 +76,7 @@ const Home = () => {
       id: "howto",
       content: (
         <div className="flex flex-col items-center justify-center h-full text-center px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8 flex items-center gap-2 drop-shadow-md">
+          <h2 className="text-2xl md:text-3xl font-bold mb-8 flex items-center gap-2 drop-shadow-md">
             <BookOpen className="w-8 h-8 text-orange-400" />
             {t('home.howToPlay')}
           </h2>
@@ -86,12 +86,12 @@ const Home = () => {
               { num: "02", title: t('home.step2Title'), desc: t('home.step2Desc') },
               { num: "03", title: t('home.step3Title'), desc: t('home.step3Desc') }
             ].map((step, idx) => (
-              <div key={idx} className="relative group flex-1 bg-black/20 p-4 rounded-2xl border border-white/10 backdrop-blur-sm text-left">
-                <div className="text-4xl font-black text-white/10 absolute top-2 right-4 group-hover:text-primary/20 transition-colors">
+              <div key={idx} className="relative group flex-1 bg-white/50 p-4 rounded-2xl border border-white/10 backdrop-blur-sm text-left">
+                <div className="text-4xl font-black text-primary absolute top-2 right-4 group-hover:text-primary/50 transition-colors">
                   {step.num}
                 </div>
-                <h3 className="text-lg font-bold text-white mt-4">{step.title}</h3>
-                <p className="text-sm text-white/70">{step.desc}</p>
+                <h3 className="text-lg font-bold mt-6">{step.title}</h3>
+                <p className="text-sm">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -168,14 +168,14 @@ const Home = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[95%] md:max-w-[85%] lg:max-w-7xl flex justify-between items-center pointer-events-none z-30">
             <button 
               onClick={handlePrev}
-              className="pointer-events-auto w-24 h-24 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95 shadow-lg group"
+              className="pointer-events-auto w-24 h-24 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg group"
             >
               <ChevronLeft className="w-12 h-12 group-hover:-translate-x-1 transition-transform" />
             </button>
             
             <button 
               onClick={handleNext}
-              className="pointer-events-auto w-24 h-24 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white transition-all hover:scale-110 active:scale-95 shadow-lg group"
+              className="pointer-events-auto w-24 h-24 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all hover:scale-110 active:scale-95 shadow-lg group"
             >
               <ChevronRight className="w-12 h-12 group-hover:translate-x-1 transition-transform" />
             </button>

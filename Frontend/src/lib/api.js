@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from '../hooks/use-toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID";
@@ -21,6 +22,37 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle token expiration
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Check if the request is NOT a login request to avoid redirect loops or wrong redirects on login failure
+      const isLoginRequest = error.config.url.endsWith('/login');
+      
+      if (!isLoginRequest) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+        localStorage.removeItem("isLoggedIn");
+        
+        toast({
+          title: "Phiên đăng nhập hết hạn",
+          description: "Vui lòng đăng nhập lại.",
+          variant: "destructive",
+        });
+        
+        // Delay redirect to let user see the toast
+        setTimeout(() => {
+            window.location.href = '/login';
+        }, 1500);
+      }
+    }
     return Promise.reject(error);
   }
 );

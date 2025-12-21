@@ -5,11 +5,12 @@ import { ArrowLeft, Edit2, Save, X, User, Mail, Lock, Calendar, Trophy, Award, M
 import { GameButton } from "@/components/GameButton";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import { playerApi, authApi } from "@/lib/api";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -18,6 +19,11 @@ const Profile = () => {
       if (!user || !user.username) {
         navigate("/login");
         return;
+      }
+
+      if (user.role === 'guest' || user.isGuest) {
+          setIsLoading(false);
+          return;
       }
 
       try {
@@ -52,11 +58,11 @@ const Profile = () => {
             : 0;
           setGuessAccuracy(accuracy);
         } else {
-          toast.error(result.message || "Failed to load profile");
+          toast({ title: result.message || "Failed to load profile", variant: "destructive" });
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
-        toast.error("Error loading profile");
+        toast({ title: "Error loading profile", variant: "destructive" });
       } finally {
         setIsLoading(false);
       }
@@ -225,6 +231,21 @@ const Profile = () => {
         <Loader className="w-10 h-10 animate-spin text-primary" />
       </div>
     );
+  }
+
+  const user = authApi.getUser();
+  if (user && (user.role === 'guest' || user.isGuest)) {
+      return (
+        <div className="h-[300px] flex flex-col items-center justify-center p-4 gap-4">
+            <div className="text-center space-y-2">
+                <h2 className="text-2xl font-bold">Hồ sơ người chơi</h2>
+                <p className="text-muted-foreground">Vui lòng đăng nhập để xem và chỉnh sửa hồ sơ của bạn.</p>
+            </div>
+            <GameButton variant="primary" onClick={() => navigate("/login")}>
+                Đăng nhập ngay
+            </GameButton>
+        </div>
+      );
   }
 
   return (

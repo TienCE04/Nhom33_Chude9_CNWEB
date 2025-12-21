@@ -9,6 +9,13 @@ const ROOMS_SET_KEY = "rooms";
 const roomKey = (id) => `room:${id}`;
 
 exports.createRoom = async (ctx) => {
+  // Check if user is guest
+  if (ctx.User.role === 'guest' || (ctx.User.id && ctx.User.id.toString().startsWith('guest_'))) {
+      ctx.status = 403;
+      ctx.body = { success: false, message: "Vui lòng đăng nhập để tạo phòng" };
+      return;
+  }
+
   const schema = Joi.object({
     id: Joi.string().optional(),
     name: Joi.string().required(),

@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Eye, EyeOff, AlertCircle, X, Save } from "lucide-react";
 import { authApi } from "@/lib/api";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const { toast } = useToast();
   
   // Password visibility states
   const [showOldPassword, setShowOldPassword] = useState(false);
@@ -48,30 +49,30 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
 
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmNewPassword) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
+      toast({ title: "Vui lòng điền đầy đủ thông tin", variant: "destructive" });
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      toast.error("Mật khẩu mới không khớp");
+      toast({ title: "Mật khẩu mới không khớp", variant: "destructive" });
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+      toast({ title: "Mật khẩu mới phải có ít nhất 6 ký tự", variant: "destructive" });
       return;
     }
 
     try {
       const result = await authApi.changePassword(oldPassword, newPassword);
       if (result.success) {
-        toast.success("Đổi mật khẩu thành công");
+        toast({ title: "Đổi mật khẩu thành công", variant: "success" });
         onClose();
       } else {
-        toast.error(result.message || "Đổi mật khẩu thất bại");
+        toast({ title: result.message || "Đổi mật khẩu thất bại", variant: "destructive" });
       }
     } catch (error) {
-      toast.error("Lỗi kết nối");
+      toast({ title: "Lỗi kết nối", variant: "destructive" });
     }
   };
 

@@ -14,13 +14,14 @@ const Login = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [regTab, setRegTab] = useState("account");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPlayNowLoading, setIsPlayNowLoading] = useState(false);
+  const [isLoginLoading, setIsLoginLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      setIsLoading(true);
+      setIsLoginLoading(true);
       try {
         // Gọi API backend với access token từ Google
         const result = await authApi.googleLogin(tokenResponse.access_token);
@@ -50,7 +51,7 @@ const Login = () => {
         });
         console.error("Google login error:", error);
       } finally {
-        setIsLoading(false);
+        setIsLoginLoading(false);
       }
     },
     onError: (error) => {
@@ -65,7 +66,7 @@ const Login = () => {
 
   const handlePlayNow = async () => {
     if (!nicknameLogin.trim()) return;
-    setIsLoading(true);
+    setIsPlayNowLoading(true);
 
     try {
       // BƯỚC 1: Xin Token từ Server (Thay cho việc tự fake localStorage)
@@ -100,13 +101,17 @@ const Login = () => {
       console.error("Lỗi:", error);
       toast({ title: "Lỗi kết nối", variant: "destructive" });
     } finally {
-      setIsLoading(false);
+      setIsPlayNowLoading(false);
     }
   };
 
   const handleCreateRoom = () => {
     if (nicknameLogin.trim()) {
-      navigate("/create/room");
+      toast({
+        title: "Yêu cầu đăng nhập",
+        description: "Vui lòng đăng nhập để tạo phòng",
+        variant: "destructive",
+      });
     }
   };
 
@@ -142,7 +147,7 @@ const Login = () => {
       return;
     }
 
-    setIsLoading(true);
+    setIsLoginLoading(true);
     try {
       const result = await authApi.login(username, password);
 
@@ -177,7 +182,7 @@ const Login = () => {
       });
       console.error("Login error:", error);
     } finally {
-      setIsLoading(false);
+      setIsLoginLoading(false);
     }
   };
 
@@ -198,7 +203,7 @@ const Login = () => {
           {/* Guess Block */}
           <div className="bg-card p-6 rounded-lg shadow-md flex flex-col">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <LogIn className="w-6 h-6" />Đoán
+              <LogIn className="w-6 h-6" />Khách
             </h2>
             <div className="flex flex-col justify-center flex-1">
               <input
@@ -216,10 +221,11 @@ const Login = () => {
                   variant="primary"
                   size="lg"
                   onClick={handlePlayNow}
-                  disabled={!nicknameLogin.trim()}
-                  className="w-full"
+                  disabled={!nicknameLogin.trim() || isPlayNowLoading}
+                  className="w-full flex items-center justify-center gap-2"
                 >
-                  Chơi Ngay
+                  {isPlayNowLoading && <Loader className="w-4 h-4 animate-spin" />}
+                  {isPlayNowLoading ? "Đang vào..." : "Chơi Ngay"}
                 </GameButton>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -315,11 +321,11 @@ const Login = () => {
                   variant="primary"
                   size="md"
                   onClick={handleLogin}
-                  disabled={isLoading}
+                  disabled={isLoginLoading}
                   className="w-full flex items-center justify-center gap-2"
                 >
-                  {isLoading && <Loader className="w-4 h-4 animate-spin" />}
-                  {isLoading ? "Đang đăng nhập..." : "Đăng Nhập để Chơi"}
+                  {isLoginLoading && <Loader className="w-4 h-4 animate-spin" />}
+                  {isLoginLoading ? "Đang đăng nhập..." : "Đăng Nhập để Chơi"}
                 </GameButton>
 
                 <p className="text-center text-sm text-muted-foreground mt-3">
@@ -341,7 +347,7 @@ const Login = () => {
                   <GameButton
                     className="w-full flex items-center justify-center gap-3 bg-white text-slate-800 border border-slate-200 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => googleLogin()}
-                    disabled={isLoading}
+                    disabled={isLoginLoading}
                     aria-label="Đăng nhập với Google"
                   >
                     {/* Google SVG */}
