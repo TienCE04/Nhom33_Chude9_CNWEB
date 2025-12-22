@@ -1,8 +1,11 @@
 import { GameButton } from "@/components/GameButton";
 import { Ban, Check } from "lucide-react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 
 export const PlayRulePopup = ({ topic, onConfirm, onClose, roomType }) => {
+  const { t } = useTranslation();
+
   return createPortal(
     // Lớp phủ (Overlay)
     <div 
@@ -18,7 +21,7 @@ export const PlayRulePopup = ({ topic, onConfirm, onClose, roomType }) => {
         
         {/* Tiêu đề */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground font-bold text-2xl px-8 py-2 rounded-full shadow-lg border-4 border-white">
-          LUẬT CHƠI
+          {t('modals.playRule.title')}
         </div>
 
         {/* Nội dung */}
@@ -27,16 +30,16 @@ export const PlayRulePopup = ({ topic, onConfirm, onClose, roomType }) => {
           {/* Thông tin game */}
           <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
             <div>
-              <h4 className="font-bold text-muted-foreground uppercase">Chủ đề</h4>
+              <h4 className="font-bold text-muted-foreground uppercase">{t('modals.playRule.topic')}</h4>
               <p className="font-semibold text-lg text-primary">{topic.label}</p>
             </div>
             <div>
-              <h4 className="font-bold text-muted-foreground uppercase">Mục tiêu</h4>
-              <p className="font-semibold text-lg">120 các điểm</p>
+              <h4 className="font-bold text-muted-foreground uppercase">{t('modals.playRule.goal')}</h4>
+              <p className="font-semibold text-lg">{t('modals.playRule.points', { count: 120 })}</p>
             </div>
             <div>
-              <h4 className="font-bold text-muted-foreground uppercase">Ngôn ngữ</h4>
-              <p className="font-semibold text-lg">Tiếng Việt</p>
+              <h4 className="font-bold text-muted-foreground uppercase">{t('modals.playRule.language')}</h4>
+              <p className="font-semibold text-lg">{t('modals.playRule.vietnamese')}</p>
             </div>
           </div>
 
@@ -54,7 +57,7 @@ export const PlayRulePopup = ({ topic, onConfirm, onClose, roomType }) => {
           
           {/* Văn bản luật chơi */}
           <p className="text-lg font-semibold text-foreground px-4">
-            Không vẽ chữ cái, số, và kí hiệu, ok?
+            {t('modals.playRule.ruleDescription')}
           </p>
         </div>
 
@@ -66,7 +69,7 @@ export const PlayRulePopup = ({ topic, onConfirm, onClose, roomType }) => {
           className="w-full sm:w-auto mx-auto"
         >
           <Check className="w-5 h-5 mr-2" />
-          XÁC NHẬN
+          {t('modals.playRule.confirm')}
         </GameButton>
       </div>
     </div>,

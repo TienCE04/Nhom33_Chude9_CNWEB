@@ -6,8 +6,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDiscord } from "@fortawesome/free-brands-svg-icons";
 import { authApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 const Register = () => {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,32 +28,32 @@ const Register = () => {
   const handleRegister = async () => {
     if (!username.trim()) {
       toast({
-        title: "Lỗi",
-        description: "Tên đăng nhập là bắt buộc",
+        title: t('common.error'),
+        description: t('register.usernameRequired'),
         variant: "destructive",
       });
       return;
     }
     if (!email.trim()) {
       toast({
-        title: "Lỗi",
-        description: "Email là bắt buộc",
+        title: t('common.error'),
+        description: t('register.emailRequired'),
         variant: "destructive",
       });
       return;
     }
     if (password.length < 4) {
       toast({
-        title: "Lỗi",
-        description: "Mật khẩu phải có ít nhất 4 ký tự",
+        title: t('common.error'),
+        description: t('register.passwordMinLength'),
         variant: "destructive",
       });
       return;
     }
     if (password !== confirmPassword) {
       toast({
-        title: "Lỗi",
-        description: "Mật khẩu không khớp",
+        title: t('common.error'),
+        description: t('register.passwordMismatch'),
         variant: "destructive",
       });
       return;
@@ -63,23 +65,23 @@ const Register = () => {
       
       if (result.success) {
         toast({
-          title: "Đăng ký thành công!",
-          description: "Vui lòng đăng nhập với tài khoản của bạn",
+          title: t('register.registerSuccess'),
+          description: t('register.registerSuccessDesc'),
           variant: "success",
         });
         
         setTimeout(() => navigate("/login"), 1500);
       } else {
         toast({
-          title: "Đăng ký thất bại",
-          description: result.message || "Có lỗi xảy ra, vui lòng thử lại",
+          title: t('register.registerFailed'),
+          description: result.message || t('login.errorOccurred'),
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Lỗi kết nối",
-        description: "Vui lòng thử lại sau",
+        title: t('login.connectionError'),
+        description: t('login.tryAgainLater'),
         variant: "destructive",
       });
       console.error("Register error:", error);
@@ -96,7 +98,7 @@ const Register = () => {
           <h1 className="text-4xl md:text-6xl font-extrabold text-foreground">Drawify</h1>
         </div>
         <p className="text-lg md:text-xl text-muted-foreground font-semibold">
-          Vẽ, Đoán & Vui cùng bạn bè!
+          {t('register.subtitle')}
         </p>
       </div>
 
@@ -105,7 +107,7 @@ const Register = () => {
           <div className="bg-card p-6 rounded-lg shadow-md">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold flex items-center gap-2">
-                <Users className="w-6 h-6" /> Đăng Ký
+                <Users className="w-6 h-6" /> {t('register.title')}
               </h2>
               {/* Tabs nav */}
               <div className="inline-flex rounded-full bg-transparent p-1 shadow-sm">
@@ -118,7 +120,7 @@ const Register = () => {
                       : "text-muted-foreground bg-card")
                   }
                 >
-                  Tài khoản
+                  {t('register.accountTab')}
                 </button>
                 <button
                   onClick={() => setRegTab("social")}
@@ -129,7 +131,7 @@ const Register = () => {
                       : "text-muted-foreground bg-card")
                   }
                 >
-                  Mạng xã hội
+                  {t('register.socialTab')}
                 </button>
               </div>
             </div>
@@ -143,11 +145,11 @@ const Register = () => {
                 {/* Username Field */}
                 <div className="mb-3">
                   <label className="block text-sm font-medium mb-1 text-left">
-                    Tên đăng nhập <span className="text-red-500">*</span>
+                    {t('register.usernameLabel')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    placeholder="Nhập tên đăng nhập"
+                    placeholder={t('register.usernamePlaceholder')}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     onFocus={() => setTouched({ ...touched, username: true })}
@@ -157,7 +159,7 @@ const Register = () => {
                   />
                   {touched.username && !username.trim() && (
                     <p className="text-xs text-red-500 mt-1 text-left">
-                      Tên đăng nhập là bắt buộc
+                      {t('register.usernameRequired')}
                     </p>
                   )}
                 </div>
@@ -165,11 +167,11 @@ const Register = () => {
                 {/* Nickname Field */}
                 <div className="mb-3">
                   <label className="block text-sm font-medium mb-1 text-left">
-                    Biệt danh (không bắt buộc)
+                    {t('register.nicknameLabel')}
                   </label>
                   <input
                     type="text"
-                    placeholder="Nhập biệt danh hiển thị"
+                    placeholder={t('register.nicknamePlaceholder')}
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
                     className="input-rounded w-full text-center text-lg"
@@ -181,11 +183,11 @@ const Register = () => {
                 {/* Email Field */}
                 <div className="mb-3">
                   <label className="block text-sm font-medium mb-1 text-left">
-                    Email <span className="text-red-500">*</span>
+                    {t('register.emailLabel')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
-                    placeholder="Nhập email của bạn"
+                    placeholder={t('register.emailPlaceholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="input-rounded w-full text-center text-lg"
@@ -196,11 +198,11 @@ const Register = () => {
                 {/* Password Field */}
                 <div className="mb-3">
                   <label className="block text-sm font-medium mb-1 text-left">
-                    Mật khẩu <span className="text-red-500">*</span>
+                    {t('register.passwordLabel')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="password"
-                    placeholder="Nhập mật khẩu"
+                    placeholder={t('register.passwordPlaceholder')}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onFocus={() => setTouched({ ...touched, password: true })}
@@ -209,7 +211,7 @@ const Register = () => {
                   />
                   {touched.password && !password.trim() && (
                     <p className="text-xs text-red-500 mt-1 text-left">
-                      Mật khẩu là bắt buộc
+                      {t('register.passwordMinLength')}
                     </p>
                   )}
                 </div>
@@ -217,11 +219,11 @@ const Register = () => {
                 {/* Confirm Password Field */}
                 <div className="mb-3">
                   <label className="block text-sm font-medium mb-1 text-left">
-                    Xác nhận mật khẩu <span className="text-red-500">*</span>
+                    {t('register.confirmPasswordLabel')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="password"
-                    placeholder="Xác nhận mật khẩu"
+                    placeholder={t('register.confirmPasswordPlaceholder')}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     onFocus={() => setTouched({ ...touched, confirmPassword: true })}
@@ -230,7 +232,7 @@ const Register = () => {
                   />
                   {touched.confirmPassword && !confirmPassword.trim() && (
                     <p className="text-xs text-red-500 mt-1 text-left">
-                      Xác nhận mật khẩu là bắt buộc
+                      {t('register.passwordMismatch')}
                     </p>
                   )}
                 </div>
@@ -243,16 +245,16 @@ const Register = () => {
                   className="w-full flex items-center justify-center gap-2"
                 >
                   {isLoading && <Loader className="w-4 h-4 animate-spin" />}
-                  {isLoading ? "Đang đăng ký..." : "Đăng Ký & Chơi"}
+                  {isLoading ? t('register.registering') : t('register.registerButton')}
                 </GameButton>
 
                 <p className="text-center text-sm text-muted-foreground mt-3">
-                  Đã có tài khoản?{" "}
+                  {t('register.loginPrompt')}{" "}
                   <button
                     onClick={() => navigate("/login")}
                     className="text-primary font-semibold hover:underline"
                   >
-                    Đăng nhập tại đây
+                    {t('register.loginLink')}
                   </button>
                 </p>
               </div>
@@ -263,14 +265,14 @@ const Register = () => {
                 }`}
               >
                 <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground text-center mb-2">
-                    Sử dụng tài khoản Google hoặc Discord để đăng ký nhanh chóng.
-                  </p>
+                  {/* <p className="text-sm text-muted-foreground text-center mb-2">
+                    {t('login.socialTab')}
+                  </p> */}
 
                   <GameButton
                     className="w-full flex items-center justify-center gap-3 bg-white text-slate-800 border border-slate-200 hover:shadow-md"
                     onClick={() => navigate("/lobby")}
-                    aria-label="Sign up with Google"
+                    aria-label={t('login.googleLogin')}
                   >
                     {/* Google SVG */}
                     <svg
@@ -296,16 +298,16 @@ const Register = () => {
                         fill="#EA4335"
                       />
                     </svg>
-                    <span>Đăng ký với Google</span>
+                    <span>{t('login.googleLogin')}</span>
                   </GameButton>
 
                   <GameButton
                     className="w-full flex items-center justify-center gap-3 bg-indigo-600 text-white hover:bg-indigo-700"
                     onClick={() => navigate("/lobby")}
-                    aria-label="Đăng ký với Discord"
+                    aria-label={t('login.discordLogin')}
                   >
                     <FontAwesomeIcon icon={faDiscord} className="w-5 h-5" />
-                    <span>Đăng ký với Discord</span>
+                    <span>{t('login.discordLogin')}</span>
                   </GameButton>
                 </div>
               </div>

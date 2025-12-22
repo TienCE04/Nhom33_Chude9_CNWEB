@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { GameButton } from "./GameButton";
+import { useTranslation } from "react-i18next";
 
 export const JoinRoomModal = ({ 
   isOpen, 
@@ -10,6 +11,8 @@ export const JoinRoomModal = ({
   onJoin, 
   isJoining 
 }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   return createPortal(
@@ -25,23 +28,23 @@ export const JoinRoomModal = ({
 
         <div className="text-center space-y-2">
           <h2 className="text-3xl font-black text-primary uppercase tracking-wider">
-            Vào phòng
+            {t('modals.joinRoom.title')}
           </h2>
           <p className="text-muted-foreground">
-            Nhập mã phòng để tham gia trò chơi
+            {t('modals.joinRoom.description')}
           </p>
         </div>
 
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-bold mb-2 text-foreground/80 uppercase tracking-wide">
-              Mã phòng
+              {t('modals.joinRoom.roomCode')}
             </label>
             <input
               type="text"
               value={roomCode}
               onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-              placeholder="GAME-1234"
+              placeholder={t('modals.joinRoom.placeholder')}
               className="w-full input-rounded py-4 px-4 text-center text-2xl font-black uppercase tracking-widest font-mono border-2 border-border focus:border-primary transition-colors bg-background"
               onKeyPress={(e) => e.key === 'Enter' && onJoin()}
               autoFocus
@@ -55,7 +58,7 @@ export const JoinRoomModal = ({
               onClick={onClose}
               className="flex-1"
             >
-              Hủy
+              {t('modals.joinRoom.cancel')}
             </GameButton>
             <GameButton
               variant="success"
@@ -64,7 +67,7 @@ export const JoinRoomModal = ({
               disabled={isJoining || !roomCode.trim()}
               className="flex-1"
             >
-              {isJoining ? "Đang vào..." : "Tham gia"}
+              {isJoining ? t('modals.joinRoom.joining') : t('modals.joinRoom.join')}
             </GameButton>
           </div>
         </div>

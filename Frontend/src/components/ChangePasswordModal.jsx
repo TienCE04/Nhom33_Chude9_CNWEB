@@ -3,8 +3,10 @@ import { createPortal } from "react-dom";
 import { Eye, EyeOff, AlertCircle, X, Save } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 const ChangePasswordModal = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
@@ -49,30 +51,30 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
 
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword || !confirmNewPassword) {
-      toast({ title: "Vui lòng điền đầy đủ thông tin", variant: "destructive" });
+      toast({ title: t('modals.changePassword.fillAllFields'), variant: "destructive" });
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      toast({ title: "Mật khẩu mới không khớp", variant: "destructive" });
+      toast({ title: t('modals.changePassword.passwordMismatch'), variant: "destructive" });
       return;
     }
 
     if (newPassword.length < 6) {
-      toast({ title: "Mật khẩu mới phải có ít nhất 6 ký tự", variant: "destructive" });
+      toast({ title: t('modals.changePassword.passwordMinLength'), variant: "destructive" });
       return;
     }
 
     try {
       const result = await authApi.changePassword(oldPassword, newPassword);
       if (result.success) {
-        toast({ title: "Đổi mật khẩu thành công", variant: "success" });
+        toast({ title: t('modals.changePassword.success'), variant: "success" });
         onClose();
       } else {
-        toast({ title: result.message || "Đổi mật khẩu thất bại", variant: "destructive" });
+        toast({ title: result.message || t('modals.changePassword.failure'), variant: "destructive" });
       }
     } catch (error) {
-      toast({ title: "Lỗi kết nối", variant: "destructive" });
+      toast({ title: t('modals.changePassword.connectionError'), variant: "destructive" });
     }
   };
 
@@ -88,7 +90,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
       >
         {/* Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-border">
-          <h3 className="text-xl font-bold text-foreground">Đổi mật khẩu</h3>
+          <h3 className="text-xl font-bold text-foreground">{t('modals.changePassword.title')}</h3>
           <button 
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground transition-colors"
@@ -102,7 +104,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
           {/* Current Password */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-muted-foreground">
-              Mật khẩu hiện tại <span className="text-red-500">*</span>
+              {t('modals.changePassword.currentPassword')} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <input
@@ -110,7 +112,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 value={oldPassword}
                 onChange={(e) => setOldPassword(e.target.value)}
                 className="input-rounded w-full"
-                placeholder="Nhập mật khẩu hiện tại"
+                placeholder={t('modals.changePassword.currentPasswordPlaceholder')}
                 autoComplete="new-password"
               />
               <button
@@ -126,7 +128,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
           {/* New Password */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-muted-foreground">
-              Mật khẩu mới <span className="text-red-500">*</span>
+              {t('modals.changePassword.newPassword')} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <input
@@ -134,7 +136,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="input-rounded w-full"
-                placeholder="Nhập mật khẩu mới"
+                placeholder={t('modals.changePassword.newPasswordPlaceholder')}
                 autoComplete="new-password"
               />
               <button
@@ -150,14 +152,14 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
             <div className="mt-2">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-xs text-muted-foreground">
-                  Độ mạnh mật khẩu: <span className={`font-medium ${
+                  {t('modals.changePassword.passwordStrength')}: <span className={`font-medium ${
                     passwordStrength === 0 ? 'text-muted-foreground' :
                     passwordStrength === 1 ? 'text-red-500' :
                     passwordStrength === 2 ? 'text-yellow-500' : 'text-green-500'
                   }`}>
-                    {passwordStrength === 0 ? 'Chưa nhập' :
-                     passwordStrength === 1 ? 'Yếu' :
-                     passwordStrength === 2 ? 'Trung bình' : 'Mạnh'}
+                    {passwordStrength === 0 ? t('modals.changePassword.strength.none') :
+                     passwordStrength === 1 ? t('modals.changePassword.strength.weak') :
+                     passwordStrength === 2 ? t('modals.changePassword.strength.medium') : t('modals.changePassword.strength.strong')}
                   </span>
                 </span>
               </div>
@@ -166,14 +168,14 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                 <span className={`w-1/3 rounded-full transition-all duration-300 ${passwordStrength >= 2 ? 'bg-yellow-500' : 'bg-muted'}`}></span>
                 <span className={`w-1/3 rounded-full transition-all duration-300 ${passwordStrength >= 3 ? 'bg-green-500' : 'bg-muted'}`}></span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Sử dụng ít nhất 8 ký tự, bao gồm chữ hoa, số và ký tự đặc biệt.</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('modals.changePassword.strengthHint')}</p>
             </div>
           </div>
 
           {/* Confirm Password */}
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-muted-foreground">
-              Xác nhận mật khẩu mới <span className="text-red-500">*</span>
+              {t('modals.changePassword.confirmNewPassword')} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <input
@@ -185,7 +187,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
                     ? 'border-red-500 focus:ring-red-500' 
                     : 'focus:ring-ring'
                 }`}
-                placeholder="Nhập lại mật khẩu mới"
+                placeholder={t('modals.changePassword.confirmNewPasswordPlaceholder')}
                 autoComplete="new-password"
               />
               <button
@@ -199,7 +201,7 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
             {confirmNewPassword && newPassword !== confirmNewPassword && (
               <p className="text-xs text-red-500 flex items-center mt-1">
                 <AlertCircle className="w-3 h-3 mr-1" />
-                Mật khẩu không khớp
+                {t('modals.changePassword.passwordMismatch')}
               </p>
             )}
           </div>
@@ -212,14 +214,14 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
             className="flex-1 px-4 py-2.5 rounded-lg bg-success text-success-foreground font-medium hover:brightness-110 transition-all flex items-center justify-center"
           >
             <Save className="w-5 h-5 mr-2" />
-            Lưu thay đổi
+            {t('modals.changePassword.saveChanges')}
           </button>
           <button
             onClick={onClose}
             className="flex-1 px-4 py-2.5 rounded-lg bg-danger text-danger-foreground font-medium hover:brightness-110 transition-all flex items-center justify-center"
           >
             <X className="w-5 h-5 mr-2" />
-            Hủy
+            {t('modals.changePassword.cancel')}
           </button>
         </div>
       </div>

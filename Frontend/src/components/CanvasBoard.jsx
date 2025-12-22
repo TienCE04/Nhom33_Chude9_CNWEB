@@ -2,19 +2,21 @@ import { useRef, useEffect, useState, useLayoutEffect } from "react";
 import { Brush, Eraser, Trash2, Lightbulb } from "lucide-react";
 import { GameButton } from "./GameButton";
 import { socket } from "@/lib/socket";
+import { useTranslation } from "react-i18next";
 
 const COLORS = [
   "#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF",
   "#FFFF00", "#FF00FF", "#00FFFF", "#FFA500", "#800080",
 ];
 
-const BRUSH_SIZES = [
-  { size: 3, label: "Nhỏ" },
-  { size: 8, label: "Vừa" },
-  { size: 16, label: "Lớn" },
-];
-
 export const CanvasBoard = ({ canDraw = true, keyword }) => {
+  const { t } = useTranslation();
+  const BRUSH_SIZES = [
+    { size: 3, label: t('canvas.brushSizeSmall') },
+    { size: 8, label: t('canvas.brushSizeMedium') },
+    { size: 16, label: t('canvas.brushSizeLarge') },
+  ];
+
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState("#000000");
@@ -194,7 +196,7 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
                 size="sm"
                 onClick={() => handleToolClick("brush")}
                 className="w-12 h-12 p-0"
-                title="Bút vẽ"
+                title={t('canvas.brushTool')}
               >
                 <Brush className="w-5 h-5" />
               </GameButton>
@@ -204,7 +206,7 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
                 size="sm"
                 onClick={() => handleToolClick("eraser")}
                 className="w-12 h-12 p-0"
-                title="Tẩy"
+                title={t('canvas.eraserTool')}
               >
                 <Eraser className="w-5 h-5" />
               </GameButton>
@@ -233,7 +235,7 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
               size="sm"
               onClick={clearCanvas}
               className="w-12 h-12 p-0"
-              title="Xóa bảng"
+              title={t('canvas.clearCanvas')}
             >
               <Trash2 className="w-5 h-5" />
             </GameButton>
@@ -321,7 +323,7 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
             onClick={handleRequestHint}
             disabled={hintLevel >= 3}
             className="!p-0 rounded-full w-12 h-12 border-4 border-white shadow-lg"
-            title="Gợi ý"
+            title={t('canvas.hint')}
           >
             <Lightbulb className={`w-5 h-5 ${hintLevel >= 3 ? 'text-gray-400' : 'text-red-500'}`} />
           </GameButton>

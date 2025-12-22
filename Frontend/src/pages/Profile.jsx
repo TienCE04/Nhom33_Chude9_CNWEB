@@ -6,8 +6,10 @@ import { GameButton } from "@/components/GameButton";
 import ChangePasswordModal from "@/components/ChangePasswordModal";
 import { playerApi, authApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 const Profile = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -57,11 +59,11 @@ const Profile = () => {
             : 0;
           setGuessAccuracy(accuracy);
         } else {
-          toast({ title: result.message || "Failed to load profile", variant: "destructive" });
+          toast({ title: result.message || t('profile.loadFail'), variant: "destructive" });
         }
       } catch (error) {
         console.error("Error fetching profile:", error);
-        toast({ title: "Error loading profile", variant: "destructive" });
+        toast({ title: t('profile.loadError'), variant: "destructive" });
       } finally {
         setIsLoading(false);
       }
@@ -233,11 +235,11 @@ const Profile = () => {
       return (
         <div className="h-[300px] flex flex-col items-center justify-center p-4 gap-4">
             <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold">Hồ sơ người chơi</h2>
-                <p className="text-muted-foreground">Vui lòng đăng nhập để xem và chỉnh sửa hồ sơ của bạn.</p>
+                <h2 className="text-2xl font-bold">{t('profile.playerProfile')}</h2>
+                <p className="text-muted-foreground">{t('profile.loginToView')}</p>
             </div>
             <GameButton variant="primary" onClick={() => navigate("/login")}>
-                Đăng nhập ngay
+                {t('profile.loginNow')}
             </GameButton>
         </div>
       );
@@ -274,7 +276,7 @@ const Profile = () => {
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
               <div className="text-right mr-4">
-                <p className="text-sm text-muted-foreground">Xếp hạng</p>
+                <p className="text-sm text-muted-foreground">{t('profile.rank')}</p>
                 <p className="text-xl font-bold text-primary">#{ranking}</p>
               </div>
             </div>
@@ -287,7 +289,7 @@ const Profile = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <User className="w-6 h-6 text-primary" />
-                <h2 className="text-2xl font-bold">Thông tin cá nhân</h2>
+                <h2 className="text-2xl font-bold">{t('profile.personalInfo')}</h2>
               </div>
               {!isEditingPersonal ? (
                 <GameButton
@@ -319,7 +321,7 @@ const Profile = () => {
 
             <div>
               <label className="block font-semibold mb-2 text-sm text-muted-foreground">
-                Họ và tên
+                {t('profile.fullName')}
               </label>
               <input
                 type="text"
@@ -327,14 +329,14 @@ const Profile = () => {
                 onChange={(e) => setFullName(e.target.value)}
                 disabled={!isEditingPersonal}
                 className={`input-rounded w-full ${!isEditingPersonal ? 'bg-muted cursor-not-allowed opacity-75' : ''}`}
-                placeholder="Nhập họ và tên"
+                placeholder={t('profile.enterFullName')}
               />
             </div>
 
             <div>
               <label className="block font-semibold mb-2 text-sm text-muted-foreground flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                Ngày tháng năm sinh
+                {t('profile.dob')}
               </label>
               <input
                 type="date"
@@ -351,7 +353,7 @@ const Profile = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Lock className="w-6 h-6 text-primary" />
-                <h2 className="text-2xl font-bold">Thông tin tài khoản</h2>
+                <h2 className="text-2xl font-bold">{t('profile.accountInfo')}</h2>
               </div>
               {!isEditingAccount ? (
                 <GameButton
@@ -391,14 +393,14 @@ const Profile = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={!isEditingAccount}
                 className={`input-rounded w-full ${!isEditingAccount ? 'bg-muted cursor-not-allowed opacity-75' : ''}`}
-                placeholder="Nhập username"
+                placeholder={t('profile.enterUsername')}
               />
             </div>
 
             <div>
               <label className="block font-semibold mb-2 text-sm text-muted-foreground flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Email
+                {t('profile.email')}
               </label>
               <input
                 type="email"
@@ -406,7 +408,7 @@ const Profile = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={!isEditingAccount}
                 className={`input-rounded w-full ${!isEditingAccount ? 'bg-muted cursor-not-allowed opacity-75' : ''}`}
-                placeholder="Nhập email"
+                placeholder={t('profile.enterEmail')}
               />
             </div>
 
@@ -414,7 +416,7 @@ const Profile = () => {
               <div className="flex items-center justify-between">
                 <label className="font-semibold text-sm text-muted-foreground flex items-center gap-2">
                   <Lock className="w-4 h-4" />
-                  Mật khẩu
+                  {t('profile.password')}
                 </label>
                 <GameButton 
                   variant="secondary" 
@@ -422,7 +424,7 @@ const Profile = () => {
                   onClick={handleOpenChangePasswordModal}
                   className="whitespace-nowrap"
                 >
-                  Đổi mật khẩu
+                  {t('profile.changePassword')}
                 </GameButton>
               </div>
             </div>
@@ -433,7 +435,7 @@ const Profile = () => {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <Gamepad2 className="w-6 h-6 text-primary" />
-                <h2 className="text-2xl font-bold">Thống kê trò chơi</h2>
+                <h2 className="text-2xl font-bold">{t('profile.gameStats')}</h2>
               </div>
             </div>
 
@@ -443,7 +445,7 @@ const Profile = () => {
                   <div className="p-2 bg-primary/20 rounded-lg">
                     <Trophy className="w-5 h-5 text-primary" />
                   </div>
-                  <span className="font-medium">Tổng số trận</span>
+                  <span className="font-medium">{t('profile.totalGames')}</span>
                 </div>
                 <span className="text-xl font-bold">{totalGames}</span>
               </div>
@@ -453,7 +455,7 @@ const Profile = () => {
                   <div className="p-2 bg-success/20 rounded-lg">
                     <Brush className="w-5 h-5 text-success" />
                   </div>
-                  <span className="font-medium">Số từ đã vẽ</span>
+                  <span className="font-medium">{t('profile.wordsDrawn')}</span>
                 </div>
                 <span className="text-xl font-bold">{wordsDrawn}</span>
               </div>
@@ -463,7 +465,7 @@ const Profile = () => {
                   <div className="p-2 bg-secondary/20 rounded-lg">
                     <MessageSquare className="w-5 h-5 text-secondary" />
                   </div>
-                  <span className="font-medium">Số từ đã đoán</span>
+                  <span className="font-medium">{t('profile.wordsGuessed')}</span>
                 </div>
                 <span className="text-xl font-bold">{wordsGuessed}</span>
               </div>
@@ -473,7 +475,7 @@ const Profile = () => {
                   <div className="p-2 bg-yellow-500/20 rounded-lg">
                     <Target className="w-5 h-5 text-yellow-500" />
                   </div>
-                  <span className="font-medium">Độ chính xác</span>
+                  <span className="font-medium">{t('profile.accuracy')}</span>
                 </div>
                 <span className="text-xl font-bold">{guessAccuracy}%</span>
               </div>
@@ -485,7 +487,7 @@ const Profile = () => {
         <div className="game-card mt-6">
           <div className="flex items-center gap-3 mb-6">
             <Trophy className="w-6 h-6 text-primary" />
-            <h2 className="text-2xl font-bold">Thành tích</h2>
+            <h2 className="text-2xl font-bold">{t('profile.achievements')}</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -494,7 +496,7 @@ const Profile = () => {
               <div className="flex items-center justify-center mb-2">
                 <Award className="w-8 h-8 text-primary" />
               </div>
-              <p className="text-sm text-muted-foreground mb-1">Vị trí xếp hạng</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('profile.rankPosition')}</p>
               <p className="text-3xl font-bold text-primary">#{ranking}</p>
             </div>
 
@@ -503,7 +505,7 @@ const Profile = () => {
               <div className="flex items-center justify-center mb-2">
                 <Medal className="w-8 h-8 text-yellow-500" />
               </div>
-              <p className="text-sm text-muted-foreground mb-1">Cúp vàng</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('profile.goldMedal')}</p>
               <p className="text-3xl font-bold text-yellow-600">{goldMedals}</p>
             </div>
 
@@ -512,7 +514,7 @@ const Profile = () => {
               <div className="flex items-center justify-center mb-2">
                 <Medal className="w-8 h-8 text-gray-500" />
               </div>
-              <p className="text-sm text-muted-foreground mb-1">Cúp bạc</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('profile.silverMedal')}</p>
               <p className="text-3xl font-bold text-gray-600">{silverMedals}</p>
             </div>
 
@@ -521,7 +523,7 @@ const Profile = () => {
               <div className="flex items-center justify-center mb-2">
                 <Medal className="w-8 h-8 text-amber-700" />
               </div>
-              <p className="text-sm text-muted-foreground mb-1">Cúp đồng</p>
+              <p className="text-sm text-muted-foreground mb-1">{t('profile.bronzeMedal')}</p>
               <p className="text-3xl font-bold text-amber-700">{bronzeMedals}</p>
             </div>
           </div>
@@ -547,7 +549,7 @@ const Profile = () => {
             </button>
 
             <div className="flex flex-col items-center gap-6 p-6">
-              <h2 className="text-2xl font-bold">Ảnh đại diện</h2>
+              <h2 className="text-2xl font-bold">{t('profile.avatar')}</h2>
               
               {/* Avatar display */}
               <div className="flex justify-center">
@@ -572,7 +574,7 @@ const Profile = () => {
                   onClick={handleEditAvatar}
                 >
                   <Edit2 className="w-5 h-5 mr-2" />
-                  Chỉnh sửa
+                  {t('profile.edit')}
                 </GameButton>
               ) : (
                 <div className="w-full space-y-4">
@@ -585,7 +587,7 @@ const Profile = () => {
                     />
                     <div className="input-rounded w-full flex items-center justify-center gap-2 hover:bg-muted transition-colors py-3">
                       <Camera className="w-5 h-5 text-primary" />
-                      <span>Chọn ảnh đại diện</span>
+                      <span>{t('profile.chooseAvatar')}</span>
                     </div>
                   </label>
                   <div className="flex gap-3">
@@ -596,7 +598,7 @@ const Profile = () => {
                       className="flex-1"
                     >
                       <Save className="w-5 h-5 mr-2" />
-                      Lưu
+                      {t('profile.save')}
                     </GameButton>
                     <GameButton
                       variant="danger"
@@ -605,7 +607,7 @@ const Profile = () => {
                       className="flex-1"
                     >
                       <X className="w-5 h-5 mr-2" />
-                      Hủy
+                      {t('profile.cancel')}
                     </GameButton>
                   </div>
                 </div>

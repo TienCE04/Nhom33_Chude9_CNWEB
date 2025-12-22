@@ -9,12 +9,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Dropdown } from "antd";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { JoinRoomModal } from "@/components/JoinRoomModal";
+import { useTranslation } from "react-i18next";
 
 const MaterialIcon = ({ iconName, className = "" }) => (
   <span className={`material-symbols-rounded ${className}`}>{iconName}</span>
 );
 
 const RoomList = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [rooms, setRooms] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -58,16 +60,16 @@ const RoomList = () => {
           maxPoints: room.maxScore,
           status:
             (room.currentPlayers || 0) >= room.maxPlayer
-              ? "Đã đầy"
-              : "Sẵn sàng",
+              ? t('roomList.full')
+              : t('roomList.ready'),
           username: room.username
         }));
         setRooms(mappedRooms);
       } else {
-        setError(result.message || "Không thể tải danh sách phòng");
+        setError(result.message || t('roomList.fetchError'));
       }
     } catch (err) {
-      setError("Lỗi kết nối");
+      setError(t('roomList.connectionError'));
     } finally {
       setIsLoading(false);
     }
@@ -90,13 +92,13 @@ const RoomList = () => {
     try {
       const result = await roomApi.deleteRoom(roomId);
       if (result.success) {
-        toast({ title: "Xóa phòng thành công", variant: "success" });
+        toast({ title: t('common.success'), variant: "success" });
         setRooms(prev => prev.filter(r => r.id !== roomId));
         if (selectedRoom?.id === roomId) {
           setSelectedRoom(null);
         }
       } else {
-        toast({ title: "Xóa phòng thất bại", description: result.message, variant: "destructive" });
+        toast({ title: t('common.error'), description: result.message, variant: "destructive" });
       }
     } catch (error) {
       console.error("Error deleting room:", error);
@@ -116,7 +118,7 @@ const RoomList = () => {
 
   const handleJoinByCode = async () => {
     if (!roomCode.trim()) {
-      toast({ title: "Vui lòng nhập room code", variant: "destructive" });
+      toast({ title: t('roomList.enterRoomCode'), variant: "destructive" });
       return;
     }
 
@@ -140,18 +142,18 @@ const RoomList = () => {
             currentPlayers: roomData.room.currentPlayers || 0,
             maxPlayers: roomData.room.maxPlayer,
             maxPoints: roomData.room.maxScore,
-            status: (roomData.room.currentPlayers || 0) >= roomData.room.maxPlayer ? "Đã đầy" : "Sẵn sàng",
+            status: (roomData.room.currentPlayers || 0) >= roomData.room.maxPlayer ? t('roomList.full') : t('roomList.ready'),
           };
         }
       }
 
       if (!targetRoom) {
-        toast({ title: "Không tìm thấy phòng với code này", variant: "destructive" });
+        toast({ title: t('roomList.roomNotFound'), variant: "destructive" });
         return;
       }
 
       if (targetRoom.currentPlayers >= targetRoom.maxPlayers) {
-        toast({ title: "Phòng này đã đầy", variant: "destructive" });
+        toast({ title: t('roomList.roomFull'), variant: "destructive" });
         return;
       }
 
@@ -159,13 +161,13 @@ const RoomList = () => {
       socket.emit("join_room", { roomId: targetRoom.id, user: userInfo });
       navigate(`/lobby/${targetRoom.id}`);
 
-      toast({ title: "Vào phòng thành công!", variant: "success" });
+      toast({ title: t('roomList.joinSuccess'), variant: "success" });
       setShowJoinByCodeModal(false);
       setRoomCode("");
       navigate(`/lobby/${targetRoom.id}`);
     } catch (error) {
       console.error("Error joining room by code:", error);
-      toast({ title: "Không thể vào phòng", variant: "destructive" });
+      toast({ title: t('roomList.joinError'), variant: "destructive" });
     } finally {
       setIsJoiningByCode(false);
     }
@@ -174,7 +176,7 @@ const RoomList = () => {
   const handleCreateRoom = () => {
     const userInfo = getUserInfo();
     if (userInfo && (userInfo.role === 'guest' || userInfo.isGuest)) {
-        toast({ title: "Vui lòng đăng nhập để tạo phòng", variant: "destructive" });
+        toast({ title: t('roomList.loginRequired'), variant: "destructive" });
         return;
     }
     navigate("/create/room");
@@ -195,7 +197,7 @@ const RoomList = () => {
         <div className="flex flex-col md:flex-row items-center justify-between mb-4 px-4 md:px-6 gap-4 md:gap-0">
           <div className="flex items-center gap-3">
             <Gamepad2 className="w-8 h-8 text-primary" />
-            <h1 className="text-2xl md:text-3xl font-extrabold">Danh sách phòng chơi</h1>
+            <h1 className="text-2xl md:text-3xl font-extrabold">{t('roomList.title')}</h1>
           </div>
           <div className="flex flex-wrap justify-center items-center gap-3">
             <GameButton
@@ -205,7 +207,7 @@ const RoomList = () => {
               className="flex items-center gap-2"
             >
               <Hash className="w-5 h-5" />
-              Vào bằng code
+              {t('roomList.joinByCode')}
             </GameButton>
             <GameButton
               variant="primary"
@@ -214,7 +216,7 @@ const RoomList = () => {
               className="flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
-              Tạo phòng mới
+              {t('roomList.createRoom')}
             </GameButton>
             <GameButton
               variant="success"
@@ -223,7 +225,7 @@ const RoomList = () => {
               disabled={!selectedRoom || selectedRoom.currentPlayers >= selectedRoom.maxPlayers}
               className="flex items-center gap-2"
             >
-              Vào chơi
+              {t('roomList.join')}
             </GameButton>
           </div>
         </div>
@@ -231,7 +233,7 @@ const RoomList = () => {
         {/* Error Message */}
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong className="font-bold">Lỗi!</strong>
+            <strong className="font-bold">{t('common.error')}!</strong>
             <span className="block sm:inline"> {error}</span>
           </div>
         )}
@@ -252,7 +254,7 @@ const RoomList = () => {
             >
               {/* Status Badge */}
               <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                room.status === "Đã đầy"
+                room.status === t('roomList.full')
                   ? "bg-red-500 text-white"
                   : "bg-primary text-primary-foreground"
               }`}>
@@ -267,13 +269,13 @@ const RoomList = () => {
                       items: [
                         {
                           key: 'edit',
-                          label: 'Chỉnh sửa',
+                          label: t('roomList.edit'),
                           icon: <Edit className="w-4 h-4" />,
                           onClick: ({ domEvent }) => handleEditRoom(room, domEvent)
                         },
                         {
                           key: 'delete',
-                          label: 'Xóa',
+                          label: t('roomList.delete'),
                           icon: <Trash2 className="w-4 h-4 text-danger" />,
                           danger: true,
                           onClick: ({ domEvent }) => handleDeleteRoom(room.id, domEvent)
@@ -346,7 +348,7 @@ const RoomList = () => {
           <div className="text-center py-12">
             <Gamepad2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <p className="text-xl text-muted-foreground">
-              Hiện tại không có phòng chơi nào
+              {t('roomList.empty')}
             </p>
           </div>
         )}
@@ -368,10 +370,10 @@ const RoomList = () => {
           isOpen={deleteModal.isOpen}
           onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
           onConfirm={confirmDeleteRoom}
-          title="Xóa phòng"
-          message="Bạn có chắc chắn muốn xóa phòng này? Hành động này không thể hoàn tác."
-          confirmText="Xóa"
-          cancelText="Hủy"
+          title={t('roomList.deleteConfirmTitle')}
+          message={t('roomList.deleteConfirmMessage')}
+          confirmText={t('roomList.delete')}
+          cancelText={t('roomList.cancel')}
           type="danger"
         />
       </div>

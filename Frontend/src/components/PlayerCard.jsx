@@ -1,5 +1,6 @@
 import { User, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 export const PlayerCard = ({
   name,
@@ -10,6 +11,8 @@ export const PlayerCard = ({
   isDrawing,
   className,
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className={cn(
       "game-card hover:shadow-[0_8px_24px_hsl(210_60%_70%_/_0.2)]",
@@ -37,7 +40,7 @@ export const PlayerCard = ({
         <div className="flex-1 min-w-0">
           <p className="font-bold text-foreground truncate">{name}</p>
           {points !== undefined && (
-            <p className="text-sm text-muted-foreground truncate">{points} points</p>
+            <p className="text-sm text-muted-foreground truncate">{points} {t('game.points')}</p>
           )}
         </div>
         

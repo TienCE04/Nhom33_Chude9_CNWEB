@@ -7,8 +7,10 @@ import { Scoreboard } from "@/components/Scoreboard";
 import { RoundResultPopup } from "@/components/RoundResultPopup";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 const Game = ({ players, messages, onSendMessage, drawTime }) => {
+  const { t } = useTranslation();
   const [keyword, setKeyword] = useState(null);
   const [isDrawer, setIsDrawer] = useState(false);
   const drawerUsernameRef = useRef(null);
@@ -122,7 +124,7 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
         {
           id: crypto.randomUUID(),
           player: username,
-          text: `đã đoán đúng từ khóa! (+${points} điểm)`,
+          text: t('game.correctGuess', { points }),
           isCorrect: true
         },
       ]);
@@ -202,13 +204,13 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
             <ChatBox
               messages={chatMessages}
               onSendMessage={onSendMessage}
-              placeholder="Nhập tin nhắn..."
+              placeholder={t('game.chatPlaceholder')}
               typeBox={"chat"}
             />
             <ChatBox
               messages={answers}
               onSendMessage={handleSetAnswers}
-              placeholder="Nhập câu trả lời..."
+              placeholder={t('game.answerPlaceholder')}
               typeBox={"answer"}
               disabled={isDrawer}
             />

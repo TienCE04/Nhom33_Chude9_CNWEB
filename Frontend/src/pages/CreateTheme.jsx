@@ -6,8 +6,10 @@ import { Input } from "antd";
 import { topicApi } from "../lib/api";
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 export const CreateTheme = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const editingTopic = location.state?.topic;
@@ -26,7 +28,7 @@ export const CreateTheme = () => {
         setKeywordInput("");
         setDuplicateMessage("");
       } else {
-        setDuplicateMessage("Từ khóa này đã tồn tại");
+        setDuplicateMessage(t('createTheme.duplicateKeyword'));
         setTimeout(() => setDuplicateMessage(""), 3000);
       }
     }
@@ -42,16 +44,16 @@ export const CreateTheme = () => {
   const handleCreateTheme = async () => {
     if (!themeName.trim()) {
       toast({
-        title: "Thiếu tên chủ đề",
-        description: "Vui lòng nhập tên chủ đề",
+        title: t('createTheme.missingNameTitle'),
+        description: t('createTheme.missingNameDesc'),
         variant: "error",
       });
       return;
     }
     if (keywords.length < 20) {
       toast({
-        title: "Chưa đủ từ khóa",
-        description: "Cần ít nhất 20 từ khóa để tạo chủ đề mới",
+        title: t('createTheme.notEnoughKeywordsTitle'),
+        description: t('createTheme.notEnoughKeywordsDesc'),
         variant: "error",
       });
       return;
@@ -75,13 +77,13 @@ export const CreateTheme = () => {
 
       if (result.success) {
         toast({
-          title: editingTopic ? "Cập nhật chủ đề thành công" : "Tạo chủ đề thành công",
+          title: editingTopic ? t('createTheme.updateSuccess') : t('createTheme.createSuccess'),
           variant: "success",
         });
         navigate("/create/room");
       } else {
         toast({
-          title: editingTopic ? "Cập nhật chủ đề thất bại" : "Tạo chủ đề thất bại",
+          title: editingTopic ? t('createTheme.updateFail') : t('createTheme.createFail'),
           description: result.message,
           variant: "error",
         });
@@ -89,8 +91,8 @@ export const CreateTheme = () => {
     } catch (error) {
       console.error("Error saving theme:", error);
       toast({
-        title: "Lỗi khi lưu chủ đề",
-        description: "Có lỗi xảy ra khi lưu chủ đề",
+        title: t('createTheme.errorTitle'),
+        description: t('createTheme.errorDesc'),
         variant: "error",
       });
     }
@@ -102,11 +104,11 @@ export const CreateTheme = () => {
       <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 md:gap-0">
         <div className="flex items-center gap-3 px-4 md:px-6">
           <Palette className="w-8 h-8 text-primary" />
-          <h1 className="text-2xl md:text-3xl font-extrabold">{editingTopic ? "Chỉnh sửa chủ đề" : "Tạo chủ đề"}</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold">{editingTopic ? t('createTheme.editTitle') : t('createTheme.title')}</h1>
         </div>
         <GameButton variant="secondary" size="md" onClick={() => navigate("/create/room")}>
           <ArrowLeft className="w-5 h-5 mr-2" />
-          Quay lại
+          {t('createTheme.back')}
         </GameButton>
       </div>
 
@@ -115,16 +117,16 @@ export const CreateTheme = () => {
         {/* Left Column - Theme Configuration (1/3 width) */}
         <div className="sm:col-span-1 bg-card game-card flex flex-col min-h-0">
           <h2 className="text-2xl font-bold mb-6 text-foreground">
-            Cấu hình chủ đề
+            {t('createTheme.configTitle')}
           </h2>
 
           {/* Theme Name */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-foreground mb-2">
-              Tên chủ đề
+              {t('createTheme.themeName')}
             </label>
             <Input
-              placeholder="Nhập tên chủ đề..."
+              placeholder={t('createTheme.themeNamePlaceholder')}
               value={themeName}
               onChange={(e) => setThemeName(e.target.value)}
               className="h-[45px]"
@@ -134,10 +136,10 @@ export const CreateTheme = () => {
           {/* Keyword Input */}
           <div className="mb-8">
             <label className="block text-sm font-semibold text-foreground mb-2">
-              Từ khóa
+              {t('createTheme.keywords')}
             </label>
             <Input
-              placeholder="Nhập từ khóa và bấm Enter..."
+              placeholder={t('createTheme.keywordsPlaceholder')}
               value={keywordInput}
               onChange={(e) => setKeywordInput(e.target.value)}
               onKeyPress={handleAddKeyword}
@@ -152,7 +154,7 @@ export const CreateTheme = () => {
               </p>
             )}
             <p className="text-xs text-muted-foreground mt-3">
-              Nhập tối thiểu 20 từ khóa để tạo chủ đề mới.
+              {t('createTheme.minKeywords')}
             </p>
           </div>
 
@@ -160,11 +162,11 @@ export const CreateTheme = () => {
           <div className="mt-auto pt-6 border-t border-border">
             <div className="bg-muted/30 rounded-lg p-4 text-sm">
               <p className="text-muted-foreground mb-2">
-                <span className="font-semibold text-foreground">Chủ đề:</span>{" "}
-                {themeName || "Chưa nhập"}
+                <span className="font-semibold text-foreground">{t('createTheme.themeLabel')}</span>{" "}
+                {themeName || t('createTheme.notEntered')}
               </p>
               <p className="text-muted-foreground">
-                <span className="font-semibold text-foreground">Từ khóa:</span>{" "}
+                <span className="font-semibold text-foreground">{t('createTheme.keywordsLabel')}</span>{" "}
                 {keywords.length}
               </p>
             </div>
@@ -176,7 +178,7 @@ export const CreateTheme = () => {
           {/* Header */}
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-foreground">
-              Danh sách từ khóa
+              {t('createTheme.keywordsListTitle')}
             </h2>
           </div>
 
@@ -185,7 +187,7 @@ export const CreateTheme = () => {
             {keywords.length === 0 ? (
               <div className="flex items-center justify-center h-full text-center">
                 <p className="text-muted-foreground">
-                  Chưa có từ khóa nào. Hãy thêm từ khóa để bắt đầu.
+                  {t('createTheme.noKeywords')}
                 </p>
               </div>
             ) : (
@@ -217,7 +219,7 @@ export const CreateTheme = () => {
               onClick={() => navigate("/create/room")}
               className="flex-1"
             >
-              Hủy
+              {t('createTheme.cancel')}
             </GameButton>
             <GameButton
               variant="success"
@@ -226,7 +228,7 @@ export const CreateTheme = () => {
               disabled={!themeName.trim() || keywords.length < 20}
               className="flex-1"
             >
-              {editingTopic ? "Lưu thay đổi" : "Tạo chủ đề"}
+              {editingTopic ? t('createTheme.save') : t('createTheme.create')}
             </GameButton>
           </div>
         </div>
