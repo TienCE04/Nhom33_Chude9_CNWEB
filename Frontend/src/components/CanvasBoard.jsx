@@ -315,16 +315,16 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
             )}
           </div>
           {canDraw && (
-            <GameButton 
-              variant="secondary" 
-              size="sm" 
-              onClick={handleRequestHint}
-              disabled={hintLevel >= 3}
-              className="rounded-full w-10 h-10 p-0 border-4 border-white shadow-lg"
-              title="Gợi ý"
-            >
-              <Lightbulb className={`w-5 h-5 ${hintLevel >= 3 ? 'text-gray-400' : 'text-yellow-500'}`} />
-            </GameButton>
+            <GameButton
+            variant="secondary" 
+            size="sm" 
+            onClick={handleRequestHint}
+            disabled={hintLevel >= 3}
+            className="!p-0 rounded-full w-12 h-12 border-4 border-white shadow-lg"
+            title="Gợi ý"
+          >
+            <Lightbulb className={`w-5 h-5 ${hintLevel >= 3 ? 'text-gray-400' : 'text-red-500'}`} />
+          </GameButton>
           )}
         </div>}
         <canvas

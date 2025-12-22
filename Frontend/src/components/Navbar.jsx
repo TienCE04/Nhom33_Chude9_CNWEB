@@ -40,7 +40,7 @@ const Navbar = ({ onLogout }) => {
             <Palette className="w-5 h-5 md:w-6 md:h-6" />
           </div>
           <span className="text-xl md:text-2xl font-extrabold text-foreground hidden sm:block">
-            Gartic
+            Drawify
           </span>
         </div>
 

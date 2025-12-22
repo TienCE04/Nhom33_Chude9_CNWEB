@@ -93,7 +93,7 @@ const Register = () => {
       <div className="text-center mb-8 animate-fade-in">
         <div className="flex items-center justify-center gap-3 mb-4">
           <Palette className="w-16 h-16 text-primary" />
-          <h1 className="text-4xl md:text-6xl font-extrabold text-foreground">Gartic</h1>
+          <h1 className="text-4xl md:text-6xl font-extrabold text-foreground">Drawify</h1>
         </div>
         <p className="text-lg md:text-xl text-muted-foreground font-semibold">
           Vẽ, Đoán & Vui cùng bạn bè!
