@@ -1,6 +1,6 @@
 const {Server} = require("socket.io");
 let io;
-const {attachSocketEvents} = require("./socketEventsHandler")
+const {attachSocketEvents, handleLeaveRoom} = require("./socketEventsHandler")
 
 function initSocket(server) {
   io = new Server(server, {
@@ -12,9 +12,15 @@ function initSocket(server) {
   io.on("connection", (socket) => {
     console.log("Client connected:", socket.id);
     attachSocketEvents(io, socket);
-    socket.on("disconnect", () => {
-      console.log("Client disconnected:", socket.id);
-    });
+
+    socket.on("disconnect", async () => {
+    console.log("Client disconnected:", socket.id);
+
+    const { roomId, username } = socket.data; // dữ liệu lưu từ join_room
+    if (roomId && username) {
+      await handleLeaveRoom(io, socket, roomId, username);
+    }
+  });
   });
 }
 
