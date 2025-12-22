@@ -47,12 +47,12 @@ function isCloseAnswer(guess, keyword) {
   if (!guess || !keyword) return false;
   const cleanGuess = guess.trim().toLowerCase();
   const cleanKeyword = keyword.trim().toLowerCase();
-  
+
   if (cleanGuess === cleanKeyword) return false;
 
   const distance = levenshteinDistance(cleanGuess, cleanKeyword);
   const threshold = cleanKeyword.length <= 5 ? 1 : 2;
-  
+
   return distance <= threshold;
 }
 
@@ -75,10 +75,7 @@ async function checkAndStopGame(io, room_id, curPlayers) {
     await room.updateCurrentPlayers(room_id, curPlayers);
 
     io.to(room_id).emit("roomData", await room.getRoomById(room_id));
-    io.to(room_id).emit(
-      "playersData",
-      await players.getRankByRoomId(room_id)
-    );
+    io.to(room_id).emit("playersData", await players.getRankByRoomId(room_id));
 
     io.emit("rooms", await room.listRooms());
   }
@@ -93,7 +90,9 @@ async function runRoundLogic(io, room_id, topic_type, currentRoomData) {
     await players.getTmpKeywords(room_id),
     topic_type
   );
-  console.log(`New round in room ${room_id}: Drawer - ${drawer_username}, Keyword - ${keyword}`);
+  console.log(
+    `New round in room ${room_id}: Drawer - ${drawer_username}, Keyword - ${keyword}`
+  );
   console.log("Current room data:", currentRoomData);
 
   // Cập nhật số từ đã vẽ cho người vẽ
@@ -129,19 +128,19 @@ async function runRoundLogic(io, room_id, topic_type, currentRoomData) {
   const timeoutId = setTimeout(async () => {
     const roundState = await players.getRoundState(room_id);
     io.to(room_id).emit("roundEndedTimeout", { keyword: roundState.keyword });
-    
+
     // Đợi 5s hiển thị kết quả rồi mới sang vòng tiếp theo
     const nextRoundId = setTimeout(async () => {
-       const freshRoom = await room.getRoomById(room_id);
-       if (freshRoom?.room?.status === "playing") {
-          await runRoundLogic(io, room_id, topic_type, freshRoom.room);
-       }
+      const freshRoom = await room.getRoomById(room_id);
+      if (freshRoom?.room?.status === "playing") {
+        await runRoundLogic(io, room_id, topic_type, freshRoom.room);
+      }
     }, 5000);
 
     countdownIntervals.set(room_id, nextRoundId); // LƯU ID VÒNG KẾ TIẾP
   }, (duration + 1) * 1000);
 
-  countdownIntervals.set(room_id, timeoutId); // LƯU ID VÒNG HIỆN TẠI 
+  countdownIntervals.set(room_id, timeoutId); // LƯU ID VÒNG HIỆN TẠI
 }
 
 /* ==================== START ROUND ==================== */
@@ -178,8 +177,8 @@ function startCountdown(io, room_id, duration = 62) {
       countdownIntervals.delete(room_id);
 
       const currentRoundState = await players.getRoundState(room_id);
-      io.to(room_id).emit("roundEndedTimeout", { 
-        keyword: currentRoundState.keyword 
+      io.to(room_id).emit("roundEndedTimeout", {
+        keyword: currentRoundState.keyword,
       });
     }
   }, 1000);
@@ -199,17 +198,16 @@ async function endGame(io, room_id) {
 
   for (let i = 0; i < top3.length; i++) {
     if (top3[i] && top3[i].username) {
-      console.log(`Cập nhật thành tích cho: ${top3[i].username} - Hạng: ${i + 1}`);
+      console.log(
+        `Cập nhật thành tích cho: ${top3[i].username} - Hạng: ${i + 1}`
+      );
       await playerMongo.updateAchievement(top3[i].username, i + 1);
     }
   }
 
   await playerMongo.updatePlayerRank(await playerMongo.getAllPlayer());
 
-  io.to(room_id).emit(
-    "playersData",
-    await players.getRankByRoomId(room_id)
-  );
+  io.to(room_id).emit("playersData", await players.getRankByRoomId(room_id));
   io.to(room_id).emit("endGame");
 
   await players.resetPlayerScore(room_id);
@@ -248,12 +246,11 @@ async function endGame(io, room_id) {
 //     const resetRank = await players.getRankByRoomId(room_id);
 //     io.to(room_id).emit("playersData", resetRank);
 //     console.log(`Scores reset for room ${room_id} after delay.`);
-//   }, 5000); 
+//   }, 5000);
 // }
 
 /* ==================== SOCKET EVENTS ==================== */
 function attachSocketEvents(io, socket) {
-
   /* -------- CREATE ROOM -------- */
   socket.on("create_room", async ({ roomData, user }) => {
     socket.join(roomData.id);
@@ -291,25 +288,21 @@ function attachSocketEvents(io, socket) {
 
     socket.join(roomId);
     socketUser.bindSocketToUser(socket.id, user.username);
+    socket.data.roomId = roomId;
+    socket.data.username = user.username;
 
     await players.updatePlayerJoin(roomId, user);
 
     const curPlayers = getCurrentPlayers(io, roomId);
     await room.updateCurrentPlayers(roomId, curPlayers);
 
-    io.to(roomId).emit(
-      "playersData",
-      await players.getRankByRoomId(roomId)
-    );
+    io.to(roomId).emit("playersData", await players.getRankByRoomId(roomId));
 
     io.to(roomId).emit("roomData", await room.getRoomById(roomId));
 
     const roomData = await room.getRoomById(roomId);
     if (roomData.status === "playing") {
-      socket.emit(
-        "syncGameState",
-        await players.getRoundState(roomId)
-      );
+      socket.emit("syncGameState", await players.getRoundState(roomId));
     }
 
     io.emit("rooms_updated");
@@ -319,7 +312,7 @@ function attachSocketEvents(io, socket) {
   socket.on("startGame", async ({ room_id, topic_id, timePerRound }) => {
     const username = socketUser.getUsernameBySocket(socket.id);
     const roomResult = await room.getRoomById(room_id);
-    
+
     if (!roomResult.success || !roomResult.room) return;
 
     // Validate Host
@@ -360,7 +353,9 @@ function attachSocketEvents(io, socket) {
   socket.on("sendAnswer", async (data) => {
     const { room_id, username, guess } = data;
     if (!room_id || !username || !guess) return;
-    console.log(`Received answer in room ${room_id} from ${username}: ${guess}`);
+    console.log(
+      `Received answer in room ${room_id} from ${username}: ${guess}`
+    );
 
     const roundState = await players.getRoundState(room_id);
     console.log("Current round state:", roundState);
@@ -430,7 +425,7 @@ function attachSocketEvents(io, socket) {
           const roomData = await room.getRoomById(room_id);
           console.log("Room data before starting new round:", roomData);
           if (!roomData.success || !roomData.room) return;
-          
+
           const current_topic_type = roomData.room.topic_type;
 
           // Kiểm tra điều kiện kết thúc game
@@ -486,7 +481,7 @@ function attachSocketEvents(io, socket) {
   // ---------------- HINT REQUEST ----------------
   socket.on("requestHint", async ({ room_id, hintLevel }) => {
     const username = socketUser.getUsernameBySocket(socket.id);
-    
+
     // 1. Lấy từ khóa từ trạng thái vòng chơi hiện tại
     const roundState = await players.getRoundState(room_id);
     if (!roundState?.keyword) return;
@@ -501,22 +496,24 @@ function attachSocketEvents(io, socket) {
 
     // Gợi ý cấp 1: Hiển thị dạng gạch dưới "_", giữ nguyên dấu cách
     if (hintLevel === 1) {
-      hint = chars.map(char => (char === " " ? " " : "_")).join(" ");
-    } 
-    
+      hint = chars.map((char) => (char === " " ? " " : "_")).join(" ");
+    }
+
     // Gợi ý cấp 2: Hiển thị chữ cái đầu tiên (của mỗi từ hoặc toàn bộ từ khóa)
     else if (hintLevel === 2) {
-      hint = chars.map((char, index) => {
-        if (char === " ") return " ";
-        // Hiện chữ cái đầu tiên của từ khóa
-        return index === 0 ? char : "_";
-      }).join(" ");
-    } 
-    
+      hint = chars
+        .map((char, index) => {
+          if (char === " ") return " ";
+          // Hiện chữ cái đầu tiên của từ khóa
+          return index === 0 ? char : "_";
+        })
+        .join(" ");
+    }
+
     // Gợi ý cấp 3: Hiển thị thêm 1 chữ cái bất kỳ (ở đây lấy vị trí giữa)
     else if (hintLevel === 3) {
       let midIndex = Math.floor(chars.length / 2);
-      
+
       // Nếu vị trí giữa là khoảng trắng hoặc là vị trí đầu tiên, tìm vị trí hợp lệ khác
       if (chars[midIndex] === " " || midIndex === 0) {
         let found = false;
@@ -540,11 +537,13 @@ function attachSocketEvents(io, socket) {
         }
       }
 
-      hint = chars.map((char, index) => {
-        if (char === " ") return " ";
-        // Hiện chữ đầu và một chữ ở giữa
-        return (index === 0 || index === midIndex) ? char : "_";
-      }).join(" ");
+      hint = chars
+        .map((char, index) => {
+          if (char === " ") return " ";
+          // Hiện chữ đầu và một chữ ở giữa
+          return index === 0 || index === midIndex ? char : "_";
+        })
+        .join(" ");
     }
 
     if (hint) {
@@ -564,7 +563,7 @@ function attachSocketEvents(io, socket) {
     if (roomResult.room.username !== username) return;
 
     await room.setStatus(roomId, "waiting");
-    
+
     // Clear intervals
     if (roomIntervals.has(roomId)) {
       clearInterval(roomIntervals.get(roomId));
@@ -581,25 +580,27 @@ function attachSocketEvents(io, socket) {
 
   /* -------- DISCONNECT -------- */
   socket.on("disconnect", async () => {
-    const username = socketUser.getUsernameBySocket(socket.id);
-    if (!username) return;
-
-    for (const room_id of socket.rooms) {
-      if (room_id === socket.id) continue;
-
-      await players.updatePlayerLeave(room_id, username);
-      await players.removeTmpPlayer(room_id, username);
-
-      const curPlayers = getCurrentPlayers(io, room_id);
-      await room.updateCurrentPlayers(room_id, curPlayers);
-
-      await checkAndStopGame(io, room_id, curPlayers);
-
-      io.to(room_id).emit("roomData", await room.getRoomById(room_id));
+    const { roomId, username } = socket.data;
+    if (roomId && username) {
+      await handleLeaveRoom(io, socket, roomId, username);
     }
-
-    socketUser.removeSocket(socket.id);
   });
 }
+async function handleLeaveRoom(io, socket, roomId, username) {
+  if (!roomId || !username) return;
 
-module.exports = { attachSocketEvents };
+  socket.leave(roomId);
+
+  await players.updatePlayerLeave(roomId, username);
+  await players.removeTmpPlayer(roomId, username);
+
+  const curPlayers = getCurrentPlayers(io, roomId);
+  await room.updateCurrentPlayers(roomId, curPlayers);
+
+  await checkAndStopGame(io, roomId, curPlayers);
+
+  io.to(roomId).emit("roomData", await room.getRoomById(roomId));
+  io.emit("rooms_updated");
+}
+
+module.exports = { attachSocketEvents, handleLeaveRoom };
