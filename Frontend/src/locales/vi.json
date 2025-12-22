@@ -283,25 +283,25 @@
       "currentPasswordPlaceholder": "Nhập mật khẩu hiện tại",
       "newPassword": "Mật khẩu mới",
       "newPasswordPlaceholder": "Nhập mật khẩu mới",
-      "confirmPassword": "Xác nhận mật khẩu mới",
-      "confirmPasswordPlaceholder": "Nhập lại mật khẩu mới",
+      "confirmNewPassword": "Xác nhận mật khẩu mới",
+      "confirmNewPasswordPlaceholder": "Nhập lại mật khẩu mới",
       "passwordStrength": "Độ mạnh mật khẩu",
       "strength": {
-        "empty": "Chưa nhập",
+        "none": "Chưa nhập",
         "weak": "Yếu",
         "medium": "Trung bình",
         "strong": "Mạnh"
       },
-      "passwordRequirements": "Sử dụng ít nhất 8 ký tự, bao gồm chữ hoa, số và ký tự đặc biệt.",
+      "strengthHint": "Sử dụng ít nhất 8 ký tự, bao gồm chữ hoa, số và ký tự đặc biệt.",
       "passwordMismatch": "Mật khẩu không khớp",
       "fillAllFields": "Vui lòng điền đầy đủ thông tin",
       "newPasswordMismatch": "Mật khẩu mới không khớp",
-      "minLength": "Mật khẩu mới phải có ít nhất 6 ký tự",
+      "passwordMinLength": "Mật khẩu mới phải có ít nhất 6 ký tự",
       "success": "Đổi mật khẩu thành công",
       "fail": "Đổi mật khẩu thất bại",
       "connectionError": "Lỗi kết nối",
       "cancel": "Hủy",
-      "save": "Lưu thay đổi"
+      "saveChanges": "Lưu thay đổi"
     },
     "confirm": {
       "confirmDefault": "Xác nhận",
@@ -310,7 +310,8 @@
     "joinRoom": {
       "title": "Vào phòng",
       "description": "Nhập mã phòng để tham gia trò chơi",
-      "roomCodeLabel": "Mã phòng",
+      "roomCode": "Mã phòng",
+      "placeholder": "Nhập mã phòng...",
       "cancel": "Hủy",
       "joining": "Đang vào...",
       "join": "Tham gia"

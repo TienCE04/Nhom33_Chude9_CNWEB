@@ -283,25 +283,25 @@
       "currentPasswordPlaceholder": "Enter current password",
       "newPassword": "New Password",
       "newPasswordPlaceholder": "Enter new password",
-      "confirmPassword": "Confirm New Password",
-      "confirmPasswordPlaceholder": "Re-enter new password",
+      "confirmNewPassword": "Confirm New Password",
+      "confirmNewPasswordPlaceholder": "Re-enter new password",
       "passwordStrength": "Password Strength",
       "strength": {
-        "empty": "Not entered",
+        "none": "Not entered",
         "weak": "Weak",
         "medium": "Medium",
         "strong": "Strong"
       },
-      "passwordRequirements": "Use at least 8 characters, including uppercase, numbers, and special characters.",
+      "strengthHint": "Use at least 8 characters, including uppercase, numbers, and special characters.",
       "passwordMismatch": "Passwords do not match",
       "fillAllFields": "Please fill in all fields",
       "newPasswordMismatch": "New passwords do not match",
-      "minLength": "New password must be at least 6 characters",
+      "passwordMinLength": "New password must be at least 6 characters",
       "success": "Password changed successfully",
       "fail": "Failed to change password",
       "connectionError": "Connection error",
       "cancel": "Cancel",
-      "save": "Save Changes"
+      "saveChanges": "Save Changes"
     },
     "confirm": {
       "confirmDefault": "Confirm",
@@ -310,7 +310,8 @@
     "joinRoom": {
       "title": "Join Room",
       "description": "Enter room code to join the game",
-      "roomCodeLabel": "Room Code",
+      "roomCode": "Room Code",
+      "placeholder": "Enter room code...",
       "cancel": "Cancel",
       "joining": "Joining...",
       "join": "Join"
