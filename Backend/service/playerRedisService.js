@@ -127,7 +127,7 @@ async function getAddPoint(room_id) {
   const key = `room:addPoint:${room_id}`;
   // const point = await sendCommand(["GET", key]);
   const point = await redis.get(key);
-  return parseInt(point || "10", 10); // Mặc định là 10 (theo logic game phổ biến)
+  return parseInt(point || "10", 10); // Mặc định là 10
 }
 
 async function updateAddPoint(room_id, point) {

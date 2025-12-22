@@ -73,9 +73,8 @@ module.exports = class Room {
 
           const room = JSON.parse(data);
 
-          // --- SỬA ĐOẠN NÀY (QUAN TRỌNG) ---
-          // 1. Lấy loại phòng bất kể lưu là 'room_type' hay 'roomType'
-          // 2. Chuyển về chữ thường để so sánh (tránh lỗi Public != public)
+          //  Lấy loại phòng bất kể lưu là 'room_type' hay 'roomType'
+          //  Chuyển về chữ thường để so sánh tránh lỗi Public != public
           const rawType = room.room_type || room.roomType || "public";
           const type = rawType.toLowerCase();
           
@@ -85,7 +84,7 @@ module.exports = class Room {
           ) {
             rooms.push(room);
           }
-          // ---------------------------------
+          
           
         } catch (error) {
           console.error("Failed to parse room data:", error);

@@ -71,7 +71,7 @@ async function checkAndStopGame(io, room_id, curPlayers) {
       countdownIntervals.delete(room_id);
     }
 
-    // 🔥 UPDATE REDIS
+    //  UPDATE REDIS
     await room.updateCurrentPlayers(room_id, curPlayers);
 
     io.to(room_id).emit("roomData", await room.getRoomById(room_id));
@@ -141,7 +141,7 @@ async function runRoundLogic(io, room_id, topic_type, currentRoomData) {
     countdownIntervals.set(room_id, nextRoundId); // LƯU ID VÒNG KẾ TIẾP
   }, (duration + 1) * 1000);
 
-  countdownIntervals.set(room_id, timeoutId); // LƯU ID VÒNG HIỆN TẠI [QUAN TRỌNG]
+  countdownIntervals.set(room_id, timeoutId); // LƯU ID VÒNG HIỆN TẠI 
 }
 
 /* ==================== START ROUND ==================== */
