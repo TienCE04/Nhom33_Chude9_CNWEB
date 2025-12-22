@@ -49,7 +49,6 @@ const App = () => {
             <Route element={<Layout />}>
               <Route path="/rooms" element={<ProtectedRoute element={<RoomList />} />} />
               <Route path="/rank" element={<ProtectedRoute element={<Rank />} />} />
-              <Route path="/lobby/:roomId" element={<ProtectedRoute element={<Lobby />} />} />
               <Route path="/profile" element={<ProtectedRoute element={<Profile />} />} />
               <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
               <Route path="/results/:roomId" element={<ProtectedRoute element={<Results />} />} />
@@ -58,6 +57,7 @@ const App = () => {
               <Route path="/topics" element={<ProtectedRoute element={<Topics />} />} />
             </Route>
 
+            <Route path="/lobby/:roomId" element={<ProtectedRoute element={<Lobby />} />} />
             <Route path="/game" element={<ProtectedRoute element={<Game />} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

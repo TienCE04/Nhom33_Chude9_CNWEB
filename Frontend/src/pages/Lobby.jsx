@@ -11,6 +11,8 @@ import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
 import "../assets/styles/gamePage.css";
 import { useTranslation } from "react-i18next";
+import Navbar from "@/components/Navbar";
+import PageTransition from "@/components/PageTransition";
 
 const Lobby = () => {
   const { t } = useTranslation();
@@ -172,7 +174,11 @@ const Lobby = () => {
   const isHost = user?.username === (room.username || room.room?.username);
 
   return (
-    <div className="p-2 md:p-4">
+    <div className="min-h-screen flex flex-col bg-background">
+      {!isGameStarted && <Navbar />}
+      <main className="flex-1 w-full">
+        <PageTransition>
+          <div className="p-2 md:p-4">
 
       {/* RENDER POP-UP KHI STATE LÀ TRUE */}
       {showRulesPopup && (
@@ -330,6 +336,9 @@ const Lobby = () => {
           </div>
         )}
       </div>
+          </div>
+        </PageTransition>
+      </main>
     </div>
   );
 };
