@@ -298,6 +298,7 @@
       "fillAllFields": "Vui lòng điền đầy đủ thông tin",
       "newPasswordMismatch": "Mật khẩu mới không khớp",
       "passwordMinLength": "Mật khẩu mới phải có ít nhất 6 ký tự",
+      "currentPasswordIncorrect": "Mật khẩu hiện tại không đúng",
       "success": "Đổi mật khẩu thành công",
       "fail": "Đổi mật khẩu thất bại",
       "connectionError": "Lỗi kết nối",
@@ -320,10 +321,11 @@
     "playRule": {
       "title": "LUẬT CHƠI",
       "topic": "Chủ đề",
-      "target": "Mục tiêu",
+      "goal": "Mục tiêu",
       "language": "Ngôn ngữ",
-      "points": "điểm",
-      "ruleText": "Không vẽ chữ cái, số, và kí hiệu, ok?",
+      "vietnamese": "Tiếng Việt",
+      "points": "{{count}} điểm",
+      "ruleDescription": "Không vẽ chữ cái, số, và kí hiệu, ok?",
       "confirm": "XÁC NHẬN"
     },
     "roundResult": {
@@ -334,9 +336,27 @@
   },
   "chatBox": {
     "chat": "Trò chuyện",
-    "answer": "Câu trả lời",
-    "placeholder": "Nhập câu trả lời...",
+    "answer": "Đáp án",
+    "placeholder": "Nhập đáp án...",
     "close": "Gần đúng!",
     "drawing": "Bạn đang vẽ, không thể đoán!"
+  },
+  "lobby": {
+    "roomCode": "Mã phòng:",
+    "copySuccess": "Đã sao chép mã phòng!",
+    "startGame": "Bắt đầu",
+    "waitingForHost": "Chờ chủ phòng",
+    "pauseGame": "Tạm dừng",
+    "leave": "Rời phòng",
+    "players": "Người chơi",
+    "gameSettings": "Cài đặt trò chơi",
+    "topic": "Chủ đề:",
+    "roomType": "Loại phòng:",
+    "drawTime": "Thời gian vẽ:",
+    "chatPlaceholder": "Trò chuyện với người chơi...",
+    "loadRoomError": "Không thể tải dữ liệu phòng",
+    "startRoom": "Bắt đầu phòng",
+    "public": "Công cộng",
+    "private": "Riêng tư"
   }
 }

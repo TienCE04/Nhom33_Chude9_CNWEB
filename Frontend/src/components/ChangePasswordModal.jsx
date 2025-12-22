@@ -71,7 +71,11 @@ const ChangePasswordModal = ({ isOpen, onClose }) => {
         toast({ title: t('modals.changePassword.success'), variant: "success" });
         onClose();
       } else {
-        toast({ title: result.message || t('modals.changePassword.failure'), variant: "destructive" });
+        let errorMessage = result.message;
+        if (result.message === "Current password is incorrect") {
+          errorMessage = t('modals.changePassword.currentPasswordIncorrect');
+        }
+        toast({ title: errorMessage || t('modals.changePassword.failure'), variant: "destructive" });
       }
     } catch (error) {
       toast({ title: t('modals.changePassword.connectionError'), variant: "destructive" });

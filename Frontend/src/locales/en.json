@@ -298,6 +298,7 @@
       "fillAllFields": "Please fill in all fields",
       "newPasswordMismatch": "New passwords do not match",
       "passwordMinLength": "New password must be at least 6 characters",
+      "currentPasswordIncorrect": "Current password is incorrect",
       "success": "Password changed successfully",
       "fail": "Failed to change password",
       "connectionError": "Connection error",
@@ -320,10 +321,11 @@
     "playRule": {
       "title": "GAME RULES",
       "topic": "Topic",
-      "target": "Target",
+      "goal": "Goal",
       "language": "Language",
-      "points": "points",
-      "ruleText": "Do not draw letters, numbers, or symbols, ok?",
+      "vietnamese": "Vietnamese",
+      "points": "{{count}} points",
+      "ruleDescription": "Do not draw letters, numbers, or symbols, ok?",
       "confirm": "CONFIRM"
     },
     "roundResult": {
@@ -338,5 +340,23 @@
     "placeholder": "Type your guess...",
     "close": "Close!",
     "drawing": "You are drawing, cannot guess!"
+  },
+  "lobby": {
+    "roomCode": "Room Code:",
+    "copySuccess": "Room code copied!",
+    "startGame": "Start Game",
+    "waitingForHost": "Waiting for Host",
+    "pauseGame": "Pause Game",
+    "leave": "Leave",
+    "players": "Players",
+    "gameSettings": "Game Settings",
+    "topic": "Topic:",
+    "roomType": "Room Type:",
+    "drawTime": "Draw Time:",
+    "chatPlaceholder": "Chat with players...",
+    "loadRoomError": "Failed to load room data",
+    "startRoom": "Start room",
+    "public": "Public",
+    "private": "Private"
   }
 }

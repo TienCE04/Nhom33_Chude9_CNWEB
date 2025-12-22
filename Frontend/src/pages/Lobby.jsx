@@ -10,8 +10,10 @@ import { PlayRulePopup } from "../components/PlayRulePopup";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
 import "../assets/styles/gamePage.css";
+import { useTranslation } from "react-i18next";
 
 const Lobby = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { roomId } = useParams();
   const dataLoadedRef = useRef(false);
@@ -43,7 +45,7 @@ const Lobby = () => {
       }
     } catch (error) {
       console.error("Error loading room data:", error);
-      toast({ title: "Không thể tải dữ liệu phòng", variant: "destructive" });
+      toast({ title: t('lobby.loadRoomError'), variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +126,7 @@ const Lobby = () => {
   const copyRoomCode = () => {
     const actualRoomCode = room.id || room.room?.id || "";
     navigator.clipboard.writeText(actualRoomCode);
-    toast({ title: "Room code copied!", variant: "success" });
+    toast({ title: t('lobby.copySuccess'), variant: "success" });
   };
 
   const handleSendMessage = (message) => {
@@ -144,7 +146,7 @@ const Lobby = () => {
     socket.emit("startGame", data)
     setShowRulesPopup(false);
     console.log("Starting game with roomType:", roomType);
-    toast({ title: `Bắt đầu phòng ${roomType}`, variant: "success" });
+    toast({ title: `${t('lobby.startRoom')} ${roomType}`, variant: "success" });
     setIsGameStarted(true);
   };
 
@@ -155,8 +157,8 @@ const Lobby = () => {
     navigate("/rooms")
   }
   const ROOM_TYPE_MAP = {
-    public: "Công cộng",
-    private: "Riêng tư",
+    public: t('lobby.public'),
+    private: t('lobby.private'),
   };
 
 
@@ -185,9 +187,9 @@ const Lobby = () => {
         {/* Header */}
         <div className="mb-3 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2 px-4 md:px-6">
           <div className="flex flex-wrap justify-center items-center gap-3">
-            <h2 className="text-2xl md:text-3xl font-extrabold">Room Code:</h2>
+            <h2 className="text-2xl md:text-3xl font-extrabold">{t('lobby.roomCode')}</h2>
             <code className="bg-primary/20 px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-mono font-bold text-base md:text-lg">
-              {room.id || room.room?.id || "Loading..."}
+              {room.id || room.room?.id || t('common.loading')}
             </code>
             <button
               onClick={copyRoomCode}
@@ -207,7 +209,7 @@ const Lobby = () => {
                 className={!isHost ? "opacity-50 cursor-not-allowed" : ""}
               >
                 <Play className="w-5 h-5 mr-2" />
-                {isHost ? "Start Game" : "Waiting for Host"}
+                {isHost ? t('lobby.startGame') : t('lobby.waitingForHost')}
               </GameButton>
             ) : (
               isHost && (
@@ -217,7 +219,7 @@ const Lobby = () => {
                   onClick={() => emitPauseGame()}
                 >
                   <Pause className="w-5 h-5 mr-2" />
-                  Pause Game
+                  {t('lobby.pauseGame')}
                 </GameButton>
               )
             )}
@@ -227,7 +229,7 @@ const Lobby = () => {
               onClick={() => handleLeaveRoom()}
             >
               <LogOut className="w-5 h-5 mr-2" />
-              Leave
+              {t('lobby.leave')}
             </GameButton>
           </div>
         </div>
@@ -249,7 +251,7 @@ const Lobby = () => {
           <div className="lg:col-span-2 flex flex-col gap-3 lg:h-full lg:min-h-0">
             {/* Players Grid */}
             <div className="game-card overflow-y-auto flex-1 min-h-0">
-              <h3 className="text-xl font-bold mb-4">Players</h3>
+              <h3 className="text-xl font-bold mb-4">{t('lobby.players')}</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
                 {players.map((player, index) => (
                   <PlayerCard key={index} name={player.username} points={player.point} />
@@ -258,12 +260,12 @@ const Lobby = () => {
             </div>
             {/* Game Settings */}
             <div className="game-card shrink-0">
-              <h3 className="text-xl font-bold mb-4">Game Settings</h3>
+              <h3 className="text-xl font-bold mb-4">{t('lobby.gameSettings')}</h3>
               
               <div className="space-y-5 px-2">
                 <div className="flex justify-between gap-5">
                   <div className="flex flex-col w-1/2 justify-center gap-3">
-                    <label className="block font-semibold">Topic:</label>
+                    <label className="block font-semibold">{t('lobby.topic')}</label>
                       <input
                         type="text"
                         value={topic.label}
@@ -273,7 +275,7 @@ const Lobby = () => {
                   </div>
 
                   <div className="flex flex-col w-1/2 justify-center gap-3">
-                    <label className="font-semibold flex-shrink-0">Loại phòng:</label>
+                    <label className="font-semibold flex-shrink-0">{t('lobby.roomType')}</label>
                     <input
                         type="text"
                         value={ROOM_TYPE_MAP[roomType] ?? ""}
@@ -299,7 +301,7 @@ const Lobby = () => {
 
                 <div>
                   <label className="block font-semibold mb-2">
-                    Draw Time: {drawTime}s
+                    {t('lobby.drawTime')} {drawTime}s
                   </label>
                   <input
                     type="range"
@@ -320,7 +322,7 @@ const Lobby = () => {
               <ChatBox
                 messages={messages}
                 onSendMessage={handleSendMessage}
-                placeholder="Chat with players..."
+                placeholder={t('lobby.chatPlaceholder')}
                 typeBox={"chat"}
               />
             </div>
