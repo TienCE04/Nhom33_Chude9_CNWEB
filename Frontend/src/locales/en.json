@@ -104,6 +104,7 @@
     "loginLink": "Login now",
     "usernameRequired": "Username is required",
     "emailRequired": "Email is required",
+    "emailInvalid": "Invalid email format",
     "passwordMinLength": "Password must be at least 4 characters",
     "passwordMismatch": "Passwords do not match",
     "registerSuccess": "Registration successful!",

@@ -104,6 +104,7 @@
     "loginLink": "Đăng nhập ngay",
     "usernameRequired": "Tên đăng nhập là bắt buộc",
     "emailRequired": "Email là bắt buộc",
+    "emailInvalid": "Email không đúng định dạng",
     "passwordMinLength": "Mật khẩu phải có ít nhất 4 ký tự",
     "passwordMismatch": "Mật khẩu không khớp",
     "registerSuccess": "Đăng ký thành công!",

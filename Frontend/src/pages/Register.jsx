@@ -19,11 +19,20 @@ const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [touched, setTouched] = useState({
     username: false,
+    email: false,
     password: false,
     confirmPassword: false,
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const validateEmail = (email) => {
+    return String(email)
+      .toLowerCase()
+      .match(
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+      );
+  };
 
   const handleRegister = async () => {
     if (!username.trim()) {
@@ -38,6 +47,14 @@ const Register = () => {
       toast({
         title: t('common.error'),
         description: t('register.emailRequired'),
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!validateEmail(email)) {
+      toast({
+        title: t('common.error'),
+        description: t('register.emailInvalid'),
         variant: "destructive",
       });
       return;
@@ -190,9 +207,20 @@ const Register = () => {
                     placeholder={t('register.emailPlaceholder')}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => setTouched({ ...touched, email: true })}
                     className="input-rounded w-full text-center text-lg"
                     autoComplete="off"
                   />
+                  {touched.email && !email.trim() && (
+                    <p className="text-xs text-red-500 mt-1 text-left">
+                      {t('register.emailRequired')}
+                    </p>
+                  )}
+                  {touched.email && email.trim() && !validateEmail(email) && (
+                    <p className="text-xs text-red-500 mt-1 text-left">
+                      {t('register.emailInvalid')}
+                    </p>
+                  )}
                 </div>
 
                 {/* Password Field */}
