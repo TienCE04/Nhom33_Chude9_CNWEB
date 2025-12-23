@@ -323,7 +323,7 @@ const Lobby = () => {
             </div>
           </div>
           {/* Chat */}
-          <div className="lg:col-span-1 h-full min-h-0">
+          <div className="lg:col-span-1 h-full min-h-[300px]">
             <div className="h-full flex flex-col">
               <ChatBox
                 messages={messages}
