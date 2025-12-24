@@ -2,20 +2,21 @@ import { useRef, useEffect, useState, useLayoutEffect } from "react";
 import { Brush, Eraser, Trash2, Lightbulb } from "lucide-react";
 import { GameButton } from "./GameButton";
 import { socket } from "@/lib/socket";
+import { useTranslation } from "react-i18next";
 
-// Dời các hằng số ra ngoài để dễ quản lý
 const COLORS = [
   "#000000", "#FFFFFF", "#FF0000", "#00FF00", "#0000FF",
   "#FFFF00", "#FF00FF", "#00FFFF", "#FFA500", "#800080",
 ];
 
-const BRUSH_SIZES = [
-  { size: 3, label: "Nhỏ" },
-  { size: 8, label: "Vừa" },
-  { size: 16, label: "Lớn" },
-];
-
 export const CanvasBoard = ({ canDraw = true, keyword }) => {
+  const { t } = useTranslation();
+  const BRUSH_SIZES = [
+    { size: 3, label: t('canvas.brushSizeSmall') },
+    { size: 8, label: t('canvas.brushSizeMedium') },
+    { size: 16, label: t('canvas.brushSizeLarge') },
+  ];
+
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [color, setColor] = useState("#000000");
@@ -72,7 +73,7 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
     };
   }, []);
 
-  // Lấy tọa độ (hỗ trợ cả chuột và cảm ứng)
+  // Lấy tọa độ
   const getEventCoordinates = (e) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
@@ -153,42 +154,6 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
     }
   };
 
-  // useLayoutEffect(() => {
-  //   const canvas = canvasRef.current;
-  //   const container = containerRef.current;
-  //   if (!canvas || !container) return;
-
-  //   const updateSize = () => {
-  //     // 1. Lấy kích thước hiển thị của container
-  //     const newWidth = container.clientWidth;
-  //     const newHeight = container.clientHeight;
-
-  //     // 2. Cập nhật thuộc tính logic của canvas. 
-  //     // Việc này TỰ ĐỘNG xóa canvas.
-  //     if (canvas.width !== newWidth || canvas.height !== newHeight) {
-  //       setCanvasWidth(newWidth);
-  //       setCanvasHeight(newHeight);
-  //     }
-      
-  //     // 3. Thiết lập lại context và vẽ nền trắng
-  //     const ctx = canvas.getContext("2d");
-  //     if (ctx) {
-  //         ctx.fillStyle = "#FFFFFF";
-  //         ctx.fillRect(0, 0, newWidth, newHeight);
-  //     }
-  //   };
-    
-  //   // Khởi tạo kích thước lần đầu
-  //   updateSize();
-
-  //   // Thiết lập ResizeObserver để lắng nghe sự thay đổi kích thước container
-  //   const observer = new ResizeObserver(updateSize);
-  //   observer.observe(container);
-
-  //   return () => {
-  //     observer.unobserve(container);
-  //   };
-  // }, [clearCanvas]);
   useLayoutEffect(() => {
   const canvas = canvasRef.current;
   const container = containerRef.current;
@@ -231,7 +196,7 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
                 size="sm"
                 onClick={() => handleToolClick("brush")}
                 className="w-12 h-12 p-0"
-                title="Bút vẽ"
+                title={t('canvas.brushTool')}
               >
                 <Brush className="w-5 h-5" />
               </GameButton>
@@ -241,7 +206,7 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
                 size="sm"
                 onClick={() => handleToolClick("eraser")}
                 className="w-12 h-12 p-0"
-                title="Tẩy"
+                title={t('canvas.eraserTool')}
               >
                 <Eraser className="w-5 h-5" />
               </GameButton>
@@ -270,7 +235,7 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
               size="sm"
               onClick={clearCanvas}
               className="w-12 h-12 p-0"
-              title="Xóa bảng"
+              title={t('canvas.clearCanvas')}
             >
               <Trash2 className="w-5 h-5" />
             </GameButton>
@@ -278,7 +243,6 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
 
           {/* Popover chọn kích thước */}
           {showSizePicker && (
-            // *** THAY ĐỔI Ở ĐÂY: Thêm "bg-muted" ***
             <div className="game-card bg-muted absolute left-full top-0 ml-2 z-10 p-3 flex flex-col gap-2 animate-fade-in">
               {BRUSH_SIZES.map((brush) => (
                 <button
@@ -317,7 +281,7 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
                 {keyword.split("").map((char, index) => {
                   if (char === " ") return <span key={index} className="w-4"></span>;
                   
-                  // Logic xác định vị trí gợi ý thứ 2 (giống backend)
+                  // Logic xác định vị trí gợi ý thứ 2
                   let midIndex = Math.floor(keyword.length / 2);
                   if (keyword[midIndex] === " " || midIndex === 0) {
                     let found = false;
@@ -353,16 +317,16 @@ export const CanvasBoard = ({ canDraw = true, keyword }) => {
             )}
           </div>
           {canDraw && (
-            <GameButton 
-              variant="secondary" 
-              size="sm" 
-              onClick={handleRequestHint}
-              disabled={hintLevel >= 3}
-              className="rounded-full w-10 h-10 p-0 border-4 border-white shadow-lg"
-              title="Gợi ý"
-            >
-              <Lightbulb className={`w-5 h-5 ${hintLevel >= 3 ? 'text-gray-400' : 'text-yellow-500'}`} />
-            </GameButton>
+            <GameButton
+            variant="secondary" 
+            size="sm" 
+            onClick={handleRequestHint}
+            disabled={hintLevel >= 3}
+            className="!p-0 rounded-full w-12 h-12 border-4 border-white shadow-lg"
+            title={t('canvas.hint')}
+          >
+            <Lightbulb className={`w-5 h-5 ${hintLevel >= 3 ? 'text-gray-400' : 'text-red-500'}`} />
+          </GameButton>
           )}
         </div>}
         <canvas

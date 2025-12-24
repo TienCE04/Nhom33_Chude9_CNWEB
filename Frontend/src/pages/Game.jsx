@@ -7,9 +7,10 @@ import { Scoreboard } from "@/components/Scoreboard";
 import { RoundResultPopup } from "@/components/RoundResultPopup";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
-// THAY ĐỔI: Nhận props từ Lobby.jsx
 const Game = ({ players, messages, onSendMessage, drawTime }) => {
+  const { t } = useTranslation();
   const [keyword, setKeyword] = useState(null);
   const [isDrawer, setIsDrawer] = useState(false);
   const drawerUsernameRef = useRef(null);
@@ -56,7 +57,6 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
       if (!isUserDrawer) {
         setKeyword(null);
       }
-      // Reset canvas logic handled in CanvasBoard via socket
     };
 
     const handleRoundEnd = (data) => {
@@ -124,7 +124,7 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
         {
           id: crypto.randomUUID(),
           player: username,
-          text: `đã đoán đúng từ khóa! (+${points} điểm)`,
+          text: t('game.correctGuess', { points }),
           isCorrect: true
         },
       ]);
@@ -172,7 +172,6 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
   };
 
   return (
-    // THAY ĐỔI: Căn chỉnh lại layout để lấp đầy không gian
     <div className="flex flex-col flex-1 h-full min-h-0 relative">
       {roundResult && (
         <RoundResultPopup 
@@ -183,34 +182,20 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
         {/* Header with Timer */}
         <div className="flex items-center gap-4">
           <div className="flex-1">
-            {/* THAY ĐỔI: Sử dụng prop drawTime */}
-            <TimerBar key={roundKey} endTime={endTime} duration={drawTime}
-            // onComplete={handleTimerComplete} 
-            />
+            <TimerBar key={roundKey} endTime={endTime} duration={drawTime} />
           </div>
         </div>
-
-        {/* Current Word Hint */}
-        {/* {isDrawer && keyword && (
-          <h2 className="text-2xl font-bold text-center">
-            <span className="text-primary">Từ khóa: {keyword}</span>
-          </h2>
-        )} */}
 
         {/* Main Game Area */}
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 flex-1 min-h-0 !mb-4">
           {/* Canvas */}
           <div className="relative mt-6" style={{maxHeight: "500px"}}>
-            {/* Current Word Hint - đặt đè lên Canvas */}
-            {/* <div className="absolute left-1/2 -translate-x-1/2 -top-6 bg-primary text-primary-foreground font-bold text-xl px-8 py-2 rounded-full shadow-lg border-4 border-white z-10">
-              ANSWER_ _ _
-            </div> */}
             <div className="flex">
               <CanvasBoard canDraw={isDrawer} keyword={keyword}/>
             </div>
           </div>
 
-          {/* THÊM VÀO: Cột Bảng điểm và Chat */}
+          {/* Cột Bảng điểm và Chat */}
           <div className="flex flex-col gap-4 min-h-0 mt-6">
             <Scoreboard players={currentPlayers} />
           </div>
@@ -219,13 +204,13 @@ const Game = ({ players, messages, onSendMessage, drawTime }) => {
             <ChatBox
               messages={chatMessages}
               onSendMessage={onSendMessage}
-              placeholder="Nhập tin nhắn..."
+              placeholder={t('game.chatPlaceholder')}
               typeBox={"chat"}
             />
             <ChatBox
               messages={answers}
               onSendMessage={handleSetAnswers}
-              placeholder="Nhập câu trả lời..."
+              placeholder={t('game.answerPlaceholder')}
               typeBox={"answer"}
               disabled={isDrawer}
             />

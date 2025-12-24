@@ -1,6 +1,9 @@
 import { Trophy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-export const Scoreboard = ({ players, title = "Scoreboard" }) => {
+export const Scoreboard = ({ players, title }) => {
+  const { t } = useTranslation();
+  const displayTitle = title || t('game.scoreboard');
   const sortedPlayers = [...players].sort((a, b) => b.point - a.point);
   console.log("Rendering Scoreboard with players:", players, sortedPlayers);
 
@@ -8,7 +11,7 @@ export const Scoreboard = ({ players, title = "Scoreboard" }) => {
     <div className="game-card h-full overflow-auto">
       <div className="flex items-center gap-2 mb-4">
         <Trophy className="w-5 h-5 text-secondary" />
-        <h3 className="font-bold text-lg">{title}</h3>
+        <h3 className="font-bold text-lg">{displayTitle}</h3>
       </div>
       
       <div className="space-y-2">
@@ -34,7 +37,7 @@ export const Scoreboard = ({ players, title = "Scoreboard" }) => {
             </div>
             
             <div className="font-bold text-primary">
-              {player.point} pts
+              {player.point} {t('game.points')}
             </div>
           </div>
         ))}

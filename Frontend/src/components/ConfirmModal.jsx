@@ -2,6 +2,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { GameButton } from "./GameButton";
+import { useTranslation } from "react-i18next";
 
 export const ConfirmModal = ({
   isOpen,
@@ -9,10 +10,14 @@ export const ConfirmModal = ({
   onConfirm,
   title,
   message,
-  confirmText = "Xác nhận",
-  cancelText = "Hủy",
+  confirmText,
+  cancelText,
   type = "danger", // danger, primary, success
 }) => {
+  const { t } = useTranslation();
+  const effectiveConfirmText = confirmText || t('modals.confirm.confirm');
+  const effectiveCancelText = cancelText || t('modals.confirm.cancel');
+
   if (!isOpen) return null;
 
   return createPortal(
@@ -44,7 +49,7 @@ export const ConfirmModal = ({
             onClick={onClose}
             className="min-w-[80px]"
           >
-            {cancelText}
+            {effectiveCancelText}
           </GameButton>
           <GameButton
             variant={type}
@@ -55,7 +60,7 @@ export const ConfirmModal = ({
             }}
             className="min-w-[80px]"
           >
-            {confirmText}
+            {effectiveConfirmText}
           </GameButton>
         </div>
       </div>

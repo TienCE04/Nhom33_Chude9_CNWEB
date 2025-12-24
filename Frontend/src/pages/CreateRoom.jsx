@@ -7,6 +7,7 @@ import { topicApi, authApi, roomApi } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
 import { socket } from "@/lib/socket";
 import { getUserInfo } from "../lib/utils";
+import { useTranslation } from "react-i18next";
 
 import { ConfirmModal } from "../components/ConfirmModal";
 
@@ -44,6 +45,7 @@ const MaterialIcon = ({ iconName, className = "" }) => (
 );
 
 const CreateRoom = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [maxPlayers, setMaxPlayers] = useState("6");
@@ -117,7 +119,7 @@ const CreateRoom = () => {
       const result = await topicApi.deleteTopic(topicId);
       if (result.success) {
         toast({
-          title: "Xóa chủ đề thành công",
+          title: t('createRoom.deleteTopicSuccess'),
           variant: "success",
         });
         const updatedTopics = topics.filter(t => (t._id || t.idTopic) !== topicId);
@@ -127,7 +129,7 @@ const CreateRoom = () => {
         }
       } else {
         toast({
-          title: "Xóa chủ đề thất bại",
+          title: t('createRoom.deleteTopicFail'),
           description: result.message,
           variant: "error",
         });
@@ -135,8 +137,8 @@ const CreateRoom = () => {
     } catch (error) {
       console.error("Error deleting topic:", error);
       toast({
-        title: "Lỗi khi xóa chủ đề",
-        description: "Có lỗi xảy ra khi xóa chủ đề",
+        title: t('createRoom.deleteTopicErrorTitle'),
+        description: t('createRoom.deleteTopicErrorDesc'),
         variant: "error",
       });
     }
@@ -150,8 +152,8 @@ const CreateRoom = () => {
   const handleCreateRoom = async () => {
     if (!selectedTopic) {
       toast({
-        title: "Chưa chọn chủ đề",
-        description: "Vui lòng chọn một chủ đề",
+        title: t('createRoom.noTopicSelectedTitle'),
+        description: t('createRoom.noTopicSelectedDesc'),
         variant: "error",
       });
       return;
@@ -175,13 +177,13 @@ const CreateRoom = () => {
         const result = await roomApi.updateRoom(editingRoomId, roomData);
         if (result.success) {
           toast({
-            title: "Cập nhật phòng thành công",
+            title: t('createRoom.updateSuccess'),
             variant: "success",
           });
           navigate("/rooms");
         } else {
           toast({
-            title: "Cập nhật phòng thất bại",
+            title: t('createRoom.updateFail'),
             description: result.message || "Không thể cập nhật phòng",
             variant: "error",
           });
@@ -190,7 +192,7 @@ const CreateRoom = () => {
         const result = await roomApi.createRoom(roomData);
         if (result.success) {
           toast({
-            title: "Tạo phòng thành công",
+            title: t('createRoom.createSuccess'),
             variant: "success",
           });
           const user = getUserInfo();
@@ -203,7 +205,7 @@ const CreateRoom = () => {
           navigate(`/lobby/${result.room.id}`);
         } else {
           toast({
-            title: "Tạo phòng thất bại",
+            title: t('createRoom.createFail'),
             description: result.message || "Không thể tạo phòng",
             variant: "error",
           });
@@ -212,8 +214,8 @@ const CreateRoom = () => {
     } catch (error) {
       console.error("Create/Update room error:", error);
       toast({
-        title: "Lỗi kết nối",
-        description: "Không thể kết nối tới máy chủ",
+        title: t('createRoom.connectionErrorTitle'),
+        description: t('createRoom.connectionErrorDesc'),
         variant: "error",
       });
     } finally {
@@ -227,11 +229,11 @@ const CreateRoom = () => {
       <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4 md:gap-0">
         <div className="flex items-center gap-3 px-4 md:px-6">
           <Gamepad2 className="w-8 h-8 text-primary" />
-          <h1 className="text-2xl md:text-3xl font-extrabold">{isEditing ? "Cập nhật phòng" : "Tạo phòng"}</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold">{isEditing ? t('createRoom.editTitle') : t('createRoom.title')}</h1>
         </div>
         <GameButton variant="secondary" size="md" onClick={() => navigate("/rooms")}>
           <ArrowLeft className="w-5 h-5 mr-2" />
-          Quay lại
+          {t('createRoom.back')}
         </GameButton>
       </div>
 
@@ -240,26 +242,26 @@ const CreateRoom = () => {
         {/* Left Column - Configuration (1/3 width) */}
         <div className="sm:col-span-1 bg-card game-card flex flex-col min-h-0 shadow-lg">
           <h2 className="text-2xl font-bold mb-6 text-foreground">
-            Cấu hình phòng
+            {t('createRoom.configTitle')}
           </h2>
 
           {/* Max Players */}
           <div className="mb-6">
             <label className="block text-md font-semibold text-foreground mb-2">
-              Số người chơi tối đa
+              {t('createRoom.maxPlayers')}
             </label>
             <Select
                 value={maxPlayers}
                 onChange={(value) => setMaxPlayers(value)}
                 options={[
-                    { value: "5", label: "5 người" },
-                    { value: "6", label: "6 người" },
-                    { value: "7", label: "7 người" },
-                    { value: "8", label: "8 người" },
-                    { value: "9", label: "9 người" },
-                    { value: "10", label: "10 người" },
-                    { value: "15", label: "15 người" },
-                    { value: "20", label: "20 người" },
+                    { value: "5", label: `5 ${t('createRoom.people')}` },
+                    { value: "6", label: `6 ${t('createRoom.people')}` },
+                    { value: "7", label: `7 ${t('createRoom.people')}` },
+                    { value: "8", label: `8 ${t('createRoom.people')}` },
+                    { value: "9", label: `9 ${t('createRoom.people')}` },
+                    { value: "10", label: `10 ${t('createRoom.people')}` },
+                    { value: "15", label: `15 ${t('createRoom.people')}` },
+                    { value: "20", label: `20 ${t('createRoom.people')}` },
                 ]}
                 className="w-full h-[45px]"
             />
@@ -268,34 +270,34 @@ const CreateRoom = () => {
           {/* Target Score */}
           <div className="mb-8">
             <label className="block text-md font-semibold text-foreground mb-2">
-              Mục tiêu điểm
+              {t('createRoom.targetScore')}
             </label>
             <Select
                 value={targetScore}
                 onChange={(value) => setTargetScore(value)}
                 options={[
-                    { value: "20", label: "20 điểm" },
-                    { value: "70", label: "70 điểm" },
-                    { value: "100", label: "100 điểm" },
-                    { value: "150", label: "150 điểm" },
-                    { value: "200", label: "200 điểm" },
-                    { value: "300", label: "300 điểm" },
-                    { value: "350", label: "350 điểm" },
-                    { value: "400", label: "400 điểm" },
+                    { value: "20", label: `20 ${t('createRoom.points')}` },
+                    { value: "70", label: `70 ${t('createRoom.points')}` },
+                    { value: "100", label: `100 ${t('createRoom.points')}` },
+                    { value: "150", label: `150 ${t('createRoom.points')}` },
+                    { value: "200", label: `200 ${t('createRoom.points')}` },
+                    { value: "300", label: `300 ${t('createRoom.points')}` },
+                    { value: "350", label: `350 ${t('createRoom.points')}` },
+                    { value: "400", label: `400 ${t('createRoom.points')}` },
                 ]}
                 className="w-full h-[45px]"
             />
           </div>
           <div className="mb-8">
             <label className="block text-md font-semibold text-foreground mb-2">
-              Loại phòng
+              {t('createRoom.roomType')}
             </label>
             <Select
                 value={typeRoom}
                 onChange={(value) => setTypeRoom(value)}
                 options={[
-                    { value: "private", label: "Phòng riêng" },
-                    { value: "public", label: "Phòng công cộng" },
+                    { value: "private", label: t('createRoom.private') },
+                    { value: "public", label: t('createRoom.public') },
                 ]}
                 className="w-full h-[45px]"
             />
@@ -305,13 +307,13 @@ const CreateRoom = () => {
             <div className="bg-muted/30 rounded-lg p-4 text-sm">
               <p className="text-muted-foreground mb-2">
                 <span className="font-semibold text-foreground">
-                  Người chơi:
+                  {t('createRoom.playersLabel')}
                 </span>{" "}
                 {maxPlayers}
               </p>
               <p className="text-muted-foreground">
-                <span className="font-semibold text-foreground">Mục tiêu:</span>{" "}
-                {targetScore} điểm
+                <span className="font-semibold text-foreground">{t('createRoom.targetLabel')}</span>{" "}
+                {targetScore} {t('createRoom.points')}
               </p>
             </div>
           </div>
@@ -321,7 +323,7 @@ const CreateRoom = () => {
         <div className="sm:col-span-2 bg-card game-card flex flex-col min-h-0 shadow-lg">
           {/* Header with Create Topic Button */}
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-foreground">Chủ đề</h2>
+            <h2 className="text-2xl font-bold text-foreground">{t('createRoom.topicsTitle')}</h2>
             <GameButton
               variant="primary"
               size="md"
@@ -329,7 +331,7 @@ const CreateRoom = () => {
               onClick={() => navigate("/create/theme")}
             >
               <Plus className="w-5 h-5" />
-              Tạo chủ đề
+              {t('createRoom.createTopic')}
             </GameButton>
           </div>
 
@@ -396,13 +398,13 @@ const CreateRoom = () => {
                               items: [
                                 {
                                   key: 'edit',
-                                  label: 'Chỉnh sửa',
+                                  label: t('createRoom.edit'),
                                   icon: <Edit className="w-4 h-4" />,
                                   onClick: ({ domEvent }) => handleEditTopic(topic, domEvent)
                                 },
                                 {
                                   key: 'delete',
-                                  label: 'Xóa',
+                                  label: t('createRoom.delete'),
                                   icon: <Trash2 className="w-4 h-4 text-danger" />,
                                   danger: true,
                                   onClick: ({ domEvent }) => handleDeleteTopic(topic._id || topic.idTopic, domEvent)
@@ -424,7 +426,7 @@ const CreateRoom = () => {
                   ))
                 ) : (
                   <div className="w-full text-center text-muted-foreground py-10">
-                    Không có chủ đề nào. Hãy tạo chủ đề mới!
+                    {t('createRoom.noTopics')}
                   </div>
                 )}
               </div>
@@ -439,7 +441,7 @@ const CreateRoom = () => {
               onClick={() => navigate("/rooms")}
               className="flex-1"
             >
-              Hủy
+              {t('createRoom.cancel')}
             </GameButton>
             <GameButton
               variant="success"
@@ -449,7 +451,7 @@ const CreateRoom = () => {
               className="flex-1 flex items-center justify-center gap-2"
             >
               {isCreating && <Loader className="w-5 h-5 animate-spin" />}
-              {isCreating ? (isEditing ? "Đang cập nhật..." : "Đang tạo...") : (isEditing ? "Cập nhật phòng" : "Tạo phòng")}
+              {isCreating ? (isEditing ? t('createRoom.updating') : t('createRoom.creating')) : (isEditing ? t('createRoom.update') : t('createRoom.create'))}
             </GameButton>
           </div>
         </div>
@@ -459,10 +461,10 @@ const CreateRoom = () => {
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
         onConfirm={confirmDeleteTopic}
-        title="Xóa chủ đề"
-        message="Bạn có chắc chắn muốn xóa chủ đề này? Hành động này không thể hoàn tác."
-        confirmText="Xóa"
-        cancelText="Hủy"
+        title={t('createRoom.deleteConfirmTitle')}
+        message={t('createRoom.deleteConfirmMessage')}
+        confirmText={t('createRoom.delete')}
+        cancelText={t('createRoom.cancel')}
         type="danger"
       />
     </div>

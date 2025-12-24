@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export const TimerBar = ({ endTime, duration = 60, onComplete }) => {
+  const { t } = useTranslation();
   const [secondsLeft, setSecondsLeft] = useState(() => {
     if (!endTime || endTime === 0) return 0;
     const now = Date.now();
@@ -54,7 +56,7 @@ export const TimerBar = ({ endTime, duration = 60, onComplete }) => {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Clock className={`w-5 h-5 ${isLow ? "text-red-500 animate-pulse" : "text-slate-500"}`} />
-          <span className="font-bold text-slate-700">Thời gian còn lại</span>
+          <span className="font-bold text-slate-700">{t('game.timeLeft')}</span>
         </div>
         <span className={`font-mono font-bold text-2xl ${isLow ? "text-red-500" : "text-blue-600"}`}>
           {secondsLeft}s

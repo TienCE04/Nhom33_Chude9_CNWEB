@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { Dropdown } from "antd";
 import { ConfirmModal } from "../components/ConfirmModal";
 import { toast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 const MaterialIcon = ({ iconName, className = "" }) => (
   <span className={`material-symbols-rounded ${className}`}>
@@ -16,6 +17,7 @@ const MaterialIcon = ({ iconName, className = "" }) => (
 );
 
 const Topics = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("system");
@@ -69,7 +71,7 @@ const Topics = () => {
       const result = await topicApi.deleteTopic(topicId);
       if (result.success) {
         toast({
-          title: "Xóa chủ đề thành công",
+          title: t('topics.deleteSuccess'),
           variant: "success",
         });
         const updatedTopics = userTopics.filter(t => (t._id || t.idTopic) !== topicId);
@@ -77,7 +79,7 @@ const Topics = () => {
         setDeleteModal({ isOpen: false, topicId: null });
       } else {
         toast({
-          title: "Xóa chủ đề thất bại",
+          title: t('topics.deleteFail'),
           description: result.message,
           variant: "error",
         });
@@ -85,8 +87,8 @@ const Topics = () => {
     } catch (error) {
       console.error("Error deleting topic:", error);
       toast({
-        title: "Lỗi khi xóa chủ đề",
-        description: "Có lỗi xảy ra khi xóa chủ đề",
+        title: t('topics.deleteErrorTitle'),
+        description: t('topics.deleteErrorMessage'),
         variant: "error",
       });
     }
@@ -106,7 +108,7 @@ const Topics = () => {
             <h3 className="font-bold text-lg text-foreground line-clamp-1">{topic.nameTopic}</h3>
             {isCustom && (
               <p className="text-xs text-muted-foreground">
-                Tạo bởi: {topic.createdBy === user?.username ? "Bạn" : topic.createdBy}
+                {t('topics.createdBy')}: {topic.createdBy === user?.username ? t('topics.you') : topic.createdBy}
               </p>
             )}
           </div>
@@ -117,7 +119,7 @@ const Topics = () => {
         <div className="grid grid-cols-2 gap-2 mt-auto pt-4 border-t border-border/50">
           <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Số lượng từ khóa">
             <Hash className="w-4 h-4" />
-            <span>{topic.keyWord?.length || 0} từ</span>
+            <span>{topic.keyWord?.length || 0} {t('topics.words')}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground" title="Ngày tạo">
             <Calendar className="w-4 h-4" />
@@ -133,13 +135,13 @@ const Topics = () => {
                 items: [
                   {
                     key: 'edit',
-                    label: 'Chỉnh sửa',
+                    label: t('topics.edit'),
                     icon: <Edit className="w-4 h-4" />,
                     onClick: ({ domEvent }) => handleEditTopic(topic, domEvent)
                   },
                   {
                     key: 'delete',
-                    label: 'Xóa',
+                    label: t('topics.delete'),
                     icon: <Trash2 className="w-4 h-4 text-danger" />,
                     danger: true,
                     onClick: ({ domEvent }) => handleDeleteTopic(topic._id || topic.idTopic, domEvent)
@@ -166,16 +168,26 @@ const Topics = () => {
       <div className="flex flex-col md:flex-row items-center justify-between mb-4 gap-4 md:gap-0">
         <div className="flex items-center gap-3 px-4 md:px-6">
           <Library className="w-8 h-8 text-primary" />
-          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground">Thư viện chủ đề</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground">{t('topics.library')}</h1>
         </div>
         <GameButton
           variant="success"
           size="md"
           className="flex items-center gap-2"
-          onClick={() => navigate("/create/theme")}
+          onClick={() => {
+             if (user && (user.role === 'guest' || user.isGuest)) {
+                 toast({
+                    title: t('topics.loginRequired'),
+                    description: t('topics.loginToCreate'),
+                    variant: "destructive",
+                 });
+                 return;
+             }
+             navigate("/create/theme");
+          }}
         >
           <Plus className="w-5 h-5" />
-          Tạo chủ đề mới
+          {t('topics.createNew')}
         </GameButton>
       </div>
 
@@ -189,7 +201,7 @@ const Topics = () => {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Chủ đề hệ thống
+          {t('topics.systemTopics')}
           {activeTab === "system" && (
             <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full" />
           )}
@@ -202,7 +214,7 @@ const Topics = () => {
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          Chủ đề của tôi
+          {t('topics.myTopics')}
           {activeTab === "custom" && (
             <div className="absolute bottom-0 left-0 w-full h-1 bg-primary rounded-t-full" />
           )}
@@ -224,21 +236,30 @@ const Topics = () => {
                 ))
               ) : (
                 <div className="col-span-full text-center py-10 text-muted-foreground">
-                  Không có chủ đề hệ thống nào.
+                  {t('topics.noSystemTopics')}
                 </div>
               )
             ) : (
-              userTopics.length > 0 ? (
-                userTopics.map((topic) => (
-                  <TopicCard key={topic._id || topic.idTopic} topic={topic} isCustom={true} />
-                ))
-              ) : (
+              user && (user.role === 'guest' || user.isGuest) ? (
                 <div className="col-span-full flex flex-col items-center justify-center py-10 gap-4">
-                  <p className="text-muted-foreground text-lg">Bạn chưa tạo chủ đề nào.</p>
-                  <GameButton variant="primary" onClick={() => navigate("/create/theme")}>
-                    Tạo ngay
+                  <p className="text-muted-foreground text-lg">{t('topics.loginToCreateMsg')}</p>
+                  <GameButton variant="primary" onClick={() => navigate("/login")}>
+                    {t('topics.loginNow')}
                   </GameButton>
                 </div>
+              ) : (
+                userTopics.length > 0 ? (
+                  userTopics.map((topic) => (
+                    <TopicCard key={topic._id || topic.idTopic} topic={topic} isCustom={true} />
+                  ))
+                ) : (
+                  <div className="col-span-full flex flex-col items-center justify-center py-10 gap-4">
+                    <p className="text-muted-foreground text-lg">{t('topics.noUserTopics')}</p>
+                    <GameButton variant="primary" onClick={() => navigate("/create/theme")}>
+                      {t('topics.createNow')}
+                    </GameButton>
+                  </div>
+                )
               )
             )}
           </div>
@@ -249,10 +270,10 @@ const Topics = () => {
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, topicId: null })}
         onConfirm={confirmDeleteTopic}
-        title="Xóa chủ đề"
-        message="Bạn có chắc chắn muốn xóa chủ đề này không? Hành động này không thể hoàn tác."
-        confirmText="Xóa"
-        cancelText="Hủy"
+        title={t('topics.deleteConfirmTitle')}
+        message={t('topics.deleteConfirmMessage')}
+        confirmText={t('topics.delete')}
+        cancelText={t('topics.cancel')}
         variant="danger"
       />
     </div>

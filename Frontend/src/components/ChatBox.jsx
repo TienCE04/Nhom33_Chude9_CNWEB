@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { Send, AlertTriangle } from "lucide-react";
 import { GameButton } from "./GameButton";
+import { useTranslation } from "react-i18next";
 
 export const ChatBox = ({
   messages,
   onSendMessage,
-  placeholder = "Type your guess...",
+  placeholder,
   typeBox,
   disabled = false
 }) => {
+  const { t } = useTranslation();
   const [input, setInput] = useState("");
+  const effectivePlaceholder = placeholder || t('chatBox.placeholder');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -22,7 +25,7 @@ export const ChatBox = ({
 
   return (
     <div className="game-card h-full flex flex-col w-full">
-      <h3 className="font-bold text-lg mb-3">{typeBox==="chat" ? "Chat" : typeBox==="answer" ? "Answer" : ""}</h3>
+      <h3 className="font-bold text-lg mb-3">{typeBox==="chat" ? t('chatBox.chat') : typeBox==="answer" ? t('chatBox.answer') : ""}</h3>
       
       <div className="flex-1 overflow-y-auto space-y-2 mb-3 min-h-0 pr-[10px]">
         {messages.map((msg) => (
@@ -47,7 +50,7 @@ export const ChatBox = ({
             {msg.isClose && (
               <span className="inline-flex items-center gap-1 text-xs font-bold uppercase text-yellow-700 shrink-0">
                 <AlertTriangle className="w-3 h-3" />
-                Gần đúng!
+                {t('chatBox.close')}
               </span>
             )}
           </div>
@@ -59,7 +62,7 @@ export const ChatBox = ({
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={disabled ? "Bạn đang vẽ, không thể đoán!" : placeholder}
+          placeholder={disabled ? t('chatBox.drawing') : effectivePlaceholder}
           className="input-rounded flex-1 py-2"
           disabled={disabled}
         />
