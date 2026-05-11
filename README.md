@@ -1,2 +1,2 @@
 Frontend: React
-Backeend: Node
+Backend: Node
